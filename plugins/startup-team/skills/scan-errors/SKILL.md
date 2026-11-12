@@ -1,6 +1,6 @@
 ---
 name: scan-errors
-description: Scan an environment's error log over a time window, cluster the rows into a ranked triage report, skip what was already triaged, and stop for the owner's verdict per cluster. Use for "what broke in the last 24 hours", a periodic health sweep, or before deciding which errors deserve a fix. Read-only: fixes go through the team chain after the owner's 1.
+description: "Scan an environment's error log over a time window, cluster the rows into a ranked triage report, skip what was already triaged, and stop for the owner's verdict per cluster. Use for \"what broke in the last 24 hours\", a periodic health sweep, or before deciding which errors deserve a fix. Read-only: fixes go through the team chain after the owner's 1."
 ---
 
 # Scan errors
