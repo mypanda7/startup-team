@@ -37,19 +37,37 @@ claude plugin update startup-team@startup-team
 | `agents/auditor` | PASS or FAIL against the owner's request, with evidence it re-ran itself. |
 | `agents/devops` | Read-only analysis, and proposals for every push, deploy or server change. |
 | `agents/security` | Security analysis of the owner's own project. Findings only, no fixes. |
-| `agents/skill-sub` | A read-only helper that answers one narrow question for another agent. |
-| `skills/team-workflow` | The chain for the main session, plus `scripts/team.py`. |
-| `commands/` | `/startup-team:triage`, `:design`, `:qa`, `:audit`, `:learn`, `:start-team` (starts the standing sessions). |
-| `sessions/` | The standing briefs for the Tech Lead, Business Analyst and Security sessions. |
-| `hooks/` | The team gate: on every request of 8 words or more it reminds the session to triage with the tech lead first. |
+| `agents/skill-sub` | A read-only helper that answers one narrow question for another agent, using one named skill. |
+| `agents/dispatcher` | Launches and watches pieces delegated to cheaper outside models through a gateway. Does nothing without one. |
+| `agents/messenger` | Carries one question to, or reads replies from, a channel outside the app that the project names. |
+| `agents/video` | Builds and renders video in code from an approved brief. |
+| `skills/team-workflow` | The chain for the main session, plus `scripts/team.py`, the skill roster (`ROSTER.md`) and the project templates. |
+| `skills/` (the rest) | Shipping, testing and operations skills: see "Skills" below. |
+| `commands/` | `/startup-team:triage`, `:design`, `:plan`, `:qa`, `:audit`, `:dispatch`, `:learn`, `:companions`, `:start-team` (starts the standing sessions). |
+| `sessions/` | The standing briefs for the Tech Lead, Business Analyst, Designer, QA Engineer, DevOps and Security sessions. |
+| `hooks/` | The team gate, plus the project's operating rules and notes reminders: see "Hooks" below. |
 
-### The team gate
+### Hooks
 
-The gate only adds a reminder; it never blocks a prompt. It stays quiet for slash commands, pasted
-terminal output, short replies, any request that starts with `quick:`, and the briefs the team
-sends to its role sessions and standing sessions (they start with `[startup-team:`). Set
-`STARTUP_TEAM_GATE_OFF=1` to turn it off for a session. It needs Python on the PATH; without one it
-does nothing.
+| Hook | Runs on | What it does |
+|---|---|---|
+| `tech-lead-gate` | every prompt | Reminds the session to triage first: the full text once per session, two lines after. |
+| `operating-rules` | every prompt | Prints the project's own non-negotiable rules and points at the most relevant project note. |
+| `notes` | session start, first prompt, stop | Points at the project's notes index, and reminds the session to update notes when code changed and no note did. |
+
+No hook ever blocks a prompt. They need Python on the PATH; without one they do nothing.
+
+The gate stays quiet for slash commands, pasted terminal output, agent reports, short replies, a
+single short question with no build verb, and the briefs the team sends to its role sessions and
+standing sessions (they start with `[startup-team:`). A request that starts with `quick:` skips
+triage; QA and the auditor still run.
+
+The rules and notes hooks print nothing until the project has a `.claude/operating-rules.md`
+(copy `skills/team-workflow/templates/operating-rules.md` and fill it in).
+
+Switches, set to `1` for a session: `STARTUP_TEAM_GATE_OFF`, `STARTUP_TEAM_GATE_FULL` (always the
+full gate text), `STARTUP_TEAM_RULES_OFF`, `STARTUP_TEAM_NOTES_OFF`. `STARTUP_TEAM_RULES_FILE`
+names another rules file.
 
 ## How a task runs
 
@@ -66,41 +84,60 @@ does nothing.
 
 In a host that can start sessions (the Claude desktop app), the team works in two kinds of session.
 
-- **Standing sessions** are long-lived: one Tech Lead, one Business Analyst and one Security session
-  per project, started once and used for every task.
+- **Standing sessions** are long-lived: one Tech Lead session per project and, under it, up to five
+  sub sessions (Business Analyst, Designer, QA Engineer, DevOps, Security), started once and used
+  for every task.
 - **Role sessions** are opened for one run of a role and end with it, so the owner can open, steer
   and stop each run on its own.
 
-They fit together like this. A role that has a standing session for the project gets its work by
-message there, and no role session is opened for it. So the tech lead and security use their
-standing session when there is one, and otherwise open a role session like the others. The
-designer, architect, executor, QA, auditor and devops always open a role session. `skill-sub` is
-always a sub-agent, and the Business Analyst is only ever a standing session.
+They fit together like this. When the project has a Tech Lead session, the tech lead, designer, QA,
+devops and security work in the standing team, and no role session is opened for them; otherwise
+they open a role session like the others. The architect, executor and auditor always open a role
+session. `skill-sub` is always a sub-agent, and the Business Analyst is only ever a sub session.
 
 ### Standing sessions
 
-`/startup-team:start-team` starts up to three standing sessions in the Claude desktop app's sidebar,
-each from its brief in `sessions/`. Pass `tech-lead`, `business-analyst` or `security` to start only
-those.
+`/startup-team:start-team` starts the Tech Lead session in the Claude desktop app's sidebar, and
+the Tech Lead session starts its sub sessions, each from its brief in `sessions/`. Pass any of
+`business-analyst`, `designer`, `qa`, `devops` or `security` to start only those sub sessions.
+
+```
+Main session
+└── Tech Lead            triages, starts its sub sessions, relays as backup
+    ├── Business Analyst asks the owner one question at a time
+    ├── Designer         proposes, briefs and reviews UI
+    ├── QA Engineer      runs the product, PASS or FAIL
+    ├── DevOps           proposes every push or deploy
+    └── Security         analysis only
+```
+
+The Tech Lead session starts the sub sessions, and the main session messages each of them
+directly. The relay through the Tech Lead is the backup only: when the main session cannot find or
+reach a sub session, it sends the Tech Lead session a message marked `FOR: <name>`, and the Tech
+Lead session starts the sub session if needed, passes the message on unchanged and sends the reply
+back unchanged. The owner can type to any of them directly.
 
 | Session | What it does | Main session uses it for |
 |---|---|---|
-| Tech Lead | Triages only: never builds, edits, commits or pushes. | Each request, answered with a decision block. |
+| Tech Lead | Triages and starts the sub sessions; relays to one only as a backup. Never builds, edits, commits or pushes. | Each request, answered with a decision block. |
 | Business Analyst | Relays questions to the owner one at a time and sends each answer back verbatim. Never answers or decides. | Question batches. |
+| Designer | Proposes, briefs and reviews UI by the `designer` agent's method. Never builds. | Every design step. |
+| QA Engineer | Runs the product and reports PASS or FAIL with steps to reproduce. Never fixes. | Testing, once the pieces are built. |
+| DevOps | Read-only analysis, and proposals for every push or deploy. Runs nothing before the owner's 1. | Shipping and server checks. |
 | Security | Analysis only: findings by severity, fixes as proposals for the owner. | Security checks. |
 
-A session exists for a role when there is a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id. A session whose title starts with `[run]` is a role session and never counts as a standing session. The main session
-messages it with `SendMessage`, whoever started it. If more than one session matches a role, the
-command lists them and asks the owner which one to use. The command looks for an
-existing one first and never starts a second, and it starts no other role. Standing sessions never
-write source.
+A session exists for a role when there is a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id. A session whose title starts with `[run]` is a role session and never counts as a standing session.
+An existing session is used, whoever started it, and a second one is never started. If more than
+one session matches a role, they are listed and the owner says which one to use. The command starts
+only the Tech Lead session, and the Tech Lead session starts only its five sub sessions. Standing
+sessions never write source.
 
 ### Role sessions
 
 The main session briefs each role session, waits for it, and reads the file it leaves in the turn
 folder. Follow-ups for the same piece go back to the session that already has the context. Role
 sessions never ask the owner anything themselves: their questions go to the Business Analyst
-session when there is one, and otherwise the main session asks them, one at a time. Approvals come
+sub session when there is one, and otherwise the main session asks them, one at a time. Approvals come
 to the owner in the main session.
 
 Role sessions share the project's checkout, so only one session that writes source runs at a time;
@@ -112,6 +149,76 @@ Without a session tool (the plain CLI), when a session cannot be started, or whe
 "here" or "no sessions", the same chain runs with sub-agents, and the main session asks the owner
 its questions itself, one at a time. In the terminal CLI `/startup-team:start-team` says so and
 does nothing.
+
+## Skills
+
+Every skill says near its top what the project's CLAUDE.md must name for it to work (branches,
+environments, commands, where records live). Nothing in a skill weakens the chain: each push,
+merge, tag, deploy, send or delete is proposed and waits for the owner's 1.
+
+| Skill | Use it to |
+|---|---|
+| `ship` | Take one finished, audited branch live. Runs only when asked. |
+| `wrap` | Checkpoint a session: notes, commit, pull request to the integration branch. |
+| `hotfix` | Get one production fix live ahead of the regular release. Runs only when asked. |
+| `release-train` | Run the scheduled release, with rollback tiers. Runs only when asked. |
+| `deploy` | Deploy merged code by hand, or check, pause and resume an automatic deploy. Runs only when asked. |
+| `release-notes` | Write version notes and a plain-language "what's new". |
+| `announcement` | Announce what shipped, for customers, the team or stakeholders. |
+| `ship-log` | Record what shipped in the project's own trackers, from a high-water mark. |
+| `test-gate` | Plan and run only the tests a diff needs, and give a GO or NO-GO. |
+| `feature-tests` | Add the right tests for a finished feature, by risk tier. |
+| `testing-rules` | Where tests run, what is expensive, what never runs on production. |
+| `dev-feature-test` | Run a feature's tests on the local test environment in a fix loop. |
+| `e2e-qa` | QA merged changes with end-to-end specs, from a high-water mark. |
+| `test-accounts` | Create and delete throwaway accounts on a test environment. |
+| `app-audit` | Crawl every route as several roles; build the access grid and the cost per route. |
+| `scan-errors` | Cluster an error log over a time window into a triaged report. |
+| `scan-tickets` | Investigate support tickets against notes, code and data. |
+| `reply-tickets` | Draft a grounded reply to a ticket; sending needs the owner's 1. |
+| `triage-log` | Keep the append-only ledger of triage outcomes. |
+| `scrum-master` | Turn notes and ideas into cards and epics; run standup, review, retro. |
+| `start-epic` | Build an epic's cards through the team chain, one piece at a time. |
+| `optimize-image` | Shrink images: dry run, check by eye, apply on the owner's OK. |
+| `repeated-judgment` | Make one judgement over many items cheaply and verify every hit. |
+| `multi-model-supervisor` | Supervise a session that runs on several models through a gateway. |
+
+### Skills the agents borrow
+
+Each agent may also borrow a named skill from a companion plugin for one narrow question, through
+`skill-sub`. Which agent may borrow which skill, the companion plugins and where to get them, and
+the rule that the team's rules always win, are in
+[ROSTER.md](plugins/startup-team/skills/team-workflow/ROSTER.md). Companion plugins are optional
+and are their authors' own work; none ships with this plugin and none of their content is copied
+here.
+
+This repository's marketplace lists each companion with a link to its original repository, so an
+install or update fetches the author's latest version from there:
+
+```bash
+claude plugin install agent-skills@startup-team --scope local
+```
+
+```bash
+claude plugin update agent-skills@startup-team --scope local
+```
+
+`/startup-team:companions` does this for the ones you choose. The companions are `agent-skills`,
+`antislop`, `taste-skill`, `ui-ux-pro-max`, `frontend-design`, `design`, `humanizer` and `ponytail`.
+The links are not pinned to a version, so an update brings whatever the author has published.
+
+## Project setup files
+
+The plugin works with none of these. Each is a fill-in template under
+`skills/team-workflow/templates/` that a project copies into its own repository.
+
+| Template | Copy to | Read by |
+|---|---|---|
+| `routing-digest.md` | `.claude/routing-digest.md` | The tech lead, in place of the whole CLAUDE.md |
+| `audit-digest.md` | `.claude/audit-digest.md` | The auditor, for the project's standing rules |
+| `preflight-frontend.md` | `.claude/preflight-frontend.md` | The executor, before a frontend piece |
+| `preflight-backend.md` | `.claude/preflight-backend.md` | The executor, before a backend piece |
+| `operating-rules.md` | `.claude/operating-rules.md` | The rules and notes hooks |
 
 ## Shared memory
 

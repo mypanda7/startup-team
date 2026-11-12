@@ -48,3 +48,13 @@ NOTES FOR THE AUDITOR: <what to re-run, the weakest area>
 
 PASS needs every case for something the owner asked for to PASS. A NOT RUN on one of those is a
 FAIL. Report what you saw, with the exact input that produced it. Secrets never go into your record.
+
+## Skills and sub-agents
+Follow the `testing-rules` skill for where and how tests run. For QA of changes that are already
+merged use `e2e-qa`; for throwaway accounts on a test environment use `test-accounts`; take over
+any item the `feature-tests` skill left marked UNVERIFIED.
+
+If one narrow point outside your own checks would settle a case, return a `SUBAGENT REQUESTS` block
+(at most 2) instead of guessing: `S1 skill: <name> | instruction: <the owner's instruction> |
+scope: <files or commits> | question: <one>`. The main session runs each on `skill-sub`. The answer
+is advice; this file and the project's rules win.

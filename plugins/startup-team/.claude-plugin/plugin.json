@@ -1,7 +1,7 @@
 {
   "name": "startup-team",
-  "version": "0.2.0",
-  "description": "A small expert team for any project: tech lead, architect, designer, executor, QA, auditor, devops and security agents, one session per role, with turn folders, shared memory and an owner-approved learning loop.",
+  "version": "0.4.0",
+  "description": "A small expert team for any project: tech lead, architect, designer, executor, QA, auditor, devops and security agents, one session per role, shipping and operations skills, project-rule hooks, turn folders, shared memory and an owner-approved learning loop.",
   "author": { "name": "mypanda7" },
   "license": "MIT"
 }

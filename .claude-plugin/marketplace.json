@@ -1,12 +1,107 @@
 {
   "name": "startup-team",
-  "owner": { "name": "mypanda7" },
-  "metadata": { "description": "A project-agnostic expert team for Claude Code that learns across projects." },
+  "owner": {
+    "name": "mypanda7"
+  },
+  "metadata": {
+    "description": "A project-agnostic expert team for Claude Code that learns across projects."
+  },
   "plugins": [
     {
       "name": "startup-team",
       "source": "./plugins/startup-team",
-      "description": "A small expert team for any project: tech lead, architect, designer, executor, QA, auditor, devops and security agents, one session per role, with turn folders, shared memory and an owner-approved learning loop."
+      "description": "A small expert team for any project: tech lead, architect, designer, executor, QA, auditor, devops and security agents, one session per role, shipping and operations skills, project-rule hooks, turn folders, shared memory and an owner-approved learning loop."
+    },
+    {
+      "name": "agent-skills",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/addyosmani/agent-skills.git"
+      },
+      "description": "Companion (optional, its author's own work, tracked from its original repository): engineering checklists and four specialist agents the team's agents borrow.",
+      "homepage": "https://github.com/addyosmani/agent-skills",
+      "category": "companion",
+      "license": "MIT"
+    },
+    {
+      "name": "antislop",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/miqdadbadjuber/anti-slop.git"
+      },
+      "description": "Companion (optional, its author's own work, tracked from its original repository): a read-only pass for generic-looking UI, copy and code comments.",
+      "homepage": "https://github.com/miqdadbadjuber/anti-slop",
+      "category": "companion",
+      "license": "MIT"
+    },
+    {
+      "name": "taste-skill",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/Leonxlnx/taste-skill.git"
+      },
+      "description": "Companion (optional, its author's own work, tracked from its original repository): visual taste for public and marketing pages.",
+      "homepage": "https://github.com/Leonxlnx/taste-skill",
+      "category": "companion",
+      "license": "MIT",
+      "skills": [
+        "./skills/taste-skill"
+      ],
+      "strict": false
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git"
+      },
+      "description": "Companion (optional, its author's own work, tracked from its original repository): the designer's design-reference search.",
+      "homepage": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "category": "companion",
+      "license": "MIT"
+    },
+    {
+      "name": "frontend-design",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/anthropics/claude-plugins-official.git",
+        "path": "plugins/frontend-design"
+      },
+      "description": "Companion (optional, its author's own work, tracked from its original repository): frontend design guidance.",
+      "homepage": "https://github.com/anthropics/claude-plugins-official",
+      "category": "companion"
+    },
+    {
+      "name": "design",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/anthropics/knowledge-work-plugins.git",
+        "path": "design"
+      },
+      "description": "Companion (optional, its author's own work, tracked from its original repository): design critique, accessibility review and developer handoff.",
+      "homepage": "https://github.com/anthropics/knowledge-work-plugins",
+      "category": "companion"
+    },
+    {
+      "name": "humanizer",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/blader/humanizer.git"
+      },
+      "description": "Companion (optional, its author's own work, tracked from its original repository): plain, human wording for owner-facing and customer-facing copy.",
+      "homepage": "https://github.com/blader/humanizer",
+      "category": "companion",
+      "license": "MIT"
+    },
+    {
+      "name": "ponytail",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/DietrichGebert/ponytail.git"
+      },
+      "description": "Companion (optional, its author's own work, tracked from its original repository): a tie-breaker for how much code to write inside an approved piece.",
+      "homepage": "https://github.com/DietrichGebert/ponytail",
+      "category": "companion"
     }
   ]
 }
