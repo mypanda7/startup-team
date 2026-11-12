@@ -334,7 +334,7 @@ def main() -> None:
     lp.add_argument("--text", required=True)
     lp.add_argument("--evidence", required=True)
     lp.add_argument("--source", default="main")
-    lp.add_argument("--agent", default="all", choices=("all", "tech-lead", "architect", "designer", "executor", "auditor", "devops", "security", "skill-sub"))
+    lp.add_argument("--agent", default="all", choices=("all", "tech-lead", "architect", "designer", "executor", "qa", "auditor", "devops", "security", "skill-sub"))
     lp.set_defaults(fn=learn_propose)
     lap = le.add_parser("apply")
     lap.add_argument("id")

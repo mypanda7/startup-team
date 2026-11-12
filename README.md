@@ -2,8 +2,9 @@
 
 A small expert team for Claude Code, packaged as a plugin. It gives any project the same way of
 working: a tech lead triages every task, a designer gets the owner's approval before any UI is
-built, an architect plans backend pieces, an executor builds one piece at a time, an auditor checks
+built, an architect plans backend pieces, an executor builds one piece at a time, QA tests it the way a user would, an auditor checks
 the result against the owner's own words, and devops proposes anything that leaves the machine.
+Where the host can start sessions (the Claude desktop app), each role runs in its own session.
 
 The team is project-agnostic. Everything specific to a project (brand, stack, hosting, standing
 decisions) stays in that project's `CLAUDE.md`, and the project's rules always win.
@@ -32,18 +33,19 @@ claude plugin update startup-team@startup-team
 | `agents/designer` | PROPOSE, BRIEF and REVIEW modes. No UI is built before the owner's 1. |
 | `agents/architect` | Plans API, data model, auth and job pieces before the build. |
 | `agents/executor` | Builds one piece from a brief. One local commit. Never pushes. |
+| `agents/qa` | Runs the product and walks every case. PASS or FAIL with steps to reproduce. Never fixes. |
 | `agents/auditor` | PASS or FAIL against the owner's request, with evidence it re-ran itself. |
 | `agents/devops` | Read-only analysis, and proposals for every push, deploy or server change. |
 | `agents/security` | Security analysis of the owner's own project. Findings only, no fixes. |
 | `agents/skill-sub` | A read-only helper that answers one narrow question for another agent. |
 | `skills/team-workflow` | The chain for the main session, plus `scripts/team.py`. |
-| `commands/` | `/startup-team:triage`, `:design`, `:audit`, `:learn`. |
+| `commands/` | `/startup-team:triage`, `:design`, `:qa`, `:audit`, `:learn`. |
 | `hooks/` | The team gate: on every request of 8 words or more it reminds the session to triage with the tech lead first. |
 
 ### The team gate
 
 The gate only adds a reminder; it never blocks a prompt. It stays quiet for slash commands, pasted
-terminal output, short replies, and any request that starts with `quick:`. Set
+terminal output, short replies, and any request that starts with `quick:`, and the briefs of role sessions. Set
 `STARTUP_TEAM_GATE_OFF=1` to turn it off for a session. It needs Python on the PATH; without one it
 does nothing.
 
@@ -54,8 +56,20 @@ does nothing.
 3. Questions go to the owner one at a time, with options and a recommendation. An answer is final.
 4. UI pieces get a design proposal and the owner's 1. Backend pieces get a plan.
 5. The executor builds each piece and commits it locally.
-6. The auditor checks the whole turn. Fixes go back to the tech lead.
-7. Devops proposes the push or deploy. The owner approves it.
+6. QA runs the product and reports bugs with steps. Fixes go back to the tech lead.
+7. The auditor checks the whole turn. Fixes go back to the tech lead.
+8. Devops proposes the push or deploy. The owner approves it.
+
+## One session per role
+
+In a host that can start sessions, every run of the tech lead, designer, architect, executor, QA,
+auditor, devops and security opens as its own session that the owner can open, steer and stop. The
+main session briefs each one, waits for it, and reads the file it leaves in the turn folder.
+Questions and approvals still come to the owner in the main session, one at a time.
+
+Role sessions share the project's checkout, so only one session that writes source runs at a time;
+the read-only ones may run side by side. Without a session tool (the plain CLI), or when the owner
+says "here" or "no sessions", the same chain runs with sub-agents. `skill-sub` is always a sub-agent.
 
 ## Shared memory
 

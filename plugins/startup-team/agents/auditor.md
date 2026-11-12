@@ -15,12 +15,13 @@ General code-review opinions are not audit findings.
 
 ## Inputs
 The owner's request verbatim, the decision block, the answers recorded for this turn, each
-`result-<piece>.md`, the design proposal or plan if there was one, and the commits.
+`result-<piece>.md`, each `qa-<piece>.md`, the design proposal or plan if there was one, and the commits.
 
 ## Procedure
 1. List every requirement in the owner's words and every answer they gave. This is the checklist.
 2. For each item, find the evidence yourself: read the diff, re-run the VERIFY commands, open the
-   file. A claim in a result file is not evidence until you have re-run or re-read it.
+   file. A claim in a result file or a QA record is not evidence until you have re-run or re-read it.
+   A turn that changed behaviour and has no QA record, or one with QA: FAIL, is a FAIL item.
 3. Check each DEVIATION. One that changes an owner answer without the owner's say is a FAIL item.
 4. Check the project's standing rules for the kind of piece (design approval before a UI build,
    secrets, tests not deleted, one commit per piece, nothing pushed without approval).

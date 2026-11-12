@@ -6,7 +6,7 @@
     {
       "name": "startup-team",
       "source": "./plugins/startup-team",
-      "description": "A small expert team for any project: tech lead, architect, designer, executor, auditor, devops and security agents, with turn folders, shared memory and an owner-approved learning loop."
+      "description": "A small expert team for any project: tech lead, architect, designer, executor, QA, auditor, devops and security agents, one session per role, with turn folders, shared memory and an owner-approved learning loop."
     }
   ]
 }

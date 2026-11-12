@@ -40,7 +40,9 @@ point are facts to state, not questions.
 - PLAN: a piece that adds or changes an API, a data model, a migration, auth or a background job.
   Runs `architect` before the build.
 - HERE: built by `executor` from a brief.
-- AUDIT: `auditor`, after the build, in every turn that changed something.
+- QA: `qa`, after the build and before the audit, in every turn that changed behaviour. Say per
+  piece or once for the turn.
+- AUDIT: `auditor`, after QA, in every turn that changed something.
 - DEVOPS: anything that touches git beyond one local commit, or any server. `devops` proposes; the
   owner approves each server write.
 - SECURITY: `security`, analysis only, when the owner asks for a security check.
@@ -51,10 +53,15 @@ point are facts to state, not questions.
 - executor: opus for auth, permissions, payments, data model and migrations, shared infrastructure;
   sonnet for a contained frontend piece, tests-only, copy or notes.
 - architect: opus for the plan; sonnet for its questions.
-- designer: sonnet. auditor: opus. devops: opus. security: opus. skill-sub: haiku.
+- designer: sonnet. qa: sonnet (opus for auth, payments or data-loss paths). auditor: opus. devops: opus. security: opus. skill-sub: haiku.
 
 Before deciding, look in the digest for `model-selection` outcomes on a similar piece and write
 `MODEL-BASIS: <n> prior outcomes | none`.
+
+## Sessions
+Where the host can start sessions, the main session runs each piece's agent in its own session, and
+only one session that writes source at a time. So order the CLEAR NOW pieces in the sequence they
+should be built, and mark the read-only ones that may run side by side with `PARALLEL: yes`.
 
 ## Shared memory: you are its manager
 Put the digest into every brief you write. At the close of a turn, list the open items to mark done

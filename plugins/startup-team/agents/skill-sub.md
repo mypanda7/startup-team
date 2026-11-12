@@ -1,6 +1,6 @@
 ---
 name: skill-sub
-description: ONE generic, read-only sub-agent that applies ONE named skill or checklist to ONE question for the agent that assigned it. A parent agent (tech-lead, architect, designer, executor, auditor, devops) returns a SUBAGENT REQUESTS block; the main session runs each request here and hands the answer back. Advice only.
+description: ONE generic, read-only sub-agent that applies ONE named skill or checklist to ONE question for the agent that assigned it. A parent agent (tech-lead, architect, designer, executor, qa, auditor, devops) returns a SUBAGENT REQUESTS block; the main session runs each request here and hands the answer back. Advice only.
 model: haiku
 tools: Read, Grep, Glob, Bash
 ---
