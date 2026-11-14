@@ -1,7 +1,12 @@
 """Offer to set up the team's standing sessions on the first owner prompt of a session.
 
-Prints the offer once per session until the project has `.handoff/team-setup-done`, which
-/startup-team:start-team creates. An owner who answers 0 sees it again in the next session.
+Prints the offer once per session until the project has `.handoff/team-setup-done` or
+`.handoff/team-setup-started`, which /startup-team:start-team creates. An owner who answers 0
+sees it again in the next session. The per-session marker is set only when the offer prints.
+
+`session-start` mode (the SessionStart backup): when neither marker exists, prints JSON with a
+one-line notice for the owner (`systemMessage`) and the offer as context for Claude
+(`hookSpecificOutput.additionalContext`), so the question is asked on the first prompt.
 
 Quiet for: STARTUP_TEAM_GATE_OFF=1, slash commands, pasted terminal output, agent reports and
 messages, and role-session briefs (they start with "[startup-team:"), so it never fires in a sub
@@ -19,6 +24,10 @@ import tempfile
 NOT_THE_OWNER = ("<task-notification>", "[SYSTEM NOTIFICATION", "Another Claude session sent a message")
 
 DONE_MARKER = os.path.join(".handoff", "team-setup-done")
+STARTED_MARKER = os.path.join(".handoff", "team-setup-started")
+
+NOTICE = ("startup-team is installed but the team isn't set up: reply 1 to create the AI Tech Lead "
+          "and its sub sessions")
 
 OFFER = """Team setup (startup-team): before anything else this turn, say "startup-team installed
 successfully." and ask the owner, as the only question:
@@ -55,6 +64,11 @@ def first_offer(session_id: str) -> bool:
     return True
 
 
+def set_up(cwd: str) -> bool:
+    """True when setup is done or under way in this project."""
+    return any(os.path.exists(os.path.join(cwd, m)) for m in (DONE_MARKER, STARTED_MARKER))
+
+
 def main() -> None:
     if os.environ.get("STARTUP_TEAM_GATE_OFF") == "1":
         return
@@ -65,6 +79,14 @@ def main() -> None:
         cwd = str(payload.get("cwd", "") or os.getcwd())
     except (ValueError, AttributeError):
         return
+    if sys.argv[1:2] == ["session-start"]:
+        if not set_up(cwd):
+            context = "On the owner's first message in this session, follow this.\n" + OFFER
+            print(json.dumps({
+                "systemMessage": NOTICE,
+                "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context},
+            }))
+        return
     text = prompt.strip()
     # "/" is a slash command; "<" covers pasted terminal output (<bash-input>, <bash-stdout>, ...).
     if not text or text[0] in "/<":
@@ -73,8 +95,9 @@ def main() -> None:
         return
     if text.startswith(NOT_THE_OWNER) or "<agent-message from=" in text[:400]:
         return
-    if os.path.exists(os.path.join(cwd, DONE_MARKER)):
+    if set_up(cwd):
         return
+    # Only reached when the offer would print, so a skipped prompt never uses up the session's turn.
     if first_offer(session_id):
         print(OFFER)
 

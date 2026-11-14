@@ -12,7 +12,9 @@ sessions. This session must start them on this turn: the desktop app refuses `st
 turn that another session's message started. Follow these steps in order.
 
 1. If you have no `start_session` tool (the terminal CLI), say in one line that standing sessions
-   need the desktop app and that the team keeps using its sub-agents. Stop.
+   need the desktop app and that the team keeps using its sub-agents. Stop. Otherwise, before
+   starting any session, create `<project folder>/.handoff/team-setup-started` holding one line,
+   today's date, so the sessions you start never get the setup notice.
 2. Call `get_session` with `self` for this session's id and title, then `list_sessions` once (all
    sessions, not only linked ones). Read `<project folder>/.handoff/team-sessions.json` if it
    exists (the registry, below).

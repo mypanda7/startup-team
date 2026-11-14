@@ -4,7 +4,7 @@
 dir="$(cd "$(dirname "$0")" && pwd)"
 for py in python python3 py; do
   if command -v "$py" >/dev/null 2>&1 && "$py" -c "import sys" >/dev/null 2>&1; then
-    "$py" "$dir/setup-offer.py" || true
+    "$py" "$dir/setup-offer.py" "$@" || true
     exit 0
   fi
 done
