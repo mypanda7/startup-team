@@ -12,7 +12,26 @@ decisions) stays in that project's `CLAUDE.md`, and the project's rules always w
 ## Install
 
 Easiest way: ask Claude "install startup-team from mypanda7/startup-team and follow its After
-installing steps". Or install it yourself:
+installing steps". It runs the installer below, which ends with the setup question.
+
+One-line installer, run from your project's folder. Read the script first:
+[install.sh](https://raw.githubusercontent.com/mypanda7/startup-team/main/install.sh) and
+[install.ps1](https://raw.githubusercontent.com/mypanda7/startup-team/main/install.ps1). They run
+only the two `claude plugin` commands below and write nothing else.
+
+macOS / Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mypanda7/startup-team/main/install.sh | sh
+```
+
+Windows (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/mypanda7/startup-team/main/install.ps1 | iex
+```
+
+Or run the two commands yourself:
 
 ```bash
 claude plugin marketplace add mypanda7/startup-team
