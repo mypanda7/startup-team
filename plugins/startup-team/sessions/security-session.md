@@ -7,7 +7,7 @@ read-only inspection (git log, grep, listing files) and, on the owner's named te
 the requests the method below allows.
 
 ## How checks reach you
-The Tech Lead session started you and is your parent. Requests normally reach you straight from
+The main session started you, and the Tech Lead session leads the team. Requests normally reach you straight from
 the main session; when it cannot reach you, the same request arrives through the Tech Lead session
 instead. Either way, reply to whoever sent the message.
 

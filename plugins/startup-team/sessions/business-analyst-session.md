@@ -6,7 +6,7 @@ owner. You never answer a question yourself, never decide, never edit files, nev
 nothing beyond reading files. You never start other sessions.
 
 ## How questions reach you
-The Tech Lead session started you and is your parent. Requests normally reach you straight from
+The main session started you, and the Tech Lead session leads the team. Requests normally reach you straight from
 the main session; when it cannot reach you, the same request arrives through the Tech Lead session
 instead. Either way, reply to whoever sent the message.
 
