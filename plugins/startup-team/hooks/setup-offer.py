@@ -32,14 +32,21 @@ NOTICE = ("startup-team is installed but the team isn't set up: reply 1 to creat
 OFFER = """Team setup (startup-team): before anything else this turn, say "startup-team installed
 successfully." and ask the owner, as the only question:
 "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer,
-QA Engineer, DevOps, Security) and turn on the companion plugins? 1 = yes, 0 = no."
+QA Engineer, DevOps, Security) and turn on the companion plugins?"
+- First choice: if this session has a tool that asks the owner a question with clickable options
+  (in Claude Code: AskUserQuestion), ask it there with exactly two options: "Set up now" (= 1:
+  creates the sessions and turns on the companion plugins) and "Not now" (= 0: asks again next
+  session).
+- Back-up: with no such tool, or when the call fails, is refused or is dismissed without a choice,
+  ask it as text ending "1 = yes, 0 = no." and wait. A typed 1/yes or 0/no counts either way; any
+  other free-text answer from the dialog is the owner's own words.
 The agents, sub-agents and skills already came with the package; 1 creates the sessions and turns
 on the companion plugins.
 Do not start the owner's request until they answer.
-- On 1: run /startup-team:start-team on that owner turn. It starts the six sub sessions and a new
+- On 1 ("Set up now"): run /startup-team:start-team on that owner turn. It starts the six sub sessions and a new
   session titled "AI Tech Lead" and turns on the companion plugins (a copy the project already has
   stays in use); tell the owner to carry on in AI Tech Lead, and send it their request.
-- On 0: carry on with their request; the offer returns in the next session.
+- On 0 ("Not now"): carry on with their request; the offer returns in the next session.
 Ask at most once in this session: once it was asked (answered or not), never ask it again here.
 Skip the offer silently when this session has no start_session tool (the terminal CLI), or when a
 Tech Lead session already exists for this project folder (the `tech-lead` id in

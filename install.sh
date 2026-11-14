@@ -47,5 +47,5 @@ run claude plugin install "$PLUGIN" --scope local || {
 
 echo "startup-team installed successfully."
 echo "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security) and turn on the companion plugins? 1 = yes, 0 = no."
-echo "Claude, if you ran this: ask the owner that question now. On 1, on the owner's turn, follow commands/start-team.md from the installed plugin folder (see claude plugin list); in the terminal CLI, say the sessions need the desktop app."
-echo "On 0, nothing more: the plugin asks again in the next session."
+echo "Claude, if you ran this: ask the owner that question now, with clickable options if you can (in Claude Code: AskUserQuestion) - \"Set up now\" (= 1) and \"Not now\" (= 0) - else as text ending 1 = yes, 0 = no. On 1, on the owner's turn, follow commands/start-team.md from the installed plugin folder (see claude plugin list); in the terminal CLI, say the sessions need the desktop app."
+echo "On 0 (Not now), nothing more: the plugin asks again in the next session."

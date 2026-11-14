@@ -50,14 +50,21 @@ the session that installed the plugin, with no restart:
 
 1. Say "startup-team installed successfully."
 2. Ask the owner only this, and wait for the answer:
-   "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security) and turn on the companion plugins? 1 = yes, 0 = no."
-3. On 1, on that same owner turn: find the installed plugin's folder with `claude plugin list`,
+   "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security) and turn on the companion plugins?"
+   - First choice: if the session has a tool that asks a question with clickable options (in
+     Claude Code: AskUserQuestion), ask it there with exactly two options: "Set up now" (= 1:
+     creates the sessions and turns on the companion plugins) and "Not now" (= 0: asks again next
+     session).
+   - Back-up: with no such tool, or when the call fails, is refused or is dismissed without a
+     choice, ask it as text ending "1 = yes, 0 = no." and wait. A typed 1/yes or 0/no counts
+     either way; any other free-text answer from the dialog is the owner's own words.
+3. On 1 ("Set up now"), on that same owner turn: find the installed plugin's folder with `claude plugin list`,
    read its `commands/start-team.md` and follow it step by step (the `/startup-team:start-team`
    command itself is not loaded until a new session). It starts the six sub sessions and the AI
    Tech Lead, turns on the companion plugins, and the owner carries on in AI Tech Lead. Without a
    `start_session` tool (the terminal CLI), say in one line that standing sessions need the
    desktop app and that the team keeps using its sub-agents.
-4. On 0, do nothing more: the `setup-offer` hook asks again at the start of the next session.
+4. On 0 ("Not now"), do nothing more: the `setup-offer` hook asks again at the start of the next session.
 
 Weren't asked? Run `/startup-team:start-team` in a new session. Until the team is set up, the
 question comes on your first message in every new session; a new session may also show a one-line
