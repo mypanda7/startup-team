@@ -30,8 +30,8 @@ project's CLAUDE.md and notes, the team's agent files, then any other plugin or 
    --text "<id> <question> -> <answer verbatim>"`, and append it to `answers.md`.
 4. **Design.** Any UI change (in the Designer sub session when the project has one, see Sessions): `designer` PROPOSE, its questions to the owner, the proposal, the
    owner's 1, then `designer` BRIEF. Nothing is built before the 1.
-5. **Plan.** Any API, data model, auth or job piece: `architect`. Its questions go to the owner; its
-   plan is the executor's brief.
+5. **Plan.** Any API, data model, auth or job piece: `architect` (the Tech Lead session when the
+   project has one, see Sessions). Its questions go to the owner; its plan is the executor's brief.
 6. **Build.** One piece per `executor` run, with the model the decision block names. One local
    commit per piece. A BLOCKED piece waits for its answer; it is never built on an assumption.
 7. **Check it yourself.** After a piece that changes a screen, look at it in a real browser at the
@@ -40,7 +40,7 @@ project's CLAUDE.md and notes, the team's agent files, then any other plugin or 
    so), with the request, the answers, the design brief or plan and the results. It writes
    `qa-<piece>.md`. BUGS go back to the tech lead as fix tasks; an UNCLEAR goes to the owner.
 9. **Deviation sweep.** Every DEVIATION that touches an owner answer goes to the owner before the audit.
-10. **Audit.** `auditor`, with the request, the decision block, the answers, the results and the QA records. FAIL
+10. **Audit.** `auditor` (the Tech Lead session when the project has one, see Sessions), with the request, the decision block, the answers, the results and the QA records. FAIL
    items go back to the tech lead. W items go to the owner as one list of 1/0 proposals.
 11. **Ship.** `devops` (the DevOps sub session when the project has one) PROPOSE for any push, merge, deploy or server change. The owner approves each.
 12. **Close.** Record outcomes (below), mark open items done, collect the tech lead's LEARN
@@ -131,8 +131,13 @@ each one yourself. Find a sub session by the same rule as the Tech Lead session,
 ("Business Analyst", "Designer", "QA Engineer", "DevOps", "Security"), and send it its work with
 `SendMessage` by session id, under a first line `[startup-team:<name>]` (`business-analyst`,
 `designer`, `developer`, `qa`, `devops` or `security`). It replies to you.
-- **Tech Lead** (`tech-lead`): triage. Send the owner's request verbatim, the turn folder and the
-  memory digest. It replies with the decision block.
+- **Tech Lead** (`tech-lead`): triage, plan and audit. For triage, send the owner's request
+  verbatim, the turn folder and the memory digest; it replies with the decision block. For the
+  architect's work, make the second line `PLAN: <piece> step 1` (or `step 2`, with the answers) and
+  send what the architect would get; it writes `plan-<piece>.md`. For the auditor's work, make the
+  second line `AUDIT` and send what the auditor would get; it writes `audit.md`. Its verdict starts
+  with a `SAME HANDS` line; a PROPOSAL in it for an independent audit runs the `auditor` agent in a
+  role session only on the owner's 1.
 - **Business Analyst** (`business-analyst`): a question batch. Answers come back one at a time,
   verbatim, as `<id> = <answer>`. `WITHDRAW` and `REPLACES` go the same way. It is only ever a sub
   session: there is no Business Analyst agent or role session.
@@ -170,8 +175,8 @@ stopped on its own. Installing this plugin is that standing request: do not ask 
 sub-agent, except a role that has a standing session for the project: its runs go to that standing
 session by message, and no new one is started. So `tech-lead`, `designer`, `qa`, `devops` and `security` runs go to their
 standing session when one exists, and `executor` runs go to the Developer session when one
-exists; otherwise they open a role session like the others. `architect` and `auditor` always open
-a role session.
+exists; otherwise they open a role session like the others. `architect` and `auditor` runs go to the
+Tech Lead session when one exists, and otherwise open a role session.
 `skill-sub` stays a sub-agent: its answer is short and its parent needs it at once.
 Fall back to sub-agents, for the whole task, when there is no such tool, when a start is refused,
 or when the owner says "here" or "no sessions". In that fallback the main session also asks the

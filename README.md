@@ -92,8 +92,8 @@ In a host that can start sessions (the Claude desktop app), the team works in tw
 
 They fit together like this. When the project has a Tech Lead session, the tech lead, designer, executor
 (as the Developer), QA, devops and security work in the standing team, and no role session is
-opened for them; otherwise they open a role session like the others. The architect and auditor
-always open a role session. `skill-sub` is always a sub-agent, and the Business Analyst is only ever a sub session.
+opened for them; otherwise they open a role session like the others. The architect's and auditor's
+work goes to the Tech Lead session, and opens a role session only when there is none. `skill-sub` is always a sub-agent, and the Business Analyst is only ever a sub session.
 
 ### Standing sessions
 
@@ -106,7 +106,7 @@ sessions.
 
 ```
 Main session
-└── Tech Lead            triages, leads its sub sessions, relays as backup
+└── Tech Lead            triages, plans, audits, relays as backup
     ├── Business Analyst asks the owner one question at a time
     ├── Designer         proposes, briefs and reviews UI
     ├── Developer        builds one piece at a time, one local commit each
@@ -123,7 +123,7 @@ back unchanged. The owner can type to any of them directly.
 
 | Session | What it does | Main session uses it for |
 |---|---|---|
-| Tech Lead | Triages and leads the sub sessions; relays to one only as a backup. Never builds, edits, commits or pushes. | Each request, answered with a decision block. |
+| Tech Lead | Triages, plans backend pieces by the `architect` method and audits each turn by the `auditor` method; leads the sub sessions and relays to one only as a backup. Never builds, edits source, commits or pushes. | Each request (a decision block), each plan and each audit. |
 | Business Analyst | Relays questions to the owner one at a time and sends each answer back verbatim. Never answers or decides. | Question batches. |
 | Designer | Proposes, briefs and reviews UI by the `designer` agent's method. Never builds. | Every design step. |
 | Developer | Builds one piece at a time from a brief by the `executor` agent's method, with one local commit each. Never pushes or deploys. | Every build piece. |

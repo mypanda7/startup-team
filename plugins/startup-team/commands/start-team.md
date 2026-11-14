@@ -41,7 +41,7 @@ by a message, so the Tech Lead session can never start them. Follow these steps 
 
 | Session | Title | Name | Model | Brief | Agent file |
 |---|---|---|---|---|---|
-| Tech Lead | Tech Lead | `tech-lead` | sonnet | `sessions/tech-lead-session.md` | none |
+| Tech Lead | Tech Lead | `tech-lead` | opus | `sessions/tech-lead-session.md` | none |
 | Business Analyst | Business Analyst | `business-analyst` | sonnet | `sessions/business-analyst-session.md` | none |
 | Designer | Designer | `designer` | sonnet | `sessions/designer-session.md` | `agents/designer.md` |
 | Developer | Developer | `developer` | opus | `sessions/developer-session.md` | `agents/executor.md` |
