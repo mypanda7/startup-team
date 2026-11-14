@@ -10,7 +10,7 @@
     {
       "name": "startup-team",
       "source": "./plugins/startup-team",
-      "description": "A small expert team for any project: tech lead, architect, designer, executor, QA, auditor, devops and security agents, one session per role, shipping and operations skills, project-rule hooks, turn folders, shared memory and an owner-approved learning loop."
+      "description": "A small expert team for any project: tech lead, architect, designer, executor, QA, auditor, devops and security agents, one session per role, shipping and operations skills, project-rule hooks, turn folders, shared memory and an owner-approved learning loop. After installing, Claude says \"startup-team installed successfully.\" and asks whether to create the AI Tech Lead session and its six sub sessions (1 = yes, 0 = no); see the README, \"After installing\"."
     },
     {
       "name": "agent-skills",

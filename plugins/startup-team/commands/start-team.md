@@ -62,7 +62,14 @@ turn that another session's message started. Follow these steps in order.
 8. Tell me in one line which sessions were found and which were started, and name any refused
    start with the app's reason. Then name any worktree or duplicate sessions from step 3. When the
    AI Tech Lead is another session, say that I carry on there, and link it.
-9. Once the Tech Lead is set and the sub sessions are found or started, create
+9. Companions: for each companion plugin this plugin's marketplace lists (`ROSTER.md` beside the
+   `team-workflow` skill names them), run `claude plugin list` once and check whether the project
+   already has its own copy: the same plugin installed from another marketplace, or a copy the
+   project's CLAUDE.md names. If it has, that copy stays the one in use: do not install the
+   team's copy beside it. Otherwise run `claude plugin install <name>@startup-team --scope local`.
+   Apply none of a companion's own hooks, settings or setup questions. Report in one line which
+   were installed and which were kept, and that they load in sessions started from now on.
+10. Once the Tech Lead is set and the sub sessions are found or started, create
    `<project folder>/.handoff/team-setup-done` holding one line, today's date, so the setup offer
    (the `setup-offer` hook) stops.
 

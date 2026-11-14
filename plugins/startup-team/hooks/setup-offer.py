@@ -27,8 +27,8 @@ QA Engineer, DevOps, Security)? 1 = yes, 0 = no."
 The agents, sub-agents and skills already came with the package; this only creates the sessions.
 Do not start the owner's request until they answer.
 - On 1: run /startup-team:start-team on that owner turn. It starts the six sub sessions and a new
-  session titled "AI Tech Lead"; tell the owner to carry on in AI Tech Lead, and send it their
-  request.
+  session titled "AI Tech Lead" and turns on the companion plugins (a copy the project already has
+  stays in use); tell the owner to carry on in AI Tech Lead, and send it their request.
 - On 0: carry on with their request; the offer returns in the next session.
 Skip the offer silently when this session has no start_session tool (the terminal CLI), or when a
 Tech Lead session already exists for this project folder (the `tech-lead` id in

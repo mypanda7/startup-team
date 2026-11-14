@@ -19,6 +19,22 @@ claude plugin marketplace add mypanda7/startup-team
 claude plugin install startup-team@startup-team --scope local
 ```
 
+### After installing (for Claude, when it ran the install)
+
+Plugin commands and hooks load only when a session starts, so the setup question is asked here, in
+the session that installed the plugin, with no restart:
+
+1. Say "startup-team installed successfully."
+2. Ask the owner only this, and wait for the answer:
+   "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security)? 1 = yes, 0 = no."
+3. On 1, on that same owner turn: find the installed plugin's folder with `claude plugin list`,
+   read its `commands/start-team.md` and follow it step by step (the `/startup-team:start-team`
+   command itself is not loaded until a new session). It starts the six sub sessions and the AI
+   Tech Lead, turns on the companion plugins, and the owner carries on in AI Tech Lead. Without a
+   `start_session` tool (the terminal CLI), say in one line that standing sessions need the
+   desktop app and that the team keeps using its sub-agents.
+4. On 0, do nothing more: the `setup-offer` hook asks again at the start of the next session.
+
 Update later with:
 
 ```bash
