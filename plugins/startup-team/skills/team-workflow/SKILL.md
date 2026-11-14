@@ -288,9 +288,17 @@ never appears in the project, a brief, a record or a reply), and these commands:
 - `gateway.py ... launch --brief <file> --out <file> [--model <name>]`: prints a task id.
 - `gateway.py ... list [--last n]` and `gateway.py ... log <id>`: the ledger, never the key or the
   full brief. `gateway.py selftest` checks the guards without any network.
+- Options before or after the command: `--timeout <s>` (default 120); `launch --max-brief-kb n`
+  (default 200).
 Guards refuse before anything is sent (exit 2): a host that is not local unless the project's
-CLAUDE.md names it (`--allow-host`), a brief holding a word from `.handoff/private-words.txt` (the
-file must exist) or an email address, an unset key variable, an existing `--out` file.
+CLAUDE.md names it (`--allow-host`); a key variable that is unset, empty or holds whitespace or
+control characters; a `.handoff/private-words.txt` that is missing or lists no word, or a brief
+holding one of its words or an email address; an empty, non-UTF-8 or oversized brief; an `--out`
+that exists or whose folder does not. Redirects are never followed, no proxy is used, and the key
+is scrubbed from error text and from the answer. Odd replies fail cleanly (exit 1, class worker).
+The guard's limits: it can't see a word split, spaced out or disguised (look-alike letters,
+invisible characters); it misses unusual email forms ("name at domain", full-width @); and
+`--allow-host` is a convention, not enforced. The brief writer stays responsible for what is sent.
 May be delegated: research, summaries, first drafts, tests for pure functions. Never: personal
 data, secrets, or code for auth, permissions, money or migrations. Sessions stay on Claude, and
 every result is reviewed here before it is used; one that fails review is redone here.
