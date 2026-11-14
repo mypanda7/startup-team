@@ -106,7 +106,7 @@ claude plugin update startup-team@startup-team
 
 | Hook | Runs on | What it does |
 |---|---|---|
-| `setup-offer` | session start, first prompt of a session | Until the project has `.handoff/team-setup-done` (or `team-setup-started`), shows a one-line notice at session start and asks once per session whether to run `/startup-team:start-team` (1 = yes, 0 = ask again next session). |
+| `setup-offer` | session start, first prompt of a session | Until the project has `.handoff/team-setup-done`, shows a one-line notice at session start and asks once per session whether to run `/startup-team:start-team` (1 = yes, 0 = ask again next session); while a setup is started but not done, it reminds you to finish it in AI Tech Lead. The AI Tech Lead writes `team-setup-done` just before it starts the sub sessions. |
 | `tech-lead-gate` | every prompt | Reminds the session to triage first: the full text once per session, two lines after. |
 | `operating-rules` | every prompt | Prints the project's own non-negotiable rules and points at the most relevant project note. |
 | `notes` | session start, first prompt, stop | Points at the project's notes index, and reminds the session to update notes when code changed and no note did. |

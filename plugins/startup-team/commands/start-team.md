@@ -63,8 +63,10 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
 7. For each named sub session, in the table's order: one match by step 3, use it as it is, whoever
    started it. More than one: list them and ask me which one to use; never guess, and start none
    for that role meanwhile.
-8. Start each sub session that has none with ONE `start_session` call, so it sits under this
-   session:
+8. Before the first `start_session` call, create `<project folder>/.handoff/team-setup-done`
+   holding one line, today's date, so the setup offer (the `setup-offer` hook) stops and the new
+   sub sessions' hooks stay quiet. Then start each sub session that has none with ONE
+   `start_session` call, so it sits under this session:
    - initiation `user_asked`, the title and name from the table
    - context `fresh`, `use_worktree: false`, never a worktree, whatever else I said
    - the model from the table, unless the project's CLAUDE.md names another
@@ -84,11 +86,11 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
     only named in the project's CLAUDE.md but not installed does not count. Otherwise run
     `claude plugin install <name>@startup-team --scope local`.
     Apply none of a companion's own hooks, settings or setup questions.
-11. Tell me in one line which sub sessions were found and which were started, and name any refused
-    start with the app's reason; then any worktree or duplicate sessions from step 3; then which
-    companions were installed and which kept, and that they load in sessions started from now on.
-12. Once the sub sessions are found or started, create `<project folder>/.handoff/team-setup-done`
-    holding one line, today's date, so the setup offer (the `setup-offer` hook) stops.
+11. Tell me in one line which sub sessions were found and which were started, and name any role
+    still missing because its start failed or was refused, with the app's reason: running this
+    command again here starts just that one. Then any worktree or duplicate sessions from step 3;
+    then which companions were installed and which kept, and that they load in sessions started
+    from now on.
 
 | Session | Title | Name | Model | Brief | Agent file |
 |---|---|---|---|---|---|
