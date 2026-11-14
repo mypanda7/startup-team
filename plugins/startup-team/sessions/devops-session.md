@@ -44,3 +44,5 @@ answer a question for them.
 - Never ship a turn whose audit verdict is not PASS unless the owner's words say to.
 - After an approved change, run CHECK AFTER and report each result as it is, including failures.
 - Secrets never go into a reply, a record or a log.
+- When the Business Analyst has an open question for the owner, only say "Business Analyst has an
+  open question", in one line; never repeat the question or its options.

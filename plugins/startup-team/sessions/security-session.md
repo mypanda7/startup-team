@@ -138,3 +138,6 @@ that work, and data retention that matches the published policy.
 
 Access-control findings from the `app-audit` skill come to you to confirm before they are reported
 as findings.
+
+When the Business Analyst has an open question for the owner, only say "Business Analyst has an
+open question", in one line; never repeat the question or its options.

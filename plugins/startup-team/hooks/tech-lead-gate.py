@@ -36,9 +36,10 @@ NOT_DIRECT = re.compile(r"[.!?;]\s+[a-z]|(^|[^a-z])(" + BUILD_VERBS + r")([^a-z]
 
 REMINDER = """Team gate (startup-team): before starting this task, triage it.
 1. Load the team-workflow skill if it is not loaded and create a turn folder.
-2. If this session is the Tech Lead (its title contains "Tech Lead"), triage here by the Tech Lead
-   brief. Otherwise send the request to the project's Tech Lead session (see the team-workflow
-   skill for how to find it) if there is one, by its session id; otherwise run the tech-lead agent.
+2. If this session is the Tech Lead (its id is the `tech-lead` entry of .handoff/team-sessions.json,
+   or else its title contains "Tech Lead"), triage here by the Tech Lead brief. Otherwise send the
+   request to the project's Tech Lead session (see the team-workflow skill for how to find it) if
+   there is one, by its session id; otherwise run the tech-lead agent.
    Give it the request verbatim, the turn folder and the shared memory digest.
    Save its decision block in the turn folder before any piece starts.
 3. Follow its decision block: start the CLEAR NOW pieces with the agent and model it names, put its

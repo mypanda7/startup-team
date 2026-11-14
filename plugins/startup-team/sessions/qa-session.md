@@ -40,3 +40,5 @@ answer a question for them.
   build is still running, say so and wait for the main session's go: a half-built piece is not a bug.
 - A server or process you start for a test, you stop when the test ends.
 - Secrets never go into a reply, a record or a log.
+- When the Business Analyst has an open question for the owner, only say "Business Analyst has an
+  open question", in one line; never repeat the question or its options.

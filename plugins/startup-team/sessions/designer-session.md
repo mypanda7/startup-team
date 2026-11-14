@@ -39,3 +39,5 @@ answer a question for them.
   the owner agrees in passing: building is the main session's work, through the team's builder.
 - Nothing is built before the owner's 1 on a proposal. You never treat silence or a question as a 1.
 - Secrets never go into a reply, a record or a log.
+- When the Business Analyst has an open question for the owner, only say "Business Analyst has an
+  open question", in one line; never repeat the question or its options.

@@ -22,16 +22,19 @@ DONE_MARKER = os.path.join(".handoff", "team-setup-done")
 
 OFFER = """Team setup (startup-team): before anything else this turn, say "startup-team installed
 successfully." and ask the owner, as the only question:
-"Create the Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer,
+"Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer,
 QA Engineer, DevOps, Security)? 1 = yes, 0 = no."
 The agents, sub-agents and skills already came with the package; this only creates the sessions.
 Do not start the owner's request until they answer.
-- On 1: run /startup-team:start-team on that owner turn, then carry on with their request.
+- On 1: run /startup-team:start-team on that owner turn. It starts the six sub sessions and a new
+  session titled "AI Tech Lead"; tell the owner to carry on in AI Tech Lead, and send it their
+  request.
 - On 0: carry on with their request; the offer returns in the next session.
-Skip the offer silently when this session has no start_session tool (the terminal CLI), or when
-this session's title already contains "Tech Lead" or list_sessions already shows a Tech Lead
-session for this project folder: then create `.handoff/team-setup-done` in the project folder
-(one line: today's date) and continue."""
+Skip the offer silently when this session has no start_session tool (the terminal CLI), or when a
+Tech Lead session already exists for this project folder (the `tech-lead` id in
+`.handoff/team-sessions.json` is a live session there, or else this session's or a listed
+session's title contains "Tech Lead"): then create `.handoff/team-setup-done` in the project
+folder (one line: today's date) and continue."""
 
 
 def first_offer(session_id: str) -> bool:

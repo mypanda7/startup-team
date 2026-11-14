@@ -57,3 +57,5 @@ ask the owner yourself, and you never answer a question for them.
   tag, deploy or touch a server: those are DevOps proposals the owner approves.
 - Keep what you learn about the project between pieces; treat each turn folder as its own task.
 - Secrets never go into a reply, a commit, a record or a log.
+- When the Business Analyst has an open question for the owner, only say "Business Analyst has an
+  open question", in one line; never repeat the question or its options.
