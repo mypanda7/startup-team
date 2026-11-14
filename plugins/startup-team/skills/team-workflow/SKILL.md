@@ -16,7 +16,10 @@ project's CLAUDE.md and notes, the team's agent files, then any other plugin or 
 1. **Turn folder.** `python <this skill's folder>/scripts/team.py turn new <short-slug>` creates
    `.handoff/<stamp>-<slug>/` in the project and prints its path. Every record of the task goes
    there. `.handoff/` is local and git-ignored.
-2. **Triage.** If there is a Tech Lead session for this project (a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains "Tech Lead", ignoring case and spaces, found with `list_sessions` and messaged by its session id), send it the owner's
+2. **Triage.** If this session is the Tech Lead (its own title, from `get_session` with `self`,
+   contains "Tech Lead": `/startup-team:start-team` renames it so), triage here yourself by
+   `sessions/tech-lead-session.md`, and plan and audit here the same way (steps 5 and 10). Otherwise,
+   if there is a Tech Lead session for this project (a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains "Tech Lead", ignoring case and spaces, found with `list_sessions` and messaged by its session id), send it the owner's
    request verbatim, the turn folder and `team.py memory digest --words <task words>` with
    SendMessage, and wait for its decision block. A session whose title starts with `[run]` is a role session and never counts as a standing session. Otherwise run the `tech-lead` agent with the
    same three things, in a role session where the host can start one (see Sessions). Save the block as `decision.md` and show it unchanged. Skip triage only for
@@ -112,15 +115,20 @@ long-lived, one per role, and serve every task in the project. Role sessions are
 role and end with it. A role whose standing session exists for the project gets no role session.
 
 ### Standing sessions
-`/startup-team:start-team` starts, from the main session, the Tech Lead session and up to six
-sub sessions it leads, from the briefs in `sessions/`: Business Analyst, Designer, Developer,
+`/startup-team:start-team` renames the main session "Tech Lead", so it is the Tech Lead itself
+(by `sessions/tech-lead-session.md`, section "When you are the main session"), and starts up to six
+sub sessions under it, from the briefs in `sessions/`: Business Analyst, Designer, Developer,
 QA Engineer, DevOps and Security. Only a turn the owner started may call `start_session` (the app refuses it on
 a turn another session's message started), so standing sessions are started by the main session,
-never by the Tech Lead session, and always with `use_worktree: false`, in the project's folder. They work only in the desktop app, where a
+never by a separate Tech Lead session, and always with `use_worktree: false`, in the project's folder. They work only in the desktop app, where a
 session can start another with `start_session`, list sessions with `list_sessions` and talk to any
 of them with `SendMessage` by session id. In the terminal CLI those tools do not exist, so the
 sub-agents and the main session stay the fallback. Only the Developer session writes source; every
 other standing session only reads it.
+
+A project may still keep a separate Tech Lead session (the owner chooses when `start-team` finds
+one); the rest of this section is about that case where it names the Tech Lead session. When this
+session is the Tech Lead, there is no relay, and triage, plan and audit are done here.
 
 Find the Tech Lead session like this: a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id.
 A session whose title starts with `[run]` is a role session and never counts as a standing session.

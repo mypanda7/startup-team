@@ -97,16 +97,15 @@ work goes to the Tech Lead session, and opens a role session only when there is 
 
 ### Standing sessions
 
-`/startup-team:start-team` starts the Tech Lead session and its sub sessions in the Claude desktop
-app's sidebar, each from its brief in `sessions/`, all from the main session and in the project's
-own folder (never a worktree). The app only lets a turn the owner started call `start_session`, so
-the Tech Lead session, whose turns are always started by a message, never starts sessions itself. Pass any of
+`/startup-team:start-team` renames the session you run it in "Tech Lead", so your main session is
+the Tech Lead, and starts its sub sessions under it in the Claude desktop app's sidebar, each from
+its brief in `sessions/`, in the project's own folder (never a worktree). The app only lets a turn the owner started call `start_session`, so
+a separate Tech Lead session, whose turns are always started by a message, could never start them. Pass any of
 `business-analyst`, `designer`, `developer`, `qa`, `devops` or `security` to start only those sub
 sessions.
 
 ```
-Main session
-└── Tech Lead            triages, plans, audits, relays as backup
+Tech Lead (your main session)  triages, plans, audits
     ├── Business Analyst asks the owner one question at a time
     ├── Designer         proposes, briefs and reviews UI
     ├── Developer        builds one piece at a time, one local commit each
@@ -115,15 +114,15 @@ Main session
     └── Security         analysis only
 ```
 
-The Tech Lead session leads the sub sessions, and the main session messages each of them
-directly. The relay through the Tech Lead is the backup only: when the main session cannot find or
-reach a sub session, it sends the Tech Lead session a message marked `FOR: <name>`, and the Tech
-Lead session passes the message on unchanged and sends the reply
-back unchanged. The owner can type to any of them directly.
+The Tech Lead is your main session: it triages, plans and audits there, and messages each sub
+session directly. A project may instead keep a separate Tech Lead session (`start-team` asks when
+it finds one); then the main session sends it each request, and it relays to a sub session only as
+a backup, when the main session cannot find or reach one. The owner can type to any of them
+directly.
 
 | Session | What it does | Main session uses it for |
 |---|---|---|
-| Tech Lead | Triages, plans backend pieces by the `architect` method and audits each turn by the `auditor` method; leads the sub sessions and relays to one only as a backup. Never builds, edits source, commits or pushes. | Each request (a decision block), each plan and each audit. |
+| Tech Lead (main session) | Triages, plans backend pieces by the `architect` method and audits each turn by the `auditor` method; starts and leads the sub sessions. Never builds, edits source, commits or pushes. | Each request (a decision block), each plan and each audit. |
 | Business Analyst | Relays questions to the owner one at a time and sends each answer back verbatim. Never answers or decides. | Question batches. |
 | Designer | Proposes, briefs and reviews UI by the `designer` agent's method. Never builds. | Every design step. |
 | Developer | Builds one piece at a time from a brief by the `executor` agent's method, with one local commit each. Never pushes or deploys. | Every build piece. |
@@ -133,8 +132,9 @@ back unchanged. The owner can type to any of them directly.
 
 A session exists for a role when there is a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id. A session whose title starts with `[run]` is a role session and never counts as a standing session.
 An existing session is used, whoever started it, and a second one is never started. If more than
-one session matches a role, they are listed and the owner says which one to use. The command starts
-only the Tech Lead session and its six sub sessions, and no other session starts them. Only the
+one session matches a role, they are listed and the owner says which one to use. The command renames
+the session it runs in "Tech Lead" and starts only its six sub sessions, and no other session
+starts them. Only the
 Developer session writes source.
 
 ### Role sessions
