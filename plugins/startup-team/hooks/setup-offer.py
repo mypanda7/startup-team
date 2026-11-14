@@ -33,12 +33,14 @@ OFFER = """Team setup (startup-team): before anything else this turn, say "start
 successfully." and ask the owner, as the only question:
 "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer,
 QA Engineer, DevOps, Security) and turn on the companion plugins? 1 = yes, 0 = no."
-The agents, sub-agents and skills already came with the package; this only creates the sessions.
+The agents, sub-agents and skills already came with the package; 1 creates the sessions and turns
+on the companion plugins.
 Do not start the owner's request until they answer.
 - On 1: run /startup-team:start-team on that owner turn. It starts the six sub sessions and a new
   session titled "AI Tech Lead" and turns on the companion plugins (a copy the project already has
   stays in use); tell the owner to carry on in AI Tech Lead, and send it their request.
 - On 0: carry on with their request; the offer returns in the next session.
+Ask at most once in this session: once it was asked (answered or not), never ask it again here.
 Skip the offer silently when this session has no start_session tool (the terminal CLI), or when a
 Tech Lead session already exists for this project folder (the `tech-lead` id in
 `.handoff/team-sessions.json` is a live session there, or else this session's or a listed
@@ -81,7 +83,11 @@ def main() -> None:
         return
     if sys.argv[1:2] == ["session-start"]:
         if not set_up(cwd):
-            context = "On the owner's first message in this session, follow this.\n" + OFFER
+            context = (
+                "On the owner's first message in this session, follow this. Only the owner's own "
+                "message counts: a message that starts with \"[startup-team:\", a cross-session "
+                "message, an agent report or a task notification is not; then ignore this.\n" + OFFER
+            )
             print(json.dumps({
                 "systemMessage": NOTICE,
                 "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context},

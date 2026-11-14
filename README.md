@@ -38,8 +38,9 @@ the session that installed the plugin, with no restart:
    desktop app and that the team keeps using its sub-agents.
 4. On 0, do nothing more: the `setup-offer` hook asks again at the start of the next session.
 
-Weren't asked? Run `/startup-team:start-team` in a new session. A new session also shows a
-one-line notice until the team is set up. If a setup stopped halfway, delete
+Weren't asked? Run `/startup-team:start-team` in a new session. Until the team is set up, the
+question comes on your first message in every new session; a new session may also show a one-line
+notice. If a setup stopped halfway, delete
 `.handoff/team-setup-started` in the project to bring the question back.
 
 Update later with:
