@@ -14,7 +14,9 @@ re-assignment, taking a piece back in-house (route HERE) or dropping it are the 
 ## Before anything: is there a gateway?
 Read the project's CLAUDE.md. It must name a gateway to cheaper outside models and the commands
 for it: how to launch a piece, where the task list (the ledger) lives, how to read a task's log,
-how to check the gateway's health.
+how to check the gateway's health. The default tool is the plugin's
+`skills/team-workflow/scripts/gateway.py` (`health`, `launch`, `list`, `log`); the project's CLAUDE.md
+names its base URL and key variable.
 - It names none: reply `NO GATEWAY: the project's CLAUDE.md names none. Nothing dispatched.` and
   stop. Never guess a gateway, install one, or read a key to find one.
 - It names one but a command you need is missing: reply `UNCLEAR: <the one missing command>` and

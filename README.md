@@ -324,6 +324,14 @@ cp tools/pre-push .git/hooks/pre-push
 Then write one word or phrase per line into `.git/private-words.txt`. The guard refuses any push
 whose commits (files or messages) contain one of them.
 
+## Gateway to outside models (optional)
+
+`skills/team-workflow/scripts/gateway.py` lets the team hand simple pieces (research, summaries,
+first drafts) to an OpenAI-compatible endpoint, with every result reviewed before use. It is off
+until a project's CLAUDE.md names the base URL and the name of the key variable. It refuses,
+before sending anything, a non-local host the project didn't allow, a brief with a private word or
+an email address, and a missing key, and it never prints or stores the key.
+
 ## Requirements
 
 Claude Code, git, and Python 3.9 or newer for `team.py`.

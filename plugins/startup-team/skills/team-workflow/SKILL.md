@@ -279,6 +279,22 @@ Only the rule's one line leaves the project. Its evidence, the turn folder, the 
 proposal log stay in the project's `.handoff/`. Nothing about one project, its owner, its users, its
 hosts or its secrets ever goes into the team repository, in a file or in a commit message.
 
+## Gateway (optional: delegated pieces on outside models)
+`scripts/gateway.py` beside this skill sends a delegated piece to an OpenAI-compatible endpoint
+and keeps a ledger in `.handoff/gateway/ledger.jsonl`. A project switches it on by naming, in its
+CLAUDE.md, the base URL, the NAME of the environment variable that holds the key (the key itself
+never appears in the project, a brief, a record or a reply), and these commands:
+- `gateway.py --base-url <url> --key-env <NAME> health`: `ok <n models>`, `down <reason>` or `auth`.
+- `gateway.py ... launch --brief <file> --out <file> [--model <name>]`: prints a task id.
+- `gateway.py ... list [--last n]` and `gateway.py ... log <id>`: the ledger, never the key or the
+  full brief. `gateway.py selftest` checks the guards without any network.
+Guards refuse before anything is sent (exit 2): a host that is not local unless the project's
+CLAUDE.md names it (`--allow-host`), a brief holding a word from `.handoff/private-words.txt` (the
+file must exist) or an email address, an unset key variable, an existing `--out` file.
+May be delegated: research, summaries, first drafts, tests for pure functions. Never: personal
+data, secrets, or code for auth, permissions, money or migrations. Sessions stay on Claude, and
+every result is reviewed here before it is used; one that fails review is redone here.
+
 ## Setup changes (opt-in: straight to the team repo's main)
 A setup change is an owner instruction about how the team itself is set up or works: session
 names, which sessions start, how sessions talk to each other, rules every session follows. Product
