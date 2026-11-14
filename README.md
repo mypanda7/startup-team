@@ -51,6 +51,7 @@ claude plugin update startup-team@startup-team
 
 | Hook | Runs on | What it does |
 |---|---|---|
+| `setup-offer` | first prompt of a session | Until the project has `.handoff/team-setup-done`, asks once per session whether to run `/startup-team:start-team` (1 = yes, 0 = ask again next session). |
 | `tech-lead-gate` | every prompt | Reminds the session to triage first: the full text once per session, two lines after. |
 | `operating-rules` | every prompt | Prints the project's own non-negotiable rules and points at the most relevant project note. |
 | `notes` | session start, first prompt, stop | Points at the project's notes index, and reminds the session to update notes when code changed and no note did. |

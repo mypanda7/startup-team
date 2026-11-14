@@ -52,6 +52,9 @@ started. Follow these steps in order.
    start with the app's reason. Then name any worktree or duplicate sessions from step 3. If this
    session became the Tech Lead and does not run on the table's Tech Lead model, say so: only I can
    change this session's model, in the model menu.
+9. Once the Tech Lead is set and the sub sessions are found or started, create
+   `<project folder>/.handoff/team-setup-done` holding one line, today's date, so the setup offer
+   (the `setup-offer` hook) stops.
 
 | Session | Title | Name | Model | Brief | Agent file |
 |---|---|---|---|---|---|
