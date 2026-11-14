@@ -23,13 +23,22 @@ if (-not $WhatIf -and -not (Get-Command claude -ErrorAction SilentlyContinue)) {
     throw "install failed: the claude command was not found. Install Claude Code first."
 }
 
-$added = $false
+# "Already added" means a marketplace NAMED startup-team, whatever its source; never re-add or replace it.
+$ours = $null
 if (-not $WhatIf) {
-    $list = & claude plugin marketplace list 2>$null | Out-String
-    $added = $list -match [regex]::Escape($Marketplace)
+    try {
+        $ours = (& claude plugin marketplace list --json 2>$null | Out-String | ConvertFrom-Json) |
+            Where-Object { $_.name -eq "startup-team" } | Select-Object -First 1
+    } catch { $ours = $null }
 }
-if ($added) {
-    Write-Output "Marketplace $Marketplace is already added."
+if ($ours) {
+    $source = @($ours.repo, $ours.url, $ours.path) | Where-Object { $_ } | Select-Object -First 1
+    if ($source -eq $Marketplace) {
+        Write-Output "Marketplace startup-team is already added."
+    } else {
+        if (-not $source) { $source = "another source" }
+        Write-Output "Marketplace startup-team is already added from $source; using that source."
+    }
 } else {
     Invoke-Step @("plugin", "marketplace", "add", $Marketplace) "could not add the marketplace $Marketplace."
 }

@@ -23,8 +23,17 @@ if [ "$DRY" -eq 0 ] && ! command -v claude >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ "$DRY" -eq 0 ] && claude plugin marketplace list 2>/dev/null | grep -q "$MARKETPLACE"; then
-  echo "Marketplace $MARKETPLACE is already added."
+# "Already added" means a marketplace NAMED startup-team, whatever its source; never re-add or replace it.
+LIST=""
+[ "$DRY" -eq 0 ] && LIST="$(claude plugin marketplace list --json 2>/dev/null)"
+FOUND="$(printf '%s\n' "$LIST" | awk -F'"' '/"name":/ && $4 == "startup-team" { print "yes"; exit }')"
+SOURCE="$(printf '%s\n' "$LIST" | awk -F'"' '/"name":/ { ours = ($4 == "startup-team") } ours && /"(repo|url|path)":/ { print $4; exit }')"
+if [ "$FOUND" = "yes" ]; then
+  if [ "$SOURCE" = "$MARKETPLACE" ]; then
+    echo "Marketplace startup-team is already added."
+  else
+    echo "Marketplace startup-team is already added from ${SOURCE:-another source}; using that source."
+  fi
 else
   run claude plugin marketplace add "$MARKETPLACE" || {
     echo "install failed: could not add the marketplace $MARKETPLACE." >&2

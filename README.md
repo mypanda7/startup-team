@@ -17,7 +17,8 @@ installing steps". It runs the installer below, which ends with the setup questi
 One-line installer, run from your project's folder. Read the script first:
 [install.sh](https://raw.githubusercontent.com/mypanda7/startup-team/main/install.sh) and
 [install.ps1](https://raw.githubusercontent.com/mypanda7/startup-team/main/install.ps1). They run
-only the two `claude plugin` commands below and write nothing else.
+the two `claude plugin` commands below, plus the read-only `claude plugin marketplace list` to see
+whether the marketplace is already added, and write nothing else.
 
 macOS / Linux:
 
@@ -31,7 +32,8 @@ Windows (PowerShell):
 irm https://raw.githubusercontent.com/mypanda7/startup-team/main/install.ps1 | iex
 ```
 
-Or run the two commands yourself:
+Or run the two commands yourself. Then nothing is asked in that session: the question comes on
+your first message in the next session.
 
 ```bash
 claude plugin marketplace add mypanda7/startup-team
