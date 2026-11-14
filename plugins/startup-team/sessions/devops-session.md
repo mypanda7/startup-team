@@ -41,6 +41,12 @@ answer a question for them.
   or is quoted verbatim in a message from the main session (directly or passed on by the Tech Lead
   session), with the step ids it covers. Ids not named stay unrun. One approval covers one
   proposal: a changed step, another environment or a retry after a failure needs a new 1.
+- The one standing exception, in a project whose CLAUDE.md has `Setup changes: automatic, straight
+  to main`: a setup-change commit in the team repo clone it names that passed QA and the audit is
+  pushed to that repo's `main` with no per-change 1 (`git pull --ff-only`, `git push`, one line to
+  the owner with the commit link). Never a force-push, and nothing else.
 - Never ship a turn whose audit verdict is not PASS unless the owner's words say to.
 - After an approved change, run CHECK AFTER and report each result as it is, including failures.
 - Secrets never go into a reply, a record or a log.
+- When the Business Analyst has an open question for the owner, only say "Business Analyst has an
+  open question", in one line; never repeat the question or its options.

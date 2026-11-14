@@ -16,10 +16,11 @@ project's CLAUDE.md and notes, the team's agent files, then any other plugin or 
 1. **Turn folder.** `python <this skill's folder>/scripts/team.py turn new <short-slug>` creates
    `.handoff/<stamp>-<slug>/` in the project and prints its path. Every record of the task goes
    there. `.handoff/` is local and git-ignored.
-2. **Triage.** If this session is the Tech Lead (its own title, from `get_session` with `self`,
-   contains "Tech Lead": `/startup-team:start-team` renames it so), triage here yourself by
+2. **Triage.** If this session is the Tech Lead (its own id, from `get_session` with `self`, is the
+   `tech-lead` entry of `.handoff/team-sessions.json`, or else its title contains "Tech Lead";
+   `/startup-team:start-team` starts it as "AI Tech Lead"), triage here yourself by
    `sessions/tech-lead-session.md`, and plan and audit here the same way (steps 5 and 10). Otherwise,
-   if there is a Tech Lead session for this project (a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains "Tech Lead", ignoring case and spaces, found with `list_sessions` and messaged by its session id), send it the owner's
+   if there is a Tech Lead session for this project (a session whose id `.handoff/team-sessions.json` names for the role and that `list_sessions` shows non-archived in the project's folder, whatever its title is now; failing that, a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains "Tech Lead", ignoring case and spaces, found with `list_sessions` and messaged by its session id), send it the owner's
    request verbatim, the turn folder and `team.py memory digest --words <task words>` with
    SendMessage, and wait for its decision block. A session whose title starts with `[run]` is a role session and never counts as a standing session. Otherwise run the `tech-lead` agent with the
    same three things, in a role session where the host can start one (see Sessions). Save the block as `decision.md` and show it unchanged. Skip triage only for
@@ -115,10 +116,13 @@ long-lived, one per role, and serve every task in the project. Role sessions are
 role and end with it. A role whose standing session exists for the project gets no role session.
 
 ### Standing sessions
-`/startup-team:start-team` renames the main session "Tech Lead", so it is the Tech Lead itself
-(by `sessions/tech-lead-session.md`, section "When you are the main session"), and starts up to six
-sub sessions under it, from the briefs in `sessions/`: Business Analyst, Designer, Developer,
-QA Engineer, DevOps and Security. Only a turn the owner started may call `start_session` (the app refuses it on
+`/startup-team:start-team`, run in the session where the owner answers the setup offer, starts up
+to six sub sessions from the briefs in `sessions/` (Business Analyst, Designer, Developer,
+QA Engineer, DevOps and Security) and one more session titled "AI Tech Lead", where the owner
+carries on; there the AI Tech Lead is the main session (by `sessions/tech-lead-session.md`,
+section "When you are the main session"). It writes `.handoff/team-sessions.json`, each role's
+session id and title, and every rule below that finds a session reads that registry first, so a
+renamed session is still found. When the Business Analyst has an open question for the owner, only say "Business Analyst has an open question", in one line; never repeat the question or its options. Only a turn the owner started may call `start_session` (the app refuses it on
 a turn another session's message started), so standing sessions are started by the main session,
 never by a separate Tech Lead session, and always with `use_worktree: false`, in the project's folder. They work only in the desktop app, where a
 session can start another with `start_session`, list sessions with `list_sessions` and talk to any
@@ -130,7 +134,7 @@ A project may still keep a separate Tech Lead session (the owner chooses when `s
 one); the rest of this section is about that case where it names the Tech Lead session. When this
 session is the Tech Lead, there is no relay, and triage, plan and audit are done here.
 
-Find the Tech Lead session like this: a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id.
+Find the Tech Lead session like this: a session whose id `.handoff/team-sessions.json` names for the role and that `list_sessions` shows non-archived in the project's folder, whatever its title is now; failing that, a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id.
 A session whose title starts with `[run]` is a role session and never counts as a standing session.
 Whoever started it, it is used, and a second one is never started. If more than one session matches, list them and ask the owner which one to use; never guess, and start none meanwhile.
 
@@ -242,7 +246,7 @@ A skill that is not installed comes back `SKILL NOT FOUND`; the agent carries on
 ## Shared memory
 `team.py memory add | query | digest | done` keeps one append-only file per project at
 `.handoff/memory/agent-memory.jsonl`. Kinds: `owner-answer`, `fact`, `open-item`, `pointer`,
-`learned`. Everything except an owner answer needs `--evidence` (a path, a command or a turn id).
+`learned`, `setup-change` (see "Setup changes"). Everything except an owner answer needs `--evidence` (a path, a command or a turn id).
 Pass the digest into every brief. Text that looks like a secret is refused: never store one.
 
 After each piece, record how the model choice went so the tech lead picks better next time:
@@ -272,6 +276,32 @@ The team repository improves from what projects learn, and only generic rules ev
 Only the rule's one line leaves the project. Its evidence, the turn folder, the memory file and the
 proposal log stay in the project's `.handoff/`. Nothing about one project, its owner, its users, its
 hosts or its secrets ever goes into the team repository, in a file or in a commit message.
+
+## Setup changes (opt-in: straight to the team repo's main)
+A setup change is an owner instruction about how the team itself is set up or works: session
+names, which sessions start, how sessions talk to each other, rules every session follows. Product
+work and project facts (the project's code, copy, design, hosting, data, owner answers about the
+product) are never setup changes, and stay in the project.
+
+It applies only when the project's CLAUDE.md has the line `Setup changes: automatic, straight to
+main` and names the team repository clone with `TEAM REPO CLONE: <path>`. Every other project uses
+the learning loop above, with the owner's 1/0 for each rule.
+
+Flow, per change:
+1. **Record.** The Tech Lead records it: `team.py memory add --kind setup-change --source tech-lead
+   --evidence <turn> --text "<owner's words> -> <the generic rule>"`.
+2. **Build.** The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words
+   only, as ONE commit on `main` that also raises the plugin's patch version.
+3. **QA, then audit.** The audit includes the privacy check: `git show <commit>` (diff and message)
+   holds none of the words in the project's `.handoff/private-words.txt` (which must exist) and none
+   of what `team.py learn propose` refuses in added lines: a secret, an email, an IP address, a
+   local path, the project's name or its web addresses.
+4. **Push.** DevOps runs `git pull --ff-only`, then `git push` to `main`, with no per-change 1 (the
+   CLAUDE.md line is the owner's standing approval). Never a force-push. Then it tells the owner in
+   one line, with the commit link.
+5. **Rollback.** A bad change is undone with `git revert` on `main`, through the same flow.
+A failed QA, audit or privacy check, or a pull that is not a fast-forward, stops the push and goes
+to the owner.
 
 ## What stays in the project
 Brand and design rules, the stack, hosting and deploy steps, standing owner decisions and the
