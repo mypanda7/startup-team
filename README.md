@@ -26,7 +26,7 @@ the session that installed the plugin, with no restart:
 
 1. Say "startup-team installed successfully."
 2. Ask the owner only this, and wait for the answer:
-   "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security)? 1 = yes, 0 = no."
+   "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security) and turn on the companion plugins? 1 = yes, 0 = no."
 3. On 1, on that same owner turn: find the installed plugin's folder with `claude plugin list`,
    read its `commands/start-team.md` and follow it step by step (the `/startup-team:start-team`
    command itself is not loaded until a new session). It starts the six sub sessions and the AI
