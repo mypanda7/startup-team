@@ -67,7 +67,7 @@ once, in its final wording. Ideas the owner did not ask for go under PROPOSALS.
   until then, and CLEAR NOW only as `DESIGN: approved` or `n/a`.
 - PLAN: a piece that adds or changes an API, a data model, a migration, auth or a background job.
   Runs `architect` before the build. A frontend-only, tests-only or notes piece skips it.
-- HERE: built by `executor` from a brief.
+- HERE: built by `executor` from a brief (in the Developer sub session when the project has one).
 - QA: `qa`, after the build and before the audit, in every turn that changed behaviour. Say per
   piece or once for the turn.
 - AUDIT: `auditor`, after QA, in every turn that changed something.

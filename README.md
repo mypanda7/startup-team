@@ -44,7 +44,7 @@ claude plugin update startup-team@startup-team
 | `skills/team-workflow` | The chain for the main session, plus `scripts/team.py`, the skill roster (`ROSTER.md`) and the project templates. |
 | `skills/` (the rest) | Shipping, testing and operations skills: see "Skills" below. |
 | `commands/` | `/startup-team:triage`, `:design`, `:plan`, `:qa`, `:audit`, `:dispatch`, `:learn`, `:companions`, `:start-team` (starts the standing sessions). |
-| `sessions/` | The standing briefs for the Tech Lead, Business Analyst, Designer, QA Engineer, DevOps and Security sessions. |
+| `sessions/` | The standing briefs for the Tech Lead, Business Analyst, Designer, Developer, QA Engineer, DevOps and Security sessions. |
 | `hooks/` | The team gate, plus the project's operating rules and notes reminders: see "Hooks" below. |
 
 ### Hooks
@@ -84,16 +84,16 @@ names another rules file.
 
 In a host that can start sessions (the Claude desktop app), the team works in two kinds of session.
 
-- **Standing sessions** are long-lived: one Tech Lead session per project and, under it, up to five
-  sub sessions (Business Analyst, Designer, QA Engineer, DevOps, Security), started once and used
+- **Standing sessions** are long-lived: one Tech Lead session per project and, under it, up to six
+  sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), started once and used
   for every task.
 - **Role sessions** are opened for one run of a role and end with it, so the owner can open, steer
   and stop each run on its own.
 
-They fit together like this. When the project has a Tech Lead session, the tech lead, designer, QA,
-devops and security work in the standing team, and no role session is opened for them; otherwise
-they open a role session like the others. The architect, executor and auditor always open a role
-session. `skill-sub` is always a sub-agent, and the Business Analyst is only ever a sub session.
+They fit together like this. When the project has a Tech Lead session, the tech lead, designer, executor
+(as the Developer), QA, devops and security work in the standing team, and no role session is
+opened for them; otherwise they open a role session like the others. The architect and auditor
+always open a role session. `skill-sub` is always a sub-agent, and the Business Analyst is only ever a sub session.
 
 ### Standing sessions
 
@@ -101,13 +101,15 @@ session. `skill-sub` is always a sub-agent, and the Business Analyst is only eve
 app's sidebar, each from its brief in `sessions/`, all from the main session and in the project's
 own folder (never a worktree). The app only lets a turn the owner started call `start_session`, so
 the Tech Lead session, whose turns are always started by a message, never starts sessions itself. Pass any of
-`business-analyst`, `designer`, `qa`, `devops` or `security` to start only those sub sessions.
+`business-analyst`, `designer`, `developer`, `qa`, `devops` or `security` to start only those sub
+sessions.
 
 ```
 Main session
 └── Tech Lead            triages, leads its sub sessions, relays as backup
     ├── Business Analyst asks the owner one question at a time
     ├── Designer         proposes, briefs and reviews UI
+    ├── Developer        builds one piece at a time, one local commit each
     ├── QA Engineer      runs the product, PASS or FAIL
     ├── DevOps           proposes every push or deploy
     └── Security         analysis only
@@ -124,6 +126,7 @@ back unchanged. The owner can type to any of them directly.
 | Tech Lead | Triages and leads the sub sessions; relays to one only as a backup. Never builds, edits, commits or pushes. | Each request, answered with a decision block. |
 | Business Analyst | Relays questions to the owner one at a time and sends each answer back verbatim. Never answers or decides. | Question batches. |
 | Designer | Proposes, briefs and reviews UI by the `designer` agent's method. Never builds. | Every design step. |
+| Developer | Builds one piece at a time from a brief by the `executor` agent's method, with one local commit each. Never pushes or deploys. | Every build piece. |
 | QA Engineer | Runs the product and reports PASS or FAIL with steps to reproduce. Never fixes. | Testing, once the pieces are built. |
 | DevOps | Read-only analysis, and proposals for every push or deploy. Runs nothing before the owner's 1. | Shipping and server checks. |
 | Security | Analysis only: findings by severity, fixes as proposals for the owner. | Security checks. |
@@ -131,8 +134,8 @@ back unchanged. The owner can type to any of them directly.
 A session exists for a role when there is a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id. A session whose title starts with `[run]` is a role session and never counts as a standing session.
 An existing session is used, whoever started it, and a second one is never started. If more than
 one session matches a role, they are listed and the owner says which one to use. The command starts
-only the Tech Lead session and its five sub sessions, and no other session starts them. Standing
-sessions never write source.
+only the Tech Lead session and its six sub sessions, and no other session starts them. Only the
+Developer session writes source.
 
 ### Role sessions
 

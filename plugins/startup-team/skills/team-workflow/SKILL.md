@@ -112,14 +112,15 @@ long-lived, one per role, and serve every task in the project. Role sessions are
 role and end with it. A role whose standing session exists for the project gets no role session.
 
 ### Standing sessions
-`/startup-team:start-team` starts, from the main session, the Tech Lead session and up to five
-sub sessions it leads, from the briefs in `sessions/`: Business Analyst, Designer, QA Engineer,
-DevOps and Security. Only a turn the owner started may call `start_session` (the app refuses it on
+`/startup-team:start-team` starts, from the main session, the Tech Lead session and up to six
+sub sessions it leads, from the briefs in `sessions/`: Business Analyst, Designer, Developer,
+QA Engineer, DevOps and Security. Only a turn the owner started may call `start_session` (the app refuses it on
 a turn another session's message started), so standing sessions are started by the main session,
 never by the Tech Lead session, and always with `use_worktree: false`, in the project's folder. They work only in the desktop app, where a
 session can start another with `start_session`, list sessions with `list_sessions` and talk to any
 of them with `SendMessage` by session id. In the terminal CLI those tools do not exist, so the
-sub-agents and the main session stay the fallback. Standing sessions never write source.
+sub-agents and the main session stay the fallback. Only the Developer session writes source; every
+other standing session only reads it.
 
 Find the Tech Lead session like this: a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id.
 A session whose title starts with `[run]` is a role session and never counts as a standing session.
@@ -129,7 +130,7 @@ Whoever started it, it is used, and a second one is never started. If more than 
 each one yourself. Find a sub session by the same rule as the Tech Lead session, with its own title
 ("Business Analyst", "Designer", "QA Engineer", "DevOps", "Security"), and send it its work with
 `SendMessage` by session id, under a first line `[startup-team:<name>]` (`business-analyst`,
-`designer`, `qa`, `devops` or `security`). It replies to you.
+`designer`, `developer`, `qa`, `devops` or `security`). It replies to you.
 - **Tech Lead** (`tech-lead`): triage. Send the owner's request verbatim, the turn folder and the
   memory digest. It replies with the decision block.
 - **Business Analyst** (`business-analyst`): a question batch. Answers come back one at a time,
@@ -137,8 +138,11 @@ each one yourself. Find a sub session by the same rule as the Tech Lead session,
   session: there is no Business Analyst agent or role session.
 - **Designer** (`designer`): a design step with its mode (PROPOSE, BRIEF or REVIEW). The reply
   names its record files.
-- **QA Engineer** (`qa`): step 8, only once the pieces are committed and no `executor` is
-  building. The QA record lands in the turn folder.
+- **Developer** (`developer`): step 6, one HERE piece at a time, with the executor's brief. It
+  makes one local commit and replies with the result file, the commit and the VERIFY results, or
+  `STATUS: BLOCKED`. Send the next piece only after it says nothing is building.
+- **QA Engineer** (`qa`): step 8, only once the pieces are committed and no `executor` (or
+  Developer session) is building. The QA record lands in the turn folder.
 - **DevOps** (`devops`): ANALYSE and PROPOSE requests. When the owner approves a proposal, send
   the 1 on in the owner's words, verbatim; nothing runs without that.
 - **Security** (`security`): a security check. Its fixes come back as proposals for the owner,
@@ -165,8 +169,9 @@ stopped on its own. Installing this plugin is that standing request: do not ask 
 `executor`, `qa`, `auditor`, `devops` and `security` goes into its own session instead of a
 sub-agent, except a role that has a standing session for the project: its runs go to that standing
 session by message, and no new one is started. So `tech-lead`, `designer`, `qa`, `devops` and `security` runs go to their
-standing session when one exists and otherwise open a role session like the others; `architect`,
-`executor` and `auditor` always open a role session.
+standing session when one exists, and `executor` runs go to the Developer session when one
+exists; otherwise they open a role session like the others. `architect` and `auditor` always open
+a role session.
 `skill-sub` stays a sub-agent: its answer is short and its parent needs it at once.
 Fall back to sub-agents, for the whole task, when there is no such tool, when a start is refused,
 or when the owner says "here" or "no sessions". In that fallback the main session also asks the
@@ -188,7 +193,8 @@ to land on the current branch. So only ONE session that writes source runs at a 
 `executor` piece, then the next). Sessions that only read source or run it (`tech-lead`,
 `designer`, `architect`, `qa`, `auditor`, `devops` ANALYSE, `security`) may run side by side, but
 never `qa` or `auditor` while an `executor` is still building. The same holds for a standing
-session: send nothing for `qa` while an `executor` is building.
+session: send nothing for `qa` while an `executor` or the Developer session is building, and never
+run an `executor` role session while the Developer session is building.
 
 **Getting the result.** The host tells you when a role session ends its turn. Do not poll. Its note
 is a report, not the result: read the file it wrote in the turn folder and carry on from that. A

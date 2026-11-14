@@ -1,9 +1,10 @@
 ---
-description: Start the Tech Lead session and the Business Analyst, Designer, QA Engineer, DevOps and Security sub sessions
+description: Start the Tech Lead session and the Business Analyst, Designer, Developer, QA Engineer, DevOps and Security sub sessions
 ---
-Start the team's standing sessions: the Tech Lead session and its five sub sessions (Business
-Analyst, Designer, QA Engineer, DevOps, Security). `$ARGUMENTS` may name a subset of the sub
-sessions (`business-analyst`, `designer`, `qa`, `devops`, `security`); with no argument, all five.
+Start the team's standing sessions: the Tech Lead session and its six sub sessions (Business
+Analyst, Designer, Developer, QA Engineer, DevOps, Security). `$ARGUMENTS` may name a subset of the
+sub sessions (`business-analyst`, `designer`, `developer`, `qa`, `devops`, `security`); with no
+argument, all six.
 
 This session starts all of them itself, on this turn. The desktop app refuses `start_session` on a
 turn that another session's message started, and the Tech Lead session's turns are always started
@@ -43,8 +44,9 @@ by a message, so the Tech Lead session can never start them. Follow these steps 
 | Tech Lead | Tech Lead | `tech-lead` | sonnet | `sessions/tech-lead-session.md` | none |
 | Business Analyst | Business Analyst | `business-analyst` | sonnet | `sessions/business-analyst-session.md` | none |
 | Designer | Designer | `designer` | sonnet | `sessions/designer-session.md` | `agents/designer.md` |
+| Developer | Developer | `developer` | opus | `sessions/developer-session.md` | `agents/executor.md` |
 | QA Engineer | QA Engineer | `qa` | sonnet | `sessions/qa-session.md` | `agents/qa.md` |
 | DevOps | DevOps | `devops` | opus | `sessions/devops-session.md` | `agents/devops.md` |
 | Security | Security | `security` | opus | `sessions/security-session.md` | none |
 
-This command starts no session beyond these six.
+This command starts no session beyond these seven.
