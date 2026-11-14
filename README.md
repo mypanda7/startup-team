@@ -51,13 +51,14 @@ the session that installed the plugin, with no restart:
 1. Say "startup-team installed successfully."
 2. Ask the owner only this, and wait for the answer:
    "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security) and turn on the companion plugins?"
-   - First choice: if the session has a tool that asks a question with clickable options (in
-     Claude Code: AskUserQuestion), ask it there with exactly two options: "Set up now" (= 1:
-     creates the sessions and turns on the companion plugins) and "Not now" (= 0: asks again next
-     session).
-   - Back-up: with no such tool, or when the call fails, is refused or is dismissed without a
-     choice, ask it as text ending "1 = yes, 0 = no." and wait. A typed 1/yes or 0/no counts
+   - First choice: if the session has, or can load, a tool that asks a question with clickable
+     options (in Claude Code: AskUserQuestion), ask it there with exactly two options: "Set up
+     now" (= 1: creates the sessions and turns on the companion plugins) and "Not now" (= 0: asks
+     again next session). A dialog dismissed without a choice counts as "Not now".
+   - Back-up, only when the dialog can't be shown (no such tool, or the call fails or is
+     refused): ask it as text ending "1 = yes, 0 = no." and wait. A typed 1/yes or 0/no counts
      either way; any other free-text answer from the dialog is the owner's own words.
+   - Either way it is asked once in this session; it returns in the next one.
 3. On 1 ("Set up now"), on that same owner turn: find the installed plugin's folder with `claude plugin list`,
    read its `commands/start-team.md` and follow it step by step (the `/startup-team:start-team`
    command itself is not loaded until a new session). It starts the six sub sessions and the AI

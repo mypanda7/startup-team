@@ -47,5 +47,5 @@ Invoke-Step @("plugin", "install", $Plugin, "--scope", "local") "could not insta
 
 Write-Output "startup-team installed successfully."
 Write-Output "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security) and turn on the companion plugins? 1 = yes, 0 = no."
-Write-Output "Claude, if you ran this: ask the owner that question now, with clickable options if you can (in Claude Code: AskUserQuestion) - `"Set up now`" (= 1) and `"Not now`" (= 0) - else as text ending 1 = yes, 0 = no. On 1, on the owner's turn, follow commands/start-team.md from the installed plugin folder (see claude plugin list); in the terminal CLI, say the sessions need the desktop app."
+Write-Output "Claude, if you ran this: ask the owner that question now, once. If the session has, or can load, a question dialog (in Claude Code: AskUserQuestion), use buttons `"Set up now`" (= 1) and `"Not now`" (= 0); a dismissed dialog = Not now. Only if the dialog can't be shown, ask as text ending 1 = yes, 0 = no. On 1, on the owner's turn, follow commands/start-team.md from the installed plugin folder (see claude plugin list); in the terminal CLI, say the sessions need the desktop app."
 Write-Output "On 0 (Not now), nothing more: the plugin asks again in the next session."

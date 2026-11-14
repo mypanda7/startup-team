@@ -26,18 +26,18 @@ NOT_THE_OWNER = ("<task-notification>", "[SYSTEM NOTIFICATION", "Another Claude 
 DONE_MARKER = os.path.join(".handoff", "team-setup-done")
 STARTED_MARKER = os.path.join(".handoff", "team-setup-started")
 
-NOTICE = ("startup-team is installed but the team isn't set up: reply 1 to create the AI Tech Lead "
-          "and its sub sessions")
+NOTICE = ("startup-team is installed but the team isn't set up: choose Set up now, or reply 1, to "
+          "create the AI Tech Lead and its sub sessions")
 
 OFFER = """Team setup (startup-team): before anything else this turn, say "startup-team installed
 successfully." and ask the owner, as the only question:
 "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer,
 QA Engineer, DevOps, Security) and turn on the companion plugins?"
-- First choice: if this session has a tool that asks the owner a question with clickable options
-  (in Claude Code: AskUserQuestion), ask it there with exactly two options: "Set up now" (= 1:
-  creates the sessions and turns on the companion plugins) and "Not now" (= 0: asks again next
-  session).
-- Back-up: with no such tool, or when the call fails, is refused or is dismissed without a choice,
+- First choice: if this session has, or can load, a tool that asks the owner a question with
+  clickable options (in Claude Code: AskUserQuestion), ask it there with exactly two options:
+  "Set up now" (= 1: creates the sessions and turns on the companion plugins) and "Not now" (= 0:
+  asks again next session). A dialog the owner dismisses without choosing counts as "Not now".
+- Back-up, only when the dialog can't be shown (no such tool, or the call fails or is refused):
   ask it as text ending "1 = yes, 0 = no." and wait. A typed 1/yes or 0/no counts either way; any
   other free-text answer from the dialog is the owner's own words.
 The agents, sub-agents and skills already came with the package; 1 creates the sessions and turns
