@@ -26,7 +26,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-KINDS = ("owner-answer", "fact", "open-item", "pointer", "learned")
+KINDS = ("owner-answer", "fact", "open-item", "pointer", "learned", "setup-change")
 SECRET = re.compile(
     r"(-----BEGIN [A-Z ]*PRIVATE KEY-----"
     r"|\b(sk|pk|rk|ghp|gho|ghs|github_pat|xox[abprs])[-_][A-Za-z0-9_\-]{16,}"

@@ -246,7 +246,7 @@ A skill that is not installed comes back `SKILL NOT FOUND`; the agent carries on
 ## Shared memory
 `team.py memory add | query | digest | done` keeps one append-only file per project at
 `.handoff/memory/agent-memory.jsonl`. Kinds: `owner-answer`, `fact`, `open-item`, `pointer`,
-`learned`. Everything except an owner answer needs `--evidence` (a path, a command or a turn id).
+`learned`, `setup-change` (see "Setup changes"). Everything except an owner answer needs `--evidence` (a path, a command or a turn id).
 Pass the digest into every brief. Text that looks like a secret is refused: never store one.
 
 After each piece, record how the model choice went so the tech lead picks better next time:
@@ -276,6 +276,32 @@ The team repository improves from what projects learn, and only generic rules ev
 Only the rule's one line leaves the project. Its evidence, the turn folder, the memory file and the
 proposal log stay in the project's `.handoff/`. Nothing about one project, its owner, its users, its
 hosts or its secrets ever goes into the team repository, in a file or in a commit message.
+
+## Setup changes (opt-in: straight to the team repo's main)
+A setup change is an owner instruction about how the team itself is set up or works: session
+names, which sessions start, how sessions talk to each other, rules every session follows. Product
+work and project facts (the project's code, copy, design, hosting, data, owner answers about the
+product) are never setup changes, and stay in the project.
+
+It applies only when the project's CLAUDE.md has the line `Setup changes: automatic, straight to
+main` and names the team repository clone with `TEAM REPO CLONE: <path>`. Every other project uses
+the learning loop above, with the owner's 1/0 for each rule.
+
+Flow, per change:
+1. **Record.** The Tech Lead records it: `team.py memory add --kind setup-change --source tech-lead
+   --evidence <turn> --text "<owner's words> -> <the generic rule>"`.
+2. **Build.** The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words
+   only, as ONE commit on `main` that also raises the plugin's patch version.
+3. **QA, then audit.** The audit includes the privacy check: `git show <commit>` (diff and message)
+   holds none of the words in the project's `.handoff/private-words.txt` (which must exist) and none
+   of what `team.py learn propose` refuses in added lines: a secret, an email, an IP address, a
+   local path, the project's name or its web addresses.
+4. **Push.** DevOps runs `git pull --ff-only`, then `git push` to `main`, with no per-change 1 (the
+   CLAUDE.md line is the owner's standing approval). Never a force-push. Then it tells the owner in
+   one line, with the commit link.
+5. **Rollback.** A bad change is undone with `git revert` on `main`, through the same flow.
+A failed QA, audit or privacy check, or a pull that is not a fast-forward, stops the push and goes
+to the owner.
 
 ## What stays in the project
 Brand and design rules, the stack, hosting and deploy steps, standing owner decisions and the

@@ -120,7 +120,9 @@ audits there and messages each sub session directly. An existing Tech Lead sessi
 duplicated. `start-team` records every role's session id and title in `.handoff/team-sessions.json`,
 and every "find a session" rule reads it first, so a renamed session is still found. The owner can
 type to any of them directly. While the Business Analyst has an open question, every other session
-only says "Business Analyst has an open question", in one line.
+only says "Business Analyst has an open question", in one line. A project whose CLAUDE.md says
+`Setup changes: automatic, straight to main` sends each generic setup change to the team repo's
+`main` after QA and audit, with no per-change 1 (see `team-workflow`, "Setup changes").
 
 | Session | What it does | Main session uses it for |
 |---|---|---|

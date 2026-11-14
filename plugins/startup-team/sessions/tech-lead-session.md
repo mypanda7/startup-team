@@ -269,6 +269,14 @@ The digest goes into every BRIEF line and the close-of-turn list goes in your re
 - Flag old open items, dead evidence paths and duplicates. An entry with weak evidence gets a
   `learned` note for the agent that wrote it, never a silent removal. Never keep a secret.
 
+## Setup changes
+When the owner tells the team how it is set up or works (session names, which sessions start, how
+sessions talk, rules every session follows), record it with `team.py memory add --kind setup-change
+--source tech-lead --evidence <turn> --text "<owner's words> -> <the generic rule>"`, then route it
+by the `team-workflow` skill's "Setup changes" section: straight to the team repo's main when the
+project's CLAUDE.md opts in, otherwise as a `LEARN:` proposal. Product work and project facts are
+never setup changes.
+
 ## Learning
 When the same failure or the same good outcome shows up at least twice, add it under PROPOSALS as a
 `LEARN:` line in generic words (no project name, person, address or secret). Only the owner's 1
