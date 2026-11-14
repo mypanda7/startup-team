@@ -61,8 +61,9 @@ the session that installed the plugin, with no restart:
    - Either way it is asked once in this session; it returns in the next one.
 3. On 1 ("Set up now"), on that same owner turn: find the installed plugin's folder with `claude plugin list`,
    read its `commands/start-team.md` and follow it step by step (the `/startup-team:start-team`
-   command itself is not loaded until a new session). It starts the six sub sessions and the AI
-   Tech Lead, turns on the companion plugins, and the owner carries on in AI Tech Lead. Without a
+   command itself is not loaded until a new session). It creates the AI Tech Lead session; the
+   owner opens it and replies there once, and the AI Tech Lead then creates its six sub sessions
+   and turns on the companion plugins. Without a
    `start_session` tool (the terminal CLI), say in one line that standing sessions need the
    desktop app and that the team keeps using its sub-agents.
 4. On 0 ("Not now"), do nothing more: the `setup-offer` hook asks again at the start of the next session.
@@ -151,10 +152,12 @@ work goes to the Tech Lead session, and opens a role session only when there is 
 
 ### Standing sessions
 
-`/startup-team:start-team` (or answering 1 to the setup offer) starts a separate "AI Tech Lead"
-session, where you carry on, and its six sub sessions in the Claude desktop app's sidebar, each from
-its brief in `sessions/`, in the project's own folder (never a worktree). The app only lets a turn the owner started call `start_session`, so
-a separate Tech Lead session, whose turns are always started by a message, could never start them. Pass any of
+`/startup-team:start-team` (or "Set up now" in the setup offer) starts the "AI Tech Lead", a
+session of its own, where you carry on. Reply there once and it starts its six sub sessions under
+it in the Claude desktop app's sidebar, each from its brief in `sessions/`, in the project's own
+folder (never a worktree). The app nests a session under the one that started it, and only lets a
+turn the owner typed call `start_session`, so that one reply is what lets the AI Tech Lead start
+them. Pass any of
 `business-analyst`, `designer`, `developer`, `qa`, `devops` or `security` to start only those sub
 sessions.
 
@@ -187,11 +190,11 @@ only says "Business Analyst has an open question", in one line. A project whose 
 | DevOps | Read-only analysis, and proposals for every push or deploy. Runs nothing before the owner's 1. | Shipping and server checks. |
 | Security | Analysis only: findings by severity, fixes as proposals for the owner. | Security checks. |
 
-A session exists for a role when there is a session whose id `.handoff/team-sessions.json` names for the role and that `list_sessions` shows non-archived in the project's folder, whatever its title is now; failing that, a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id. A session whose title starts with `[run]` is a role session and never counts as a standing session.
+A session exists for a role when there is a session whose id `.handoff/team-sessions.json` names for the role and that `list_sessions` shows non-archived in the project's folder, whatever its title is now; failing that, a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title is the role's title, ignoring case and spaces (for the Tech Lead, a title that ends with "Tech Lead", so "AI Tech Lead" matches; a title that only contains the word does not), found with `list_sessions` and messaged by its session id. A session whose title starts with `[run]` is a role session and never counts as a standing session.
 An existing session is used, whoever started it, and a second one is never started. If more than
 one session matches a role, they are listed and the owner says which one to use. The command keeps
-the title of the session it runs in and starts only the AI Tech Lead and its six sub sessions, and no other session
-starts them. Only the
+the title of the session it runs in: run elsewhere it starts only the AI Tech Lead; run in the AI
+Tech Lead it starts only the six sub sessions. Only the
 Developer session writes source.
 
 ### Role sessions

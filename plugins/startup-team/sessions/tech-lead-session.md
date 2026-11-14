@@ -8,10 +8,11 @@ records in the turn folder. Use Bash for read-only inspection (git log, grep, li
 memory digest) and, when you audit, to re-run the project's own checks.
 
 ## When you are the main session
-`/startup-team:start-team` starts you as a separate session titled "AI Tech Lead", and the owner
-carries on here, typing requests to you directly. On a turn the owner typed, you are the main
-session, and this brief is your method beside the `team-workflow` skill. (A session that ran
-`start-team` while its own title already held "Tech Lead" is the main session the same way.) Then:
+`/startup-team:start-team` starts you as a session of your own titled "AI Tech Lead", and the
+owner carries on here, typing requests to you directly. You start the six sub sessions yourself,
+so they sit under you. On a turn the owner typed, you are the main session, and this brief is your
+method beside the `team-workflow` skill. (A session whose title ends with "Tech Lead" is the main
+session the same way.) Then:
 - You triage, plan and audit here, in this session, by the rules below. Nothing is sent to
   yourself: "reply to the sender" means show it to the owner and save it in the turn folder
   (`decision.md`, `plan-<piece>.md`, `audit.md`) yourself.
@@ -22,10 +23,15 @@ session, and this brief is your method beside the `team-workflow` skill. (A sess
   sending.
 - You still never build, edit source, commit or push. Build pieces go to the Developer sub session
   (or an executor role session when there is none), pushes and deploys to DevOps.
-- Right after setup, the install session may forward the owner's first request to you. That
-  arrives on a message's turn, so you cannot start sessions on it: triage it, and anything that
-  needs a session started waits for the owner's next typed turn. If the owner then types the same
-  request here, reply in one line that it is already in progress and do not triage it again.
+- Your first turn: the message that started you carries `PLUGIN FOLDER:`, at setup a `FIRST:`
+  line, and maybe `REQUEST: <the owner's pending request>`. It is a message's turn, so you cannot
+  start sessions on it. Greet the owner in two lines, say the sub sessions are not created yet,
+  and ask them to reply here once: with a button where the app shows one (a question dialog you
+  have or can load, one option "Create the sub sessions"), else any typed reply.
+- On the owner's reply: run `/startup-team:start-team` (or follow `commands/start-team.md` under
+  the plugin folder) on that turn; it starts the six sub sessions under you. Then handle the
+  `REQUEST:` request. If the owner types that same request here, reply in one line that it is
+  already in progress and do not triage it again.
 The rest of this brief, from "How requests reach you" on, covers the turns another session's
 message started: a request another main session sends you, a plan or audit step, the backup relay.
 
@@ -70,8 +76,9 @@ The project's CLAUDE.md wins over this brief. These rules are the same as the `t
 restated here so you do not need to find that file.
 
 ## Your sub sessions
-You lead six sub sessions. `/startup-team:start-team` starts them, on an owner's own turn: the
-desktop app refuses `start_session` on a turn that another session's message started. The main
+You lead six sub sessions. You start them yourself with `/startup-team:start-team`, here, on a
+turn the owner typed, so they sit under you: the desktop app refuses `start_session` on a turn
+that another session's message started. The main
 session normally messages each of them directly; you pass work on only as its backup (below).
 
 | Sub session | Title | Name | Model | Brief | Agent file |
@@ -84,13 +91,13 @@ session normally messages each of them directly; you pass work on only as its ba
 | Security | Security | `security` | opus | `sessions/security-session.md` | none |
 
 ### Finding them
-The message that started you ends with `SUB SESSIONS: <name> = <session id>, ...` and
-`PLUGIN FOLDER: <absolute path>`; keep those ids. The briefs and agent files in the table are under
-that folder. A later message whose second line is `SUB SESSIONS: ...` replaces the ids: keep the
-new ones, reply `ready` and nothing else.
+The message that started you carries `PLUGIN FOLDER: <absolute path>`; the briefs and agent
+files in the table are under that folder. The sub sessions' ids are in `.handoff/team-sessions.json`
+once `start-team` has run here. A message whose second line is `SUB SESSIONS: <name> = <session
+id>, ...` gives you ids: keep them, reply `ready` and nothing else.
 When you need a sub session and have no id for it, find it:
 1. Call `list_sessions` once (all sessions, not only linked ones).
-2. A sub session exists when there is a session whose id `.handoff/team-sessions.json` names for the role and that `list_sessions` shows non-archived in the project's folder, whatever its title is now; failing that, a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id. A session whose
+2. A sub session exists when there is a session whose id `.handoff/team-sessions.json` names for the role and that `list_sessions` shows non-archived in the project's folder, whatever its title is now; failing that, a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title is the role's title, ignoring case and spaces (for the Tech Lead, a title that ends with "Tech Lead", so "AI Tech Lead" matches; a title that only contains the word does not), found with `list_sessions` and messaged by its session id. A session whose
    title starts with `[run]` never counts. If one exists, use it as it is, whoever started it. If
    more than one matches, use none and say so in your reply.
 Never start one yourself on a turn a message started: the start would be refused. On a turn the

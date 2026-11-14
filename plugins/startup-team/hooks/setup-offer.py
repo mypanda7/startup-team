@@ -43,15 +43,15 @@ QA Engineer, DevOps, Security) and turn on the companion plugins?"
 The agents, sub-agents and skills already came with the package; 1 creates the sessions and turns
 on the companion plugins.
 Do not start the owner's request until they answer.
-- On 1 ("Set up now"): run /startup-team:start-team on that owner turn. It starts the six sub sessions and a new
-  session titled "AI Tech Lead" and turns on the companion plugins (a copy the project already has
-  stays in use); tell the owner to carry on in AI Tech Lead, and send it their request.
+- On 1 ("Set up now"): run /startup-team:start-team on that owner turn. It creates the AI Tech Lead
+  session (with the owner's pending request); the six sub sessions and the companion plugins are
+  set up inside it after one reply there. Tell the owner to open AI Tech Lead and reply there once.
 - On 0 ("Not now"): carry on with their request; the offer returns in the next session.
 Ask at most once in this session: once it was asked (answered or not), never ask it again here.
 Skip the offer silently when this session has no start_session tool (the terminal CLI), or when a
 Tech Lead session already exists for this project folder (the `tech-lead` id in
 `.handoff/team-sessions.json` is a live session there, or else this session's or a listed
-session's title contains "Tech Lead"): then create `.handoff/team-setup-done` in the project
+session's title ends with "Tech Lead"): then create `.handoff/team-setup-done` in the project
 folder (one line: today's date) and continue."""
 
 
