@@ -8,6 +8,9 @@ sees it again in the next session. The per-session marker is set only when the o
 one-line notice for the owner (`systemMessage`) and the offer as context for Claude
 (`hookSpecificOutput.additionalContext`), so the question is asked on the first prompt.
 
+Half-done setup (`team-setup-started` without `team-setup-done`): both modes print a one-line
+reminder instead (the prompt mode once per session, under the same owner-only rules).
+
 Quiet for: STARTUP_TEAM_GATE_OFF=1, slash commands, pasted terminal output, agent reports and
 messages, and role-session briefs (they start with "[startup-team:"), so it never fires in a sub
 session.
@@ -29,6 +32,18 @@ STARTED_MARKER = os.path.join(".handoff", "team-setup-started")
 NOTICE = ("startup-team is installed but the team isn't set up: choose Set up now, or reply 1, to "
           "create the AI Tech Lead and its sub sessions")
 
+HALF_NOTICE = ("startup-team setup isn't finished: open AI Tech Lead and type a reply there to create "
+               "the sub sessions")
+
+REMINDER = """Team setup (startup-team) isn't finished: the setup started, but the sub sessions don't
+exist yet. If this session is the Tech Lead (its id is the `tech-lead` entry of
+`.handoff/team-sessions.json`, or else its title ends with "Tech Lead"), run /startup-team:start-team
+on this owner turn; it starts the sub sessions here. Otherwise, before anything else, tell the owner
+in one line: \"Setup isn't finished: open AI Tech Lead and type a reply there to create the sub sessions.\"
+If no Tech Lead session exists for this project, say instead that setup stopped before the AI Tech
+Lead was created, and that deleting `.handoff/team-setup-started` brings the setup question back.
+Then carry on with the owner's request. Say it at most once in this session."""
+
 OFFER = """Team setup (startup-team): before anything else this turn, say "startup-team installed
 successfully." and ask the owner, as the only question:
 "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer,
@@ -48,11 +63,15 @@ Do not start the owner's request until they answer.
   set up inside it after one reply there. Tell the owner to open AI Tech Lead and reply there once.
 - On 0 ("Not now"): carry on with their request; the offer returns in the next session.
 Ask at most once in this session: once it was asked (answered or not), never ask it again here.
-Skip the offer silently when this session has no start_session tool (the terminal CLI), or when a
-Tech Lead session already exists for this project folder (the `tech-lead` id in
+Skip the offer silently when this session has no start_session tool (the terminal CLI), or when
+the team already exists: a Tech Lead session for this project folder (the `tech-lead` id in
 `.handoff/team-sessions.json` is a live session there, or else this session's or a listed
-session's title ends with "Tech Lead"): then create `.handoff/team-setup-done` in the project
-folder (one line: today's date) and continue."""
+session's title ends with "Tech Lead") whose sub sessions are in that registry. Then create
+`.handoff/team-setup-done` in the project folder (one line: today's date) and continue.
+A Tech Lead without its sub sessions is a half-done setup: never write `team-setup-done` for it.
+If this session is that Tech Lead, run /startup-team:start-team on this owner turn instead of
+asking. Otherwise skip the question and tell the owner in one line:
+\"Setup isn't finished: open AI Tech Lead and type a reply there to create the sub sessions.\""""
 
 
 def first_offer(session_id: str) -> bool:
@@ -73,9 +92,13 @@ def first_offer(session_id: str) -> bool:
     return True
 
 
-def set_up(cwd: str) -> bool:
-    """True when setup is done or under way in this project."""
-    return any(os.path.exists(os.path.join(cwd, m)) for m in (DONE_MARKER, STARTED_MARKER))
+def state(cwd: str) -> str:
+    """"done", "started" (begun but not finished) or "none" for this project."""
+    if os.path.exists(os.path.join(cwd, DONE_MARKER)):
+        return "done"
+    if os.path.exists(os.path.join(cwd, STARTED_MARKER)):
+        return "started"
+    return "none"
 
 
 def main() -> None:
@@ -89,14 +112,16 @@ def main() -> None:
     except (ValueError, AttributeError):
         return
     if sys.argv[1:2] == ["session-start"]:
-        if not set_up(cwd):
+        now = state(cwd)
+        if now != "done":
             context = (
                 "On the owner's first message in this session, follow this. Only the owner's own "
                 "message counts: a message that starts with \"[startup-team:\", a cross-session "
-                "message, an agent report or a task notification is not; then ignore this.\n" + OFFER
+                "message, an agent report or a task notification is not; then ignore this.\n"
+                + (REMINDER if now == "started" else OFFER)
             )
             print(json.dumps({
-                "systemMessage": NOTICE,
+                "systemMessage": HALF_NOTICE if now == "started" else NOTICE,
                 "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context},
             }))
         return
@@ -108,11 +133,12 @@ def main() -> None:
         return
     if text.startswith(NOT_THE_OWNER) or "<agent-message from=" in text[:400]:
         return
-    if set_up(cwd):
+    now = state(cwd)
+    if now == "done":
         return
-    # Only reached when the offer would print, so a skipped prompt never uses up the session's turn.
+    # Only reached when something would print, so a skipped prompt never uses up the session's turn.
     if first_offer(session_id):
-        print(OFFER)
+        print(REMINDER if now == "started" else OFFER)
 
 
 if __name__ == "__main__":

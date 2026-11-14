@@ -70,8 +70,9 @@ the session that installed the plugin, with no restart:
 
 Weren't asked? Run `/startup-team:start-team` in a new session. Until the team is set up, the
 question comes on your first message in every new session; a new session may also show a one-line
-notice. If a setup stopped halfway, delete
-`.handoff/team-setup-started` in the project to bring the question back.
+notice. If a setup stopped halfway, open AI
+Tech Lead and type a reply there: it creates the sub sessions (new sessions remind you until then).
+As a last resort, deleting `.handoff/team-setup-started` in the project brings the question back.
 
 Update later with:
 

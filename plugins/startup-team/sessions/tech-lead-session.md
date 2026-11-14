@@ -26,8 +26,8 @@ session the same way.) Then:
 - Your first turn: the message that started you carries `PLUGIN FOLDER:`, at setup a `FIRST:`
   line, and maybe `REQUEST: <the owner's pending request>`. It is a message's turn, so you cannot
   start sessions on it. Greet the owner in two lines, say the sub sessions are not created yet,
-  and ask them to reply here once: with a button where the app shows one (a question dialog you
-  have or can load, one option "Create the sub sessions"), else any typed reply.
+  and ask them to type a reply here once (any message). Use no question dialog on this turn: a
+  dialog answer can stay on this message-started turn, where session starts are refused.
 - On the owner's reply: run `/startup-team:start-team` (or follow `commands/start-team.md` under
   the plugin folder) on that turn; it starts the six sub sessions under you. Then handle the
   `REQUEST:` request. If the owner types that same request here, reply in one line that it is

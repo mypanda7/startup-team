@@ -44,16 +44,17 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
      nor see the project's `.handoff/`). Prompt: `[startup-team:tech-lead]`, the full text of
      `sessions/tech-lead-session.md` (the `sessions` and `agents` folders sit beside the
      `commands` folder), `PLUGIN FOLDER: <absolute path of this plugin's folder>`, the line
-     `FIRST: no sub sessions exist yet; ask the owner to reply here once, then run start-team from
-     the plugin folder on that turn`, and `REQUEST: <my pending request, verbatim>` when there is
+     `FIRST: no sub sessions exist yet; ask the owner to type a reply here once (no dialog), then
+     run start-team from the plugin folder on that typed turn`, and `REQUEST: <my pending request, verbatim>` when there is
      one. Background: at least 80 characters on which project folder it serves and that it leads
      the team.
    - If this session has a tool that moves a session it started to the top level of the sidebar
      (in the desktop app: `detach_session`), use it on the AI Tech Lead, so it is a session of its
      own. Without one, leave it where it is.
    - Write the registry's `tech-lead` entry (step 9 shows the format), keeping every other entry.
-   - Tell me in one line: open AI Tech Lead (link it) and reply there once to create the six sub
-     sessions. Do not write `team-setup-done`. Stop.
+   - Tell me in one line: when the Tech Lead has no sub sessions yet, open AI Tech Lead (link it)
+     and type a reply there once to create the six sub sessions; when it already has them, that the
+     team already exists, with the AI Tech Lead linked. Do not write `team-setup-done`. Stop.
 6. **Case B: this session is the Tech Lead.** If this turn was started by another session's
    message, not typed by me, say in one line that the app refuses session starts on such a turn and
    ask me to reply here once. Stop. Otherwise create `.handoff/team-setup-started` if it is
