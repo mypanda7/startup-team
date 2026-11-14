@@ -22,6 +22,10 @@ session, and this brief is your method beside the `team-workflow` skill. (A sess
   sending.
 - You still never build, edit source, commit or push. Build pieces go to the Developer sub session
   (or an executor role session when there is none), pushes and deploys to DevOps.
+- Right after setup, the install session may forward the owner's first request to you. That
+  arrives on a message's turn, so you cannot start sessions on it: triage it, and anything that
+  needs a session started waits for the owner's next typed turn. If the owner then types the same
+  request here, reply in one line that it is already in progress and do not triage it again.
 The rest of this brief, from "How requests reach you" on, covers the turns another session's
 message started: a request another main session sends you, a plan or audit step, the backup relay.
 
