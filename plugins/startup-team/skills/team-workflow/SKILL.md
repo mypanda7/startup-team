@@ -112,9 +112,11 @@ long-lived, one per role, and serve every task in the project. Role sessions are
 role and end with it. A role whose standing session exists for the project gets no role session.
 
 ### Standing sessions
-`/startup-team:start-team` starts the Tech Lead session in the desktop app's sidebar, and the Tech
-Lead session starts up to five sub sessions under it, from the briefs in `sessions/`: Business
-Analyst, Designer, QA Engineer, DevOps and Security. They work only in the desktop app, where a
+`/startup-team:start-team` starts, from the main session, the Tech Lead session and up to five
+sub sessions it leads, from the briefs in `sessions/`: Business Analyst, Designer, QA Engineer,
+DevOps and Security. Only a turn the owner started may call `start_session` (the app refuses it on
+a turn another session's message started), so standing sessions are started by the main session,
+never by the Tech Lead session, and always with `use_worktree: false`, in the project's folder. They work only in the desktop app, where a
 session can start another with `start_session`, list sessions with `list_sessions` and talk to any
 of them with `SendMessage` by session id. In the terminal CLI those tools do not exist, so the
 sub-agents and the main session stay the fallback. Standing sessions never write source.
@@ -123,7 +125,7 @@ Find the Tech Lead session like this: a non-archived session whose `cwd` is the 
 A session whose title starts with `[run]` is a role session and never counts as a standing session.
 Whoever started it, it is used, and a second one is never started. If more than one session matches, list them and ask the owner which one to use; never guess, and start none meanwhile.
 
-**Message each session directly.** The Tech Lead session starts the sub sessions, but you talk to
+**Message each session directly.** The Tech Lead session leads the sub sessions, but you talk to
 each one yourself. Find a sub session by the same rule as the Tech Lead session, with its own title
 ("Business Analyst", "Designer", "QA Engineer", "DevOps", "Security"), and send it its work with
 `SendMessage` by session id, under a first line `[startup-team:<name>]` (`business-analyst`,
@@ -146,10 +148,10 @@ each one yourself. Find a sub session by the same rule as the Tech Lead session,
 find the sub session (none matches, or more than one does and the owner has not chosen), or the
 message to it is refused or gets no reply after one follow-up. Then send the Tech Lead session a
 message whose first line is `[startup-team:tech-lead]` and whose second line is `FOR: <name>`,
-followed by exactly what you would have sent. The Tech Lead session starts the sub session if it is
-missing, passes the message on unchanged and sends the reply back unchanged under `FROM: <name>`.
+followed by exactly what you would have sent. The Tech Lead session passes the message on unchanged and sends the reply back unchanged under `FROM: <name>`.
 Say in `sessions.md` that the relay was used and why. A reply of `NO SESSION: <name>` means the sub
-session does not exist and could not be started: run that role in a role session (below), or as a
+session does not exist (or more than one matches): tell the owner that `/startup-team:start-team`
+starts it, and meanwhile run that role in a role session (below), or as a
 sub-agent in the fallback; for `business-analyst`, ask the owner yourself, one at a time.
 Without a Tech Lead session there is no relay: a sub session you can find is still used directly,
 and any other role runs in a role session (below).

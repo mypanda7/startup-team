@@ -97,13 +97,15 @@ session. `skill-sub` is always a sub-agent, and the Business Analyst is only eve
 
 ### Standing sessions
 
-`/startup-team:start-team` starts the Tech Lead session in the Claude desktop app's sidebar, and
-the Tech Lead session starts its sub sessions, each from its brief in `sessions/`. Pass any of
+`/startup-team:start-team` starts the Tech Lead session and its sub sessions in the Claude desktop
+app's sidebar, each from its brief in `sessions/`, all from the main session and in the project's
+own folder (never a worktree). The app only lets a turn the owner started call `start_session`, so
+the Tech Lead session, whose turns are always started by a message, never starts sessions itself. Pass any of
 `business-analyst`, `designer`, `qa`, `devops` or `security` to start only those sub sessions.
 
 ```
 Main session
-└── Tech Lead            triages, starts its sub sessions, relays as backup
+└── Tech Lead            triages, leads its sub sessions, relays as backup
     ├── Business Analyst asks the owner one question at a time
     ├── Designer         proposes, briefs and reviews UI
     ├── QA Engineer      runs the product, PASS or FAIL
@@ -111,15 +113,15 @@ Main session
     └── Security         analysis only
 ```
 
-The Tech Lead session starts the sub sessions, and the main session messages each of them
+The Tech Lead session leads the sub sessions, and the main session messages each of them
 directly. The relay through the Tech Lead is the backup only: when the main session cannot find or
 reach a sub session, it sends the Tech Lead session a message marked `FOR: <name>`, and the Tech
-Lead session starts the sub session if needed, passes the message on unchanged and sends the reply
+Lead session passes the message on unchanged and sends the reply
 back unchanged. The owner can type to any of them directly.
 
 | Session | What it does | Main session uses it for |
 |---|---|---|
-| Tech Lead | Triages and starts the sub sessions; relays to one only as a backup. Never builds, edits, commits or pushes. | Each request, answered with a decision block. |
+| Tech Lead | Triages and leads the sub sessions; relays to one only as a backup. Never builds, edits, commits or pushes. | Each request, answered with a decision block. |
 | Business Analyst | Relays questions to the owner one at a time and sends each answer back verbatim. Never answers or decides. | Question batches. |
 | Designer | Proposes, briefs and reviews UI by the `designer` agent's method. Never builds. | Every design step. |
 | QA Engineer | Runs the product and reports PASS or FAIL with steps to reproduce. Never fixes. | Testing, once the pieces are built. |
@@ -129,7 +131,7 @@ back unchanged. The owner can type to any of them directly.
 A session exists for a role when there is a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title contains the role's title, ignoring case and spaces, found with `list_sessions` and messaged by its session id. A session whose title starts with `[run]` is a role session and never counts as a standing session.
 An existing session is used, whoever started it, and a second one is never started. If more than
 one session matches a role, they are listed and the owner says which one to use. The command starts
-only the Tech Lead session, and the Tech Lead session starts only its five sub sessions. Standing
+only the Tech Lead session and its five sub sessions, and no other session starts them. Standing
 sessions never write source.
 
 ### Role sessions
