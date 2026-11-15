@@ -5,7 +5,7 @@ Set up the team's standing sessions: the AI Tech Lead, a session of its own, and
 sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), which sit under it
 in the sidebar. `$ARGUMENTS` may name a subset of the sub sessions (`business-analyst`,
 `designer`, `developer`, `qa`, `devops`, `security`); with no argument, all six. The argument
-`gateway`, run in the Tech Lead, runs only step 11 and asks its question again.
+`gateway`, run in the Tech Lead, runs only step 12 and asks its question again.
 
 The desktop app nests a session under the session that started it, and allows `start_session`
 only on a turn the owner typed. So setup takes two runs of this command: run in any other
@@ -87,12 +87,51 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
     only named in the project's CLAUDE.md but not installed does not count. Otherwise run
     `claude plugin install <name>@startup-team --scope local`.
     Apply none of a companion's own hooks, settings or setup questions.
-11. Outside models (optional; the code graph step, when there is one, comes before this one). A
+11. Code graph (optional). A failure anywhere in this step never fails the setup; report it in one
+    line and go on. Skip it when `.handoff/graph-setup-declined` exists, or when
+    `.claude/skills/graphify/` and `graphify-out/graph.json` already exist: then only rebuild the
+    graph as in 11.4 and report it in one line. When `.handoff/graph-setup-pending` exists, do not
+    ask again: resume at 11.2.
+    1. Find the command: `graphify` on PATH; else `graphify` in the user Python scripts folder
+       (`python -c "import sysconfig; print(sysconfig.get_path('scripts', 'nt_user' if __import__('os').name == 'nt' else 'posix_user'))"`);
+       else `python -m graphify --help` exits 0. Not found: ask me once whether to install it
+       (`python -m pip install --user graphifyy`, the PyPI package `graphifyy`, for this user only);
+       install only on my yes; on no, write `.handoff/graph-setup-declined` and go on.
+       Then ask me once, as the only question: "Set up a code graph (graphify) for this project?
+       The full install adds a graphify section to the project's CLAUDE.md, a `.claude/CLAUDE.md`,
+       a `/graphify` skill and three hooks in `.claude/settings.json` that run on searches and file
+       reads." If this session has, or can load, a question dialog, ask it there with "Set it up"
+       (= 1) and "Not now" (= 0); a dialog I dismiss counts as "Not now"; else ask it as text ending
+       "1 = yes, 0 = no." On "Not now", write `.handoff/graph-setup-declined` and go on. My yes here
+       is the approval for those CLAUDE.md and hook changes, also in a project whose CLAUDE.md asks
+       for the owner's approval for them: quote my answer in the report.
+    2. The hooks call `graphify` by its bare name, so check it resolves in a fresh shell
+       (`cmd /c where graphify` on Windows, `sh -lc "command -v graphify"` elsewhere). If it does
+       not: do NOT install. Tell me the folder to add to my PATH (the scripts folder of 11.1; I
+       change PATH myself), build the graph with the full path as in 11.4 meanwhile, write
+       `.handoff/graph-setup-pending` and stop this step: it finishes the next time this command
+       runs here.
+    3. Install, in the project folder: `graphify install --project --platform claude`.
+    4. Build the graph code-only with every model backend off: `graphify extract . --code-only`
+       (local AST, no LLM), run with the model key and base-URL variables (ANTHROPIC_*, OPENAI_*,
+       GEMINI_API_KEY, GOOGLE_API_KEY and the like) unset for that one command. Never `extract`
+       without `--code-only`, never `label`, never a docs pass without my 1.
+    5. Add `graphify-out/` to the project's `.gitignore` unless `git check-ignore -q graphify-out`
+       already passes.
+    6. Run each hook command once by hand with a harmless input, e.g.
+       `echo '{"tool_name":"Grep","tool_input":{"pattern":"x"},"hook_event_name":"PreToolUse"}' | graphify hook-guard search`,
+       the same with `"tool_name":"Read"` for `graphify hook-guard read`, and
+       `echo '{"source":"compact","hook_event_name":"SessionStart"}' | graphify hook-guard compact`.
+       Each must exit 0. If one does not, remove graphify's three entries (the commands starting
+       `graphify hook-guard`) from `.claude/settings.json` again and say so.
+    7. Report in one line: installed or pending, the graph's node and edge count, ignored, hooks
+       ok or removed, and my quoted yes. Delete `.handoff/graph-setup-pending` if it exists.
+12. Outside models (optional). A
     failure anywhere in this step never fails the setup; report it in one line and go on.
     Skip it when `.handoff/gateway-setup-declined` exists (unless `$ARGUMENTS` is `gateway`), or
     when the project's CLAUDE.md already has a `# Gateway (outside models)` section: then only run
-    the `health` command of 11.1 against its base URL and report the result in one line. When
-    `.handoff/gateway-setup-pending` exists, do not ask again: resume at 11.1.
+    the `health` command of 12.1 against its base URL and report the result in one line. When
+    `.handoff/gateway-setup-pending` exists, do not ask again: resume at 12.1.
     Otherwise ask me once, as the only question: "Set up FreeLLMAPI so the team can hand text work
     to free models?" If this session has, or can load, a question dialog, ask it there with two
     options, "Set it up" (= 1) and "Not now" (= 0); a dialog I dismiss counts as "Not now". Only if
@@ -103,18 +142,18 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
     1. Find a running local router, only at these two addresses, in this order:
        `python <plugin folder>/skills/team-workflow/scripts/gateway.py --base-url http://127.0.0.1:31415 --key-env FREELLMAPI_API_KEY health`,
        then the same with `http://127.0.0.1:3001`. `ok <n>` at either: that address is the base URL,
-       go to 11.4. Report `auth`, `down <reason>` and `refused: ...` as they are. If both say
-       `down`, go to 11.2. If either says the key variable is unset (it refuses before contacting
-       anything, so a router may or may not be running), or `auth`, go to 11.3.
+       go to 12.4. Report `auth`, `down <reason>` and `refused: ...` as they are. If both say
+       `down`, go to 12.2. If either says the key variable is unset (it refuses before contacting
+       anything, so a router may or may not be running), or `auth`, go to 12.3.
     2. No router answers: tell me where to get FreeLLMAPI (https://github.com/tashfeenahmed/freellmapi,
        its Releases page or its desktop app), and that I install it and add my provider keys in
        its dashboard myself: the team never installs it and never handles a key. Write
        `.handoff/gateway-setup-pending` (one line, today's date). Stop this step; it resumes at
-       11.1 the next time this command runs here.
+       12.1 the next time this command runs here.
     3. The key is missing or refused: ask me to copy the unified key from FreeLLMAPI's dashboard and
        save it as a user environment variable named `FREELLMAPI_API_KEY`, never pasting it into the
        chat, then to restart the session. If FreeLLMAPI may not be installed yet, add the pointer of
-       11.2. Write `.handoff/gateway-setup-pending` and stop this step, as in 11.2.
+       12.2. Write `.handoff/gateway-setup-pending` and stop this step, as in 12.2.
     4. Masking needs the project's private words. If `.handoff/private-words.txt` is missing or
        lists no word (blank lines and `#` lines don't count), ask me for them in one question: the
        project and company names, domains, hosts, account names and people's names. Write my
@@ -125,7 +164,7 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
        marker):
        ```
        # Gateway (outside models)
-       - Base URL: <the address found in 11.1>. Key variable: FREELLMAPI_API_KEY (the name only;
+       - Base URL: <the address found in 12.1>. Key variable: FREELLMAPI_API_KEY (the name only;
          the key is never written, pasted or printed).
        - Commands, with the plugin at <plugin folder>: `python <plugin folder>/skills/team-workflow/scripts/gateway.py
          --base-url <base URL> --key-env FREELLMAPI_API_KEY health | launch --brief <file> --out
@@ -143,7 +182,7 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
        to a later time." and run `launch --brief .handoff/gateway/trial-brief.txt --out
        .handoff/gateway/trial-answer-<date>.txt`. Report ok or failed and the ledger id. On ok,
        delete `.handoff/gateway-setup-pending` if it exists.
-12. Tell me in one line which sub sessions were found and which were started, and name any role
+13. Tell me in one line which sub sessions were found and which were started, and name any role
     still missing because its start failed or was refused, with the app's reason: running this
     command again here starts just that one. Then any worktree or duplicate sessions from step 3;
     then which companions were installed and which kept, and that they load in sessions started

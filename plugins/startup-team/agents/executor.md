@@ -140,3 +140,8 @@ Only when the project's CLAUDE.md has a gateway section: hand each text-producin
 work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
 put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
 Everything identifying is masked before it leaves: run `anonymizer` on the brief, pass its list with `--terms`, then `launch`; the script restores the real values in the answer.
+
+## Code graph
+When the project has `graphify-out/graph.json`, ask it first (`graphify query`, `path`, `explain`)
+before grepping or reading whole files, name files from it, and fall back to Grep/Glob when it has
+no answer. Full rule: `team-workflow` skill, "Code graph".

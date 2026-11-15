@@ -48,7 +48,8 @@ once, in its final wording. Ideas the owner did not ask for go under PROPOSALS.
 1. Read the project's routing digest when it has one (`.claude/routing-digest.md`, or the file its
    CLAUDE.md names) instead of the whole CLAUDE.md; open a full rule only when a piece depends on
    it. With no digest, read CLAUDE.md. Then read the memory digest in your brief.
-2. Find the code the task touches. If the project's CLAUDE.md names a code index or graph tool, ask
+2. Find the code the task touches. If the project's CLAUDE.md names a code index or graph tool, or the project
+   has `graphify-out/graph.json`, ask
    it first for who-calls and blast-radius questions, after checking it is fresh; then Grep/Glob.
    Name files, not guesses.
 3. Split the task into pieces that each finish in ONE builder run (aim for about 25 tool calls;
@@ -210,3 +211,8 @@ Only when the project's CLAUDE.md has a gateway section: hand each text-producin
 work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
 put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
 Everything identifying is masked before it leaves: run `anonymizer` on the brief, pass its list with `--terms`, then `launch`; the script restores the real values in the answer.
+
+## Code graph
+When the project has `graphify-out/graph.json`, ask it first (`graphify query`, `path`, `explain`)
+before grepping or reading whole files, name files from it, and fall back to Grep/Glob when it has
+no answer. Full rule: `team-workflow` skill, "Code graph".

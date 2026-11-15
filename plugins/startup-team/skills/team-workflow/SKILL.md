@@ -279,6 +279,18 @@ Only the rule's one line leaves the project. Its evidence, the turn folder, the 
 proposal log stay in the project's `.handoff/`. Nothing about one project, its owner, its users, its
 hosts or its secrets ever goes into the team repository, in a file or in a commit message.
 
+## Code graph (optional: graphify)
+A project set up with `/startup-team:start-team` may have a code graph (`graphify-out/graph.json`,
+built by the graphify tool, an optional tool and not a plugin). When it exists:
+- Ask it first, before grepping or reading whole files: `graphify query "<question>"`,
+  `graphify path "<A>" "<B>"`, `graphify explain "<X>"` (exit 0 with an answer, 3 when a name is
+  ambiguous, 4 when nothing matches). Name files from it; fall back to Grep/Glob when it has no
+  answer.
+- Rebuild it after a piece that changed code: `graphify update .` or
+  `graphify extract . --code-only` (code only, offline, no model backend).
+- The graph output is local: never committed, never deployed or served, never sent through the
+  gateway unmasked. Code only, always; a docs or semantic pass needs the owner's 1.
+
 ## Gateway (optional: delegated pieces on outside models)
 `scripts/gateway.py` beside this skill sends a delegated piece to an OpenAI-compatible endpoint
 and keeps a ledger in `.handoff/gateway/ledger.jsonl`. A project switches it on by naming, in its

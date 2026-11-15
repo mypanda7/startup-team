@@ -42,6 +42,9 @@ before updating if you depend on its behaviour, and check this roster still name
 A companion already installed from its author's own marketplace works just as well: the roster goes
 by the plugin's name, not by where it was installed from.
 
+Optional tool (not a plugin): graphify (PyPI package `graphifyy`, github.com/Graphify-Labs/graphify)
+builds the code graph the setup offers; see `team-workflow`, "Code graph".
+
 ## Roster
 
 Skill names are as the companion plugin names them. `(ask)` means only when the owner asks for it.

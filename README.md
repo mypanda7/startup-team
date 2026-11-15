@@ -328,6 +328,13 @@ cp tools/pre-push .git/hooks/pre-push
 Then write one word or phrase per line into `.git/private-words.txt`. The guard refuses any push
 whose commits (files or messages) contain one of them.
 
+## Code graph (optional)
+
+The AI Tech Lead's setup offers graphify (an optional tool, PyPI package `graphifyy`): on the
+owner's yes it installs graphify's project skill, its CLAUDE.md section and three hooks, builds a
+code-only graph offline and git-ignores `graphify-out/`. Every role then asks the graph before
+grepping or reading whole files. The graph stays local and is never committed or served.
+
 ## Gateway to outside models (optional)
 
 `skills/team-workflow/scripts/gateway.py` connects the team to outside models through an
