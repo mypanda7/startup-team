@@ -1,9 +1,11 @@
 """startup-team gateway: send a delegated piece to an OpenAI-compatible endpoint and keep a ledger.
 
   gateway.py health
-  gateway.py launch --brief <file> --out <file> [--model <name>] [--max-brief-kb n]
+  gateway.py launch --brief <file> --out <file> [--terms <file>] [--model <name>] [--max-brief-kb n]
   gateway.py list [--last n]
   gateway.py log <id>
+  gateway.py mask --brief <file> --out <file> [--terms <file>]      (sends nothing)
+  gateway.py unmask --map <task id | file> --in <file> --out <file>  (sends nothing)
   gateway.py selftest
 
 Common options (or environment), accepted before or after the command:
@@ -16,11 +18,15 @@ Common options (or environment), accepted before or after the command:
 The key is read from that variable at call time and is never printed, logged or written; it is
 scrubbed from error text and from the answer. Redirects are never followed and no proxy is used.
 Guards refuse before any network call (exit 2, error class "guard"): a non-local host that is not
-allowed; a key variable that is unset, empty or holds whitespace or control characters; a block
-list that is missing or lists no word, or a brief holding one of its words, an email address or
-secret-shaped text; a brief that is empty, not UTF-8 or over the size limit; an --out that exists
+allowed; a key variable that is unset, empty or holds whitespace or control characters; a
+.handoff/private-words.txt that is missing or lists no word; a brief that still holds a private
+word, an email address or secret-shaped text after masking, or holds a placeholder bracket; a brief that is empty, not UTF-8 or over the size limit; an --out that exists
 or whose folder does not.
-Block list: .handoff/gateway-blocked.txt when it exists, else .handoff/private-words.txt.
+Masking, always on for launch: every private word (.handoff/private-words.txt), email-shaped and
+secret-shaped string and every --terms line is replaced by a numbered placeholder like ⟦PRIVATE_1⟧
+before the guards run and before anything is sent. The map (placeholder -> value) stays in
+.handoff/gateway/maps/<task id>.json and is never sent or printed; the answer gets the real values
+back before --out is written.
 Ledger: <project>/.handoff/gateway/ledger.jsonl. Python 3.9+, standard library only.
 """
 import argparse
@@ -42,7 +48,11 @@ from pathlib import Path
 
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-BLOCK_LISTS = ("gateway-blocked.txt", "private-words.txt")  # first one that exists is used
+PH_OPEN, PH_CLOSE = "\u27e6", "\u27e7"  # ⟦ ⟧: rare in normal text, so a placeholder can't collide
+PH_TYPES = ("SECRET", "EMAIL", "PRIVATE", "TERM")  # overlap priority, highest first
+PH_FULL = re.compile("\u27e6\\s*(SECRET|EMAIL|PRIVATE|TERM)_(\\d+)\\s*\u27e7", re.I)
+PH_BARE = re.compile(r"(?<![A-Za-z0-9_])(SECRET|EMAIL|PRIVATE|TERM)_(\d+)(?![A-Za-z0-9_])", re.I)
+PH_LEFTOVER = re.compile("[\u27e6\u27e7]|(?i:\\b(?:SECRET|EMAIL|PRIVATE|TERM)[ _-]?\\d+\\b)")
 # A safety net, not a scanner: shapes of common secrets. It misses split, encoded or unusual ones.
 SECRET_SHAPES = (
     ("a private-key header", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
@@ -131,7 +141,7 @@ def check_host(base_url: str, allow_host: str) -> None:
         raise Refused(f"host {host} is not local and not allowed with --allow-host")
 
 
-def check_brief(project: Path, text: str, max_kb: float = 200) -> str:
+def check_brief(project: Path, text: str, max_kb: float = 200) -> None:
     if not text.strip():
         raise Refused("the brief is empty")
     if len(text.encode("utf-8")) > max_kb * 1024:
@@ -143,35 +153,112 @@ def check_brief(project: Path, text: str, max_kb: float = 200) -> str:
         tok = m.group(0)
         if any(c.isdigit() for c in tok) and any(c.isalpha() for c in tok):
             raise Refused("the brief holds something shaped like a secret (a long token-like string)")
-    label, words = block_words(project)
     low = text.lower()
-    for n, word in words:
+    for n, word in private_words(project):
         if word.lower() in low:
-            # Names the list and line number only, so the blocked word itself is not echoed.
-            raise Refused(f"the brief holds blocked word line {n} of {label}")
+            # Names the line number only, so the private word itself is not echoed.
+            raise Refused(f"the brief holds private word line {n} of .handoff/private-words.txt")
     if EMAIL.search(text):
         raise Refused("the brief holds something shaped like an email address")
-    return label
 
 
-def block_words(project: Path):
-    """(label, [(line, word)]) from the first block list that exists; Refused if none is usable."""
-    for name in BLOCK_LISTS:
-        f = project / ".handoff" / name
-        if f.exists():
-            label = ".handoff/" + name
-            break
-    else:
-        raise Refused(".handoff/private-words.txt (or .handoff/gateway-blocked.txt) must exist "
-                      "before anything is sent")
+def read_list(f: Path, label: str, min_len: int = 1) -> list:
+    """[(line, entry)] of a utf-8-sig list file, skipping blanks and # comments."""
     try:
         lines = f.read_text(encoding="utf-8-sig").splitlines()
     except UnicodeDecodeError:
         raise Refused(f"{label} is not UTF-8")
-    words = [(n, w.strip()) for n, w in enumerate(lines, 1) if w.strip() and not w.strip().startswith("#")]
+    return [(n, w.strip()) for n, w in enumerate(lines, 1)
+            if len(w.strip()) >= min_len and not w.strip().startswith("#")]
+
+
+def private_words(project: Path) -> list:
+    f = project / ".handoff" / "private-words.txt"
+    if not f.exists():
+        raise Refused(".handoff/private-words.txt must exist before anything is sent")
+    words = read_list(f, ".handoff/private-words.txt")
     if not words:
-        raise Refused(f"{label} lists no word; an empty list guards nothing")
-    return label, words
+        raise Refused(".handoff/private-words.txt lists no word; an empty list guards nothing")
+    return words
+
+
+def _flex(term: str) -> str:
+    """A term as a pattern that also matches across spaces and line breaks."""
+    return r"\s+".join(re.escape(t) for t in term.split())
+
+
+def mask(project: Path, text: str, terms=()):
+    """(masked text, {"PRIVATE_1": value, ...}, {type: count}). Overlapping hits merge into one."""
+    if PH_OPEN in text or PH_CLOSE in text:
+        raise Refused("the brief holds a placeholder bracket; remove it before sending")
+    spans = []
+    for _, shape in SECRET_SHAPES:
+        spans += [(m.start(), m.end(), "SECRET") for m in shape.finditer(text)]
+    for m in LONG_TOKEN.finditer(text):
+        if any(c.isdigit() for c in m.group(0)) and any(c.isalpha() for c in m.group(0)):
+            spans.append((m.start(), m.end(), "SECRET"))
+    spans += [(m.start(), m.end(), "EMAIL") for m in EMAIL.finditer(text)]
+    for kind, entries in (("PRIVATE", [w for _, w in private_words(project)]), ("TERM", list(terms))):
+        for entry in entries:
+            spans += [(m.start(), m.end(), kind) for m in re.finditer(_flex(entry), text, re.I) if m.end() > m.start()]
+    merged = []
+    for start, end, kind in sorted(spans):
+        if merged and start < merged[-1][1]:
+            last = merged[-1]
+            top = min(last[2], kind, key=PH_TYPES.index)
+            merged[-1] = (last[0], max(last[1], end), top)
+        else:
+            merged.append((start, end, kind))
+    mapping, by_value, counts, parts, pos = {}, {}, {k: 0 for k in PH_TYPES}, [], 0
+    for start, end, kind in merged:
+        value = text[start:end]
+        if value not in by_value:
+            counts[kind] += 1
+            name = f"{kind}_{counts[kind]}"
+            by_value[value] = name
+            mapping[name] = value
+        parts += [text[pos:start], PH_OPEN + by_value[value] + PH_CLOSE]
+        pos = end
+    parts.append(text[pos:])
+    return "".join(parts), mapping, {k: v for k, v in counts.items() if v}
+
+
+def unmask(answer: str, mapping: dict, bare_ok: bool):
+    """(answer with real values back, [placeholders it could not restore])."""
+    unrestored = []
+
+    def put_back(m):
+        name = f"{m.group(1).upper()}_{m.group(2)}"
+        if name in mapping:
+            return mapping[name]
+        unrestored.append(m.group(0))
+        return m.group(0)
+    out = PH_FULL.sub(put_back, answer)
+    if bare_ok:  # the model dropped the brackets, and the brief had no such bare word itself
+        out = PH_BARE.sub(lambda m: mapping.get(f"{m.group(1).upper()}_{m.group(2)}", m.group(0)), out)
+    restored_values = set(mapping.values())
+    rest = out
+    for u in unrestored:
+        rest = rest.replace(u, " ")
+    for m in PH_LEFTOVER.finditer(rest):
+        if m.group(0) not in restored_values and m.group(0) not in unrestored:
+            unrestored.append(m.group(0))
+    return out, unrestored
+
+
+def read_terms(path: str) -> list:
+    if not path:
+        return []
+    f = Path(path)
+    if not f.is_file():
+        raise Refused("the --terms file does not exist")
+    return [w for _, w in read_list(f, "the --terms file", min_len=2)]
+
+
+def maps_dir(project: Path) -> Path:
+    d = project / ".handoff" / "gateway" / "maps"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
 
 
 def request(base_url: str, path: str, key: str, body=None, timeout: float = 120.0):
@@ -240,13 +327,20 @@ def cmd_launch(a) -> int:
             text = brief_file.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             raise Refused("the brief file is not UTF-8")
-        row["block_list"] = check_brief(project, text, a.max_brief_kb)
+        if not text.strip():
+            raise Refused("the brief is empty")
+        masked, mapping, counts = mask(project, text, read_terms(a.terms))
+        row["masked"] = counts
+        check_brief(project, masked, a.max_brief_kb)
         out = Path(a.out)
         if out.exists():
             raise Refused("the --out file already exists; it is never overwritten")
         if not out.parent.resolve().is_dir():
             raise Refused("the --out file's folder does not exist")
         row["brief_bytes"] = len(text.encode("utf-8"))
+        bare_ok = not PH_BARE.search(text)
+        (maps_dir(project) / f"{task_id}.json").write_text(
+            json.dumps({"placeholders": mapping, "bare_ok": bare_ok}, ensure_ascii=False), encoding="utf-8")
     except Refused as e:
         row.update(error_class="guard", error=scrub(str(e)))
         append_ledger(project, row)
@@ -254,14 +348,16 @@ def cmd_launch(a) -> int:
         return 2
     try:
         data = request(a.base_url, "/v1/chat/completions", key,
-                       {"model": a.model, "messages": [{"role": "user", "content": text}]}, a.timeout)
+                       {"model": a.model, "messages": [{"role": "user", "content": masked}]}, a.timeout)
         try:
             answer = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError):
             raise Failed("worker", "the answer had no message content")
         if not isinstance(answer, str) or not answer:
             raise Failed("worker", "the answer content was empty or not text")
+        answer, unrestored = unmask(answer, mapping, bare_ok)
         answer = scrub(answer)
+        row["unrestored"] = unrestored
         try:
             out.write_text(answer, encoding="utf-8")
         except OSError as e:
@@ -271,7 +367,7 @@ def cmd_launch(a) -> int:
         row.update(status="done", model_answered=model if isinstance(model, str) else None,
                    tokens=usage.get("total_tokens"), out_bytes=len(answer.encode("utf-8")))
         append_ledger(project, row)
-        print(task_id)
+        print(task_id + (f" ({len(unrestored)} placeholder(s) not restored; see log)" if unrestored else ""))
         return 0
     except Failed as e:
         row.update(status="failed", error_class=e.error_class, error=scrub(str(e)))
@@ -291,11 +387,59 @@ def cmd_log(a) -> int:
     for r in read_ledger(Path(a.project)):
         if r.get("id") == a.id:
             for k in ("id", "time", "status", "model_asked", "model_answered", "tokens", "brief",
-                      "brief_bytes", "block_list", "out", "out_bytes", "error_class", "error"):
+                      "brief_bytes", "masked", "out", "out_bytes", "error_class", "error"):
                 print(f"{k}: {r.get(k)}")
+            print(f"unrestored: {len(r.get('unrestored') or [])}")
             return 0
     print(f"no task {a.id}")
     return 1
+
+
+def cmd_mask(a) -> int:
+    """Mask a brief locally, write the masked text and its map, and run the guards. Sends nothing."""
+    project = Path(a.project)
+    task_id = "mask-" + time.strftime("%Y%m%d-%H%M%S") + "-" + secrets.token_hex(2)
+    try:
+        brief, out = Path(a.brief), Path(a.out)
+        if not brief.is_file():
+            raise Refused("the brief file does not exist")
+        if out.exists():
+            raise Refused("the --out file already exists; it is never overwritten")
+        try:
+            text = brief.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            raise Refused("the brief file is not UTF-8")
+        masked, mapping, counts = mask(project, text, read_terms(a.terms))
+        check_brief(project, masked, a.max_brief_kb)
+    except Refused as e:
+        print(f"refused: {e}")
+        return 2
+    out.write_text(masked, encoding="utf-8")
+    (maps_dir(project) / f"{task_id}.json").write_text(
+        json.dumps({"placeholders": mapping, "bare_ok": not PH_BARE.search(text)}, ensure_ascii=False), encoding="utf-8")
+    print(f"{task_id} masked {counts or 'nothing'}; guards ok")
+    return 0
+
+
+def cmd_unmask(a) -> int:
+    """Put the real values back into a file from a map. Sends nothing."""
+    project = Path(a.project)
+    m = Path(a.map)
+    if not m.is_file():
+        m = maps_dir(project) / f"{a.map}.json"
+    out = Path(a.out)
+    if not m.is_file() or not Path(a.in_file).is_file():
+        print("refused: no such map or --in file")
+        return 2
+    if out.exists():
+        print("refused: the --out file already exists; it is never overwritten")
+        return 2
+    data = json.loads(m.read_text(encoding="utf-8"))
+    text, unrestored = unmask(Path(a.in_file).read_text(encoding="utf-8"), data.get("placeholders", {}),
+                              bool(data.get("bare_ok")))
+    out.write_text(text, encoding="utf-8")
+    print(f"restored; {len(unrestored)} placeholder(s) not restored")
+    return 0
 
 
 def main(argv=None) -> int:
@@ -312,13 +456,23 @@ def main(argv=None) -> int:
     la.add_argument("--out", required=True)
     la.add_argument("--model", default="auto")
     la.add_argument("--max-brief-kb", type=float, default=200)
+    la.add_argument("--terms", default="")
+    ma = sub.add_parser("mask")
+    ma.add_argument("--brief", required=True)
+    ma.add_argument("--out", required=True)
+    ma.add_argument("--terms", default="")
+    ma.add_argument("--max-brief-kb", type=float, default=200)
+    um = sub.add_parser("unmask")
+    um.add_argument("--map", required=True)
+    um.add_argument("--in", dest="in_file", required=True)
+    um.add_argument("--out", required=True)
     li = sub.add_parser("list")
     li.add_argument("--last", type=int, default=20)
     lo = sub.add_parser("log")
     lo.add_argument("id")
     sub.add_parser("selftest")
     # The common options may also come after the command.
-    for sp in (he, la, li, lo):
+    for sp in (he, la, li, lo, ma, um):
         sp.add_argument("--base-url", dest="base_url_late")
         sp.add_argument("--key-env", dest="key_env_late")
         sp.add_argument("--allow-host", dest="allow_host_late")
@@ -331,7 +485,8 @@ def main(argv=None) -> int:
             setattr(a, name, late)
     if a.cmd == "selftest":
         return selftest()
-    return {"health": cmd_health, "launch": cmd_launch, "list": cmd_list, "log": cmd_log}[a.cmd](a)
+    return {"health": cmd_health, "launch": cmd_launch, "list": cmd_list, "log": cmd_log,
+            "mask": cmd_mask, "unmask": cmd_unmask}[a.cmd](a)
 
 
 def run(argv=None) -> int:
@@ -355,8 +510,8 @@ def _stub(behaviour: dict):
         def _go(self):
             counter[0] += 1
             n = int(self.headers.get("Content-Length") or 0)
-            if n:
-                self.rfile.read(n)
+            body = self.rfile.read(n) if n else b""
+            behaviour.setdefault("bodies", []).append(body)
             kind = behaviour["kind"]
             if kind == "redirect":
                 self.send_response(behaviour["code"])
@@ -377,6 +532,11 @@ def _stub(behaviour: dict):
                 "no_choices": {"choices": []},
                 "echo_key": {"choices": [{"message": {"content": "got " + self.headers.get("Authorization", "")}}]},
             }
+            if kind == "echo_brief":
+                sent = json.loads(body.decode("utf-8"))["messages"][0]["content"]
+                bodies[kind] = {"choices": [{"message": {"content": sent}}]}
+            if kind == "fixed":
+                bodies[kind] = {"choices": [{"message": {"content": behaviour["answer"]}}]}
             raw = b"not json at all" if kind == "bad_json" else json.dumps(bodies[kind]).encode()
             self.send_response(200)
             self.send_header("Content-Length", str(len(raw)))
@@ -431,16 +591,7 @@ def selftest() -> int:
         assert "email" in refused(check_brief, project, "write to someone@example.org")
         assert "empty" in refused(check_brief, project, "  \n ")
         assert "over 1 KB" in refused(check_brief, project, "x" * 2000, 1)
-        assert check_brief(project, "Summarise this public README in five lines.") == ".handoff/private-words.txt"
-        # gateway-blocked.txt wins when it exists: a word only in private-words.txt then passes
-        blocked = project / ".handoff" / "gateway-blocked.txt"
-        blocked.write_text("# what may never leave\nHostCo\n", encoding="utf-8-sig")
-        assert check_brief(project, "About AcmeWidget, the public product.") == ".handoff/gateway-blocked.txt"
-        assert "line 2 of .handoff/gateway-blocked.txt" in refused(check_brief, project, "hosted at hostco")
-        blocked.write_text("# only a comment\n", encoding="utf-8")
-        assert "gateway-blocked.txt lists no word" in refused(check_brief, project, "a clean brief")
-        blocked.unlink()
-        assert "private-words.txt" in refused(check_brief, project, "about acmewidget")
+        check_brief(project, "Summarise this public README in five lines.")
         # secret shapes
         for shaped in ("-----BEGIN RSA PRIVATE KEY-----", "password = hunter22", "API_KEY: abc123",
                        "token=xyz", "secret: s3", "passwd=pw", "use sk-abcdefghijk1", "ghp_abcdefgh1234",
@@ -498,6 +649,65 @@ def selftest() -> int:
         front_behaviour.update(kind="echo_key")
         assert gw("launch", "--base-url", base, "--brief", str(brief), "--out", str(project / "echo.txt")) == 0
         assert "<key>" in (project / "echo.txt").read_text(encoding="utf-8")
+        # masking: values never leave, come back byte-exact, overlaps merge, line breaks, repeats
+        words.write_text("AcmeWidget\nAcme\nProject Nimbus\nHostCo\n", encoding="utf-8")
+        terms = project / "terms.txt"
+        terms.write_text("Jane Roe\nAcmeWidget Pro\n", encoding="utf-8")
+        values = ["AcmeWidget Pro", "acmewidget", "Acme", "project\nNIMBUS", "preHostCoTech", "jane@example.org",
+                  "password = hunter22", "Jane  Roe", "ghp_abcdefgh1234"]
+        secret_brief = ("Plan for AcmeWidget Pro, made by acmewidget and Acme; see project\nNIMBUS and "
+                        "preHostCoTech. Mail jane@example.org, password = hunter22, owner Jane  Roe, "
+                        "token ghp_abcdefgh1234. Again: Acme and jane@example.org.\n")
+        sb = project / "secret_brief.txt"
+        sb.write_text(secret_brief, encoding="utf-8")
+        masked, mapping, counts = mask(project, secret_brief, read_terms(str(terms)))
+        low = masked.lower()
+        for v in values:
+            assert v.lower() not in low, v
+        assert "acme" not in low and "hostco" not in low and "nimbus" not in low
+        assert list(mapping.values()).count("Acme") == 1  # the same value twice -> one placeholder
+        assert list(mapping.values()).count("jane@example.org") == 1
+        assert unmask(masked, mapping, True) == (secret_brief, [])  # byte-exact round trip
+        front_behaviour.update(kind="echo_brief", bodies=[])
+        assert gw("launch", "--base-url", base, "--brief", str(sb), "--out", str(project / "m1.txt"),
+                  "--terms", str(terms)) == 0
+        assert (project / "m1.txt").read_text(encoding="utf-8") == secret_brief
+        sent = b"".join(front_behaviour["bodies"]).decode("utf-8")
+        sent_text = json.loads(sent)["messages"][0]["content"]
+        for v in list(mapping.values()) + ["AcmeWidget", "Acme", "HostCo", "Nimbus", "hunter22", "jane@"]:
+            assert v.lower() not in sent.lower() and v.lower() not in sent_text.lower(), v
+        # a brief that is all private data sends only placeholders
+        allp = project / "all_private.txt"
+        allp.write_text("AcmeWidget HostCo jane@example.org", encoding="utf-8")
+        front_behaviour.update(kind="echo_brief", bodies=[])
+        assert gw("launch", "--base-url", base, "--brief", str(allp), "--out", str(project / "m2.txt")) == 0
+        only = json.loads(front_behaviour["bodies"][0].decode("utf-8"))["messages"][0]["content"]
+        assert PH_FULL.sub("", only).strip() == "", only
+        # brackets dropped by the model come back when unambiguous
+        name = next(iter(mapping))
+        assert unmask(f"see {name} now", mapping, True)[0] == f"see {mapping[name]} now"
+        # an unknown placeholder in the answer is reported, not crashed
+        front_behaviour.update(kind="fixed", answer="Result for \u27e6PRIVATE_99\u27e7 and \u27e6TERM_1")
+        assert gw("launch", "--base-url", base, "--brief", str(sb), "--out", str(project / "m3.txt")) == 0
+        assert read_ledger(project)[-1]["unrestored"], "the unknown placeholder was not reported"
+        # guards after masking: a placeholder bracket or an oversize masked brief refuses, 0 requests
+        before = fcount[0]
+        br = project / "bracket.txt"
+        br.write_text("a \u27e6 b", encoding="utf-8")
+        assert gw("launch", "--base-url", base, "--brief", str(br), "--out", str(project / "m4.txt")) == 2
+        assert gw("launch", "--base-url", base, "--brief", str(sb), "--out", str(project / "m5.txt"),
+                  "--max-brief-kb", "0.05") == 2
+        assert fcount[0] == before
+        # mask / unmask commands send nothing and round-trip
+        assert gw("mask", "--brief", str(sb), "--out", str(project / "masked.txt")) == 0
+        map_id = sorted(maps_dir(project).glob("mask-*.json"))[-1]
+        assert gw("unmask", "--map", str(map_id), "--in", str(project / "masked.txt"),
+                  "--out", str(project / "unmasked.txt")) == 0
+        assert (project / "unmasked.txt").read_text(encoding="utf-8") == secret_brief
+        assert fcount[0] == before
+        assert "acme" not in buf.getvalue().lower(), "a private value reached the printed output"
+        words.write_text("AcmeWidget\n# list\n", encoding="utf-8")
+
         # N6: --timeout after every command
         front_behaviour.update(kind="ok")
         assert gw("health", "--base-url", base, "--timeout", "5") == 0

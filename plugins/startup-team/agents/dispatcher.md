@@ -23,10 +23,11 @@ names its base URL and key variable.
   stop.
 
 ## Never delegated
-A piece whose brief or files carry personal data (names, contacts, records about people, anything
-read from a live database) or secrets (keys, tokens, passwords, environment files, credentials)
-never goes to an outside model. If a DELEGATE piece looks like one, do not launch it: list it
-under NOT LAUNCHED with the reason and hand it to the tech lead. The same holds for a piece whose
+Every brief is masked before it leaves: run the `anonymizer` agent on it and launch with its list
+as `--terms`; the gateway masks that list, the private words, emails and secrets, and restores the
+real values in the answer. A piece whose point is a secret or personal value itself (keys, tokens,
+passwords, records about people) is never launched: list it under NOT LAUNCHED with the reason and
+hand it to the tech lead. The same holds for a piece whose
 design is not yet approved, and for a model the project's CLAUDE.md does not allow on that gateway.
 
 ## What you may touch
@@ -88,7 +89,7 @@ DELEGATED TASKS: <n> running, <n> done, <n> failed or stalled. Gateway: <ok | do
 DISPATCHED:                       # DISPATCH mode only
 - <piece> -> <id> on <model>, brief: <brief file>
 NOT LAUNCHED:
-- <piece>: <not DELEGATE | personal data or secrets | design not approved | model not allowed>
+- <piece>: <not DELEGATE | the point is a secret or personal value | design not approved | model not allowed>
 
 REVIEWED:                         # DISPATCH mode only
 - <id>: `<command>` -> <what it printed, at most 4 lines> -> ok | failed (review)
@@ -111,4 +112,4 @@ lead.
 Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
 work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
 put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
-Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.
+Everything identifying is masked before it leaves: run `anonymizer` on the brief, pass its list with `--terms`, then `launch`; the script restores the real values in the answer.

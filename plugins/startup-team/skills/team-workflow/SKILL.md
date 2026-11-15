@@ -285,7 +285,11 @@ and keeps a ledger in `.handoff/gateway/ledger.jsonl`. A project switches it on 
 CLAUDE.md, the base URL, the NAME of the environment variable that holds the key (the key itself
 never appears in the project, a brief, a record or a reply), and these commands:
 - `gateway.py --base-url <url> --key-env <NAME> health`: `ok <n models>`, `down <reason>` or `auth`.
-- `gateway.py ... launch --brief <file> --out <file> [--model <name>]`: prints a task id.
+- `gateway.py ... launch --brief <file> --out <file> [--terms <file>] [--model <name>]`: masks, sends,
+  restores, and prints a task id.
+- `gateway.py ... mask --brief <file> --out <file> [--terms <file>]` and
+  `gateway.py ... unmask --map <task id | file> --in <file> --out <file>`: check the masking locally;
+  they send nothing.
 - `gateway.py ... list [--last n]` and `gateway.py ... log <id>`: the ledger, never the key or the
   full brief. `gateway.py selftest` checks the guards without any network.
 - Options before or after the command: `--timeout <s>` (default 120); `launch --max-brief-kb n`
@@ -299,10 +303,15 @@ is scrubbed from error text and from the answer. Odd replies fail cleanly (exit 
 The guard's limits: it can't see a word split, spaced out or disguised (look-alike letters,
 invisible characters); it misses unusual email forms ("name at domain", full-width @); and
 `--allow-host` is a convention, not enforced. The brief writer stays responsible for what is sent.
-A brief is also refused for secret-shaped text (a private-key header, a `password=`/`api_key:`
-style assignment, a known key prefix, a long token-like string): a safety net with the same
-limits. A project may keep `.handoff/gateway-blocked.txt` (what may never leave, e.g. without the
-product's public name); when it exists it replaces `private-words.txt` for the gateway only.
+Masking, always on for `launch` (there is no way to send unmasked text): every line of
+`.handoff/private-words.txt` (case-insensitive, also inside longer words and across line breaks),
+every email-shaped and secret-shaped string (a private-key header, a `password=`/`api_key:` style
+assignment, a known key prefix, a long token-like string) and every line of `--terms` is replaced
+by a numbered placeholder such as `⟦PRIVATE_1⟧`, `⟦EMAIL_1⟧`, `⟦SECRET_1⟧`, `⟦TERM_1⟧` (one per
+value). The guards then run on the MASKED text, so a hit refuses with nothing sent. The map
+(placeholder -> real value) is kept only in `.handoff/gateway/maps/<task id>.json`, never sent or
+printed; the answer gets the real values back before `--out` is written, and the ledger records
+the counts per type and any placeholder that could not be restored (`unrestored`).
 
 ### Delegation first (only in a project whose CLAUDE.md has a gateway section)
 When the project's CLAUDE.md names the gateway's base URL, key variable and commands, this rule
@@ -314,20 +323,25 @@ answers only and sends nothing). Without that section nothing here changes.
   PUT THE PARTS TOGETHER. You stay responsible for the result.
 - Write each brief self-contained, since the model sees nothing else: the task, the exact input,
   the rules that apply, the output format.
-- Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.
-  The product's name and what is public on its site may be sent; the project's
-  `.handoff/gateway-blocked.txt` (else `private-words.txt`) lists what may not.
+- Everything identifying is masked before it leaves. Run the `anonymizer` agent on the brief (as a
+  sub-agent where the session can; otherwise list the terms yourself, one per line): it lists the
+  names, ids, addresses, hosts and other identifying strings the fixed lists won't catch. Pass
+  that list with `--terms`, then `launch`; the script masks it, the private words, emails and
+  secrets, and restores the real values in the answer. Check any `unrestored` placeholder.
+- Limits: a term nobody listed is sent as it is, and distinctive wording (a slogan, a rare
+  feature) can still hint at the project. The lists and the anonymizer are a net, not a guarantee.
 - Not delegable: reading or writing files, running commands or tests, browsers, pushes, deploys,
-  approvals, questions to the owner.
+  approvals, questions to the owner, and a task whose point is the secret or personal value itself
+  (for example "is this password strong").
 - A refused or failed launch, or an answer that fails your check twice: do that part yourself and
   say so in your result. The ledger records each launch; add the one-line `model-selection`
   memory entry as for any piece.
 - Every existing gate stays: design approval, the plan's green light, QA, the audit, the owner's 1.
 - A piece sent whole to the outside models (route DELEGATE) still goes through the `dispatcher`.
 
-May be delegated: research, summaries, first drafts, tests for pure functions. Never: personal
-data, secrets, or code for auth, permissions, money or migrations. Sessions stay on Claude, and
-every result is reviewed here before it is used; one that fails review is redone here.
+Sessions stay on Claude, and every result is reviewed here before it is used; one that fails
+review is redone here. Code for auth, permissions, money or migrations is still written and
+checked here: an outside draft of it is never used as it is.
 
 ## Setup changes (opt-in: straight to the team repo's main)
 A setup change is an owner instruction about how the team itself is set up or works: session

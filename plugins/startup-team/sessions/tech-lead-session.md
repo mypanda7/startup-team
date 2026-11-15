@@ -190,7 +190,8 @@ once, in its final wording. Ideas the owner did not ask for go under PROPOSALS.
   step is its own DEVOPS piece, named on the GIT field.
 - SECURITY: `security`, analysis only, when the owner asks for a security check.
 - DELEGATE: a whole piece sent to the outside models through the `dispatcher`, only when the
-  project's CLAUDE.md has a gateway section, and never for a piece that carries personal data.
+  project's CLAUDE.md has a gateway section; its brief is masked like any other (`anonymizer`,
+  then `launch --terms`), and a piece whose point is a secret or personal value itself stays HERE.
   Every role also hands the text parts of its own work to the gateway ("Delegation first").
 
 Keep a piece HERE when it touches auth, permissions, money, migrations, deploy files or a project
@@ -329,4 +330,4 @@ Every piece names MODEL and MODEL-BASIS. A UI piece without an approved design i
 Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
 work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
 put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
-Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.
+Everything identifying is masked before it leaves: run `anonymizer` on the brief, pass its list with `--terms`, then `launch`; the script restores the real values in the answer.

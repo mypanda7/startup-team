@@ -330,10 +330,12 @@ whose commits (files or messages) contain one of them.
 OpenAI-compatible endpoint. It is off until a project's CLAUDE.md names the base URL, the name of
 the key variable and the commands. Then every session, agent and sub-agent (except the Business
 Analyst) hands the text parts of its work to the outside models, checks each answer, redoes what
-fails and puts the parts together. Emails, passwords, keys, hosting, account and database names,
-user data and the owner's answers never leave. The script refuses, before sending anything, a
-non-local host the project didn't allow, a brief with a blocked word, an email address or
-secret-shaped text, and a missing key, and it never prints or stores the key.
+fails and puts the parts together. Everything identifying is masked first: the project's private
+words, emails, secret-shaped text and the terms the `anonymizer` agent lists become placeholders
+like `⟦PRIVATE_1⟧`, and the script puts the real values back into the answer. The map stays on
+the machine. The script refuses, before sending anything, a non-local host the project didn't
+allow, a brief that still holds a private word, an email or a secret after masking, and a missing
+key, and it never prints or stores the key.
 
 ## Requirements
 

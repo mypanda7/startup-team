@@ -75,4 +75,4 @@ When the project's channel is a chat page:
 Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
 work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
 put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
-Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.
+Everything identifying is masked before it leaves: run `anonymizer` on the brief, pass its list with `--terms`, then `launch`; the script restores the real values in the answer.
