@@ -326,11 +326,14 @@ whose commits (files or messages) contain one of them.
 
 ## Gateway to outside models (optional)
 
-`skills/team-workflow/scripts/gateway.py` lets the team hand simple pieces (research, summaries,
-first drafts) to an OpenAI-compatible endpoint, with every result reviewed before use. It is off
-until a project's CLAUDE.md names the base URL and the name of the key variable. It refuses,
-before sending anything, a non-local host the project didn't allow, a brief with a private word or
-an email address, and a missing key, and it never prints or stores the key.
+`skills/team-workflow/scripts/gateway.py` connects the team to outside models through an
+OpenAI-compatible endpoint. It is off until a project's CLAUDE.md names the base URL, the name of
+the key variable and the commands. Then every session, agent and sub-agent (except the Business
+Analyst) hands the text parts of its work to the outside models, checks each answer, redoes what
+fails and puts the parts together. Emails, passwords, keys, hosting, account and database names,
+user data and the owner's answers never leave. The script refuses, before sending anything, a
+non-local host the project didn't allow, a brief with a blocked word, an email address or
+secret-shaped text, and a missing key, and it never prints or stores the key.
 
 ## Requirements
 

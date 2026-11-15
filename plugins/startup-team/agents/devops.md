@@ -195,3 +195,9 @@ session runs each on `skill-sub`. The answer is advice; this file and the projec
 For a ship, a hotfix, a release, a deploy or a rollback, follow the plugin skill of that name
 (`ship`, `hotfix`, `release-train`, `deploy`): its steps are your STEPS, and each write boundary in
 it is its own proposal.
+
+## Gateway: delegation first
+Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
+work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
+put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.

@@ -16,10 +16,11 @@ Common options (or environment), accepted before or after the command:
 The key is read from that variable at call time and is never printed, logged or written; it is
 scrubbed from error text and from the answer. Redirects are never followed and no proxy is used.
 Guards refuse before any network call (exit 2, error class "guard"): a non-local host that is not
-allowed; a key variable that is unset, empty or holds whitespace or control characters; a
-.handoff/private-words.txt that is missing or lists no word, or a brief holding one of its words
-or an email address; a brief that is empty, not UTF-8 or over the size limit; an --out that exists
+allowed; a key variable that is unset, empty or holds whitespace or control characters; a block
+list that is missing or lists no word, or a brief holding one of its words, an email address or
+secret-shaped text; a brief that is empty, not UTF-8 or over the size limit; an --out that exists
 or whose folder does not.
+Block list: .handoff/gateway-blocked.txt when it exists, else .handoff/private-words.txt.
 Ledger: <project>/.handoff/gateway/ledger.jsonl. Python 3.9+, standard library only.
 """
 import argparse
@@ -41,6 +42,16 @@ from pathlib import Path
 
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+BLOCK_LISTS = ("gateway-blocked.txt", "private-words.txt")  # first one that exists is used
+# A safety net, not a scanner: shapes of common secrets. It misses split, encoded or unusual ones.
+SECRET_SHAPES = (
+    ("a private-key header", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+    ("a password, secret, api_key or token assignment",
+     re.compile(r"(?i)\b(password|passwd|secret|api_key|token)\s*[=:]\s*\S+")),
+    ("a known key prefix", re.compile(r"(?<![A-Za-z0-9])(sk-[A-Za-z0-9_-]{8,}|ghp_[A-Za-z0-9]{8,}|"
+                                      r"gho_[A-Za-z0-9]{8,}|AKIA[0-9A-Z]{12,})")),
+)
+LONG_TOKEN = re.compile(r"[A-Za-z0-9+/_=-]{40,}")
 _SEEN_KEYS = set()  # every key value read this run, so any output can be scrubbed of it
 
 
@@ -120,28 +131,47 @@ def check_host(base_url: str, allow_host: str) -> None:
         raise Refused(f"host {host} is not local and not allowed with --allow-host")
 
 
-def check_brief(project: Path, text: str, max_kb: float = 200) -> None:
+def check_brief(project: Path, text: str, max_kb: float = 200) -> str:
     if not text.strip():
         raise Refused("the brief is empty")
     if len(text.encode("utf-8")) > max_kb * 1024:
         raise Refused(f"the brief is over {max_kb:g} KB (raise it with --max-brief-kb)")
-    words_file = project / ".handoff" / "private-words.txt"
-    if not words_file.exists():
-        raise Refused(".handoff/private-words.txt must exist before anything is sent")
-    try:
-        lines = words_file.read_text(encoding="utf-8-sig").splitlines()
-    except UnicodeDecodeError:
-        raise Refused(".handoff/private-words.txt is not UTF-8")
-    words = [(n, w.strip()) for n, w in enumerate(lines, 1) if w.strip() and not w.strip().startswith("#")]
-    if not words:
-        raise Refused(".handoff/private-words.txt lists no word; an empty list guards nothing")
+    for kind, shape in SECRET_SHAPES:
+        if shape.search(text):
+            raise Refused(f"the brief holds something shaped like a secret ({kind})")
+    for m in LONG_TOKEN.finditer(text):
+        tok = m.group(0)
+        if any(c.isdigit() for c in tok) and any(c.isalpha() for c in tok):
+            raise Refused("the brief holds something shaped like a secret (a long token-like string)")
+    label, words = block_words(project)
     low = text.lower()
     for n, word in words:
         if word.lower() in low:
-            # Names the line number only, so the private word itself is not echoed.
-            raise Refused(f"the brief holds private word line {n} of .handoff/private-words.txt")
+            # Names the list and line number only, so the blocked word itself is not echoed.
+            raise Refused(f"the brief holds blocked word line {n} of {label}")
     if EMAIL.search(text):
         raise Refused("the brief holds something shaped like an email address")
+    return label
+
+
+def block_words(project: Path):
+    """(label, [(line, word)]) from the first block list that exists; Refused if none is usable."""
+    for name in BLOCK_LISTS:
+        f = project / ".handoff" / name
+        if f.exists():
+            label = ".handoff/" + name
+            break
+    else:
+        raise Refused(".handoff/private-words.txt (or .handoff/gateway-blocked.txt) must exist "
+                      "before anything is sent")
+    try:
+        lines = f.read_text(encoding="utf-8-sig").splitlines()
+    except UnicodeDecodeError:
+        raise Refused(f"{label} is not UTF-8")
+    words = [(n, w.strip()) for n, w in enumerate(lines, 1) if w.strip() and not w.strip().startswith("#")]
+    if not words:
+        raise Refused(f"{label} lists no word; an empty list guards nothing")
+    return label, words
 
 
 def request(base_url: str, path: str, key: str, body=None, timeout: float = 120.0):
@@ -210,7 +240,7 @@ def cmd_launch(a) -> int:
             text = brief_file.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             raise Refused("the brief file is not UTF-8")
-        check_brief(project, text, a.max_brief_kb)
+        row["block_list"] = check_brief(project, text, a.max_brief_kb)
         out = Path(a.out)
         if out.exists():
             raise Refused("the --out file already exists; it is never overwritten")
@@ -261,7 +291,7 @@ def cmd_log(a) -> int:
     for r in read_ledger(Path(a.project)):
         if r.get("id") == a.id:
             for k in ("id", "time", "status", "model_asked", "model_answered", "tokens", "brief",
-                      "brief_bytes", "out", "out_bytes", "error_class", "error"):
+                      "brief_bytes", "block_list", "out", "out_bytes", "error_class", "error"):
                 print(f"{k}: {r.get(k)}")
             return 0
     print(f"no task {a.id}")
@@ -394,14 +424,30 @@ def selftest() -> int:
         words.write_text("# only a comment\n\n   \n", encoding="utf-8")
         assert "lists no word" in refused(check_brief, project, "a clean brief")
         words.write_text("AcmeWidget\n# list\n", encoding="utf-8-sig")
-        assert "line 1" in refused(check_brief, project, "about acmewidget")
+        assert "line 1 of .handoff/private-words.txt" in refused(check_brief, project, "about acmewidget")
         msg = refused(check_brief, project, "Summarise the ACMEWIDGET docs")
         assert "acmewidget" not in msg.lower()
         # email, empty brief, size limit (N4)
         assert "email" in refused(check_brief, project, "write to someone@example.org")
         assert "empty" in refused(check_brief, project, "  \n ")
         assert "over 1 KB" in refused(check_brief, project, "x" * 2000, 1)
-        check_brief(project, "Summarise this public README in five lines.")
+        assert check_brief(project, "Summarise this public README in five lines.") == ".handoff/private-words.txt"
+        # gateway-blocked.txt wins when it exists: a word only in private-words.txt then passes
+        blocked = project / ".handoff" / "gateway-blocked.txt"
+        blocked.write_text("# what may never leave\nHostCo\n", encoding="utf-8-sig")
+        assert check_brief(project, "About AcmeWidget, the public product.") == ".handoff/gateway-blocked.txt"
+        assert "line 2 of .handoff/gateway-blocked.txt" in refused(check_brief, project, "hosted at hostco")
+        blocked.write_text("# only a comment\n", encoding="utf-8")
+        assert "gateway-blocked.txt lists no word" in refused(check_brief, project, "a clean brief")
+        blocked.unlink()
+        assert "private-words.txt" in refused(check_brief, project, "about acmewidget")
+        # secret shapes
+        for shaped in ("-----BEGIN RSA PRIVATE KEY-----", "password = hunter22", "API_KEY: abc123",
+                       "token=xyz", "secret: s3", "passwd=pw", "use sk-abcdefghijk1", "ghp_abcdefgh1234",
+                       "gho_abcdefgh1234", "AKIAABCDEFGHIJKL", "x " + "a1B2" * 11):
+            assert "shaped like a secret" in refused(check_brief, project, shaped), shaped
+        check_brief(project, "Count the tokens in this passage and keep the secret of good copy short.")
+        check_brief(project, "See https://example.com/docs/getting-started/install-guide for steps.")
         # host
         assert "not local" in refused(check_host, "http://example.com:8080", "")
         for ok in ("http://localhost:8080", "http://127.0.0.1:8080", "http://[::1]:8080"):

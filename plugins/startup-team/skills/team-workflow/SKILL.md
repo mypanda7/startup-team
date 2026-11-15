@@ -299,6 +299,32 @@ is scrubbed from error text and from the answer. Odd replies fail cleanly (exit 
 The guard's limits: it can't see a word split, spaced out or disguised (look-alike letters,
 invisible characters); it misses unusual email forms ("name at domain", full-width @); and
 `--allow-host` is a convention, not enforced. The brief writer stays responsible for what is sent.
+A brief is also refused for secret-shaped text (a private-key header, a `password=`/`api_key:`
+style assignment, a known key prefix, a long token-like string): a safety net with the same
+limits. A project may keep `.handoff/gateway-blocked.txt` (what may never leave, e.g. without the
+product's public name); when it exists it replaces `private-words.txt` for the gateway only.
+
+### Delegation first (only in a project whose CLAUDE.md has a gateway section)
+When the project's CLAUDE.md names the gateway's base URL, key variable and commands, this rule
+applies to every session, agent and sub-agent of the team (the Business Analyst relays the owner's
+answers only and sends nothing). Without that section nothing here changes.
+- Your role: hand each text-producing part of your work to the outside models with
+  `gateway.py launch`: drafts of code, copy, plans, test lists, reviews, summaries. Then CHECK each
+  answer against the request and the project's rules, fix or redo it yourself when it fails, and
+  PUT THE PARTS TOGETHER. You stay responsible for the result.
+- Write each brief self-contained, since the model sees nothing else: the task, the exact input,
+  the rules that apply, the output format.
+- Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.
+  The product's name and what is public on its site may be sent; the project's
+  `.handoff/gateway-blocked.txt` (else `private-words.txt`) lists what may not.
+- Not delegable: reading or writing files, running commands or tests, browsers, pushes, deploys,
+  approvals, questions to the owner.
+- A refused or failed launch, or an answer that fails your check twice: do that part yourself and
+  say so in your result. The ledger records each launch; add the one-line `model-selection`
+  memory entry as for any piece.
+- Every existing gate stays: design approval, the plan's green light, QA, the audit, the owner's 1.
+- A piece sent whole to the outside models (route DELEGATE) still goes through the `dispatcher`.
+
 May be delegated: research, summaries, first drafts, tests for pure functions. Never: personal
 data, secrets, or code for auth, permissions, money or migrations. Sessions stay on Claude, and
 every result is reviewed here before it is used; one that fails review is redone here.

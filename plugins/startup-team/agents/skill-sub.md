@@ -62,3 +62,9 @@ The answer first, then the evidence. A review-type skill returns its findings as
 list, each with a severity (HIGH, MEDIUM or LOW), still within 15 lines.
 
 It is advice for the PARENT, who still decides in its own format.
+
+## Gateway: delegation first
+Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
+work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
+put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.

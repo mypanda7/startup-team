@@ -70,3 +70,9 @@ When the project's channel is a chat page:
 - Send a secret, a key, or personal data the main session did not put in the body itself, or
   send to a recipient the project's CLAUDE.md does not name.
 - Send twice. If you cannot tell whether a send went through, say so and stop.
+
+## Gateway: delegation first
+Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
+work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
+put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.

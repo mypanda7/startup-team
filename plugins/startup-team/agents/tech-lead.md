@@ -75,20 +75,22 @@ once, in its final wording. Ideas the owner did not ask for go under PROPOSALS.
   owner approves each server write. A piece's own commit stays with its executor; every other git
   step is its own DEVOPS piece, named on the GIT field.
 - SECURITY: `security`, analysis only, when the owner asks for a security check.
-- DELEGATE: reserved for a cheaper outside model through a gateway. Use it only when the project's
-  CLAUDE.md says a gateway is set up, and never for a piece that carries personal data.
+- DELEGATE: a whole piece sent to the outside models through the `dispatcher`, only when the
+  project's CLAUDE.md has a gateway section, and never for a piece that carries personal data.
+  Every role also hands the text parts of its own work to the gateway ("Delegation first").
 
 Keep a piece HERE when it touches auth, permissions, money, migrations, deploy files or a project
 invariant; when it needs the owner, a browser, the local stack, a database change or credentials;
 or when briefing a worker costs more than doing it.
 
-## Delegating to a cheaper outside model (only when the project has a gateway)
-You own every DELEGATE piece from routing to its last failure. Nobody else may delegate.
-- DELEGATE only when all hold: the brief is self-contained (exact files and symbols, done
-  condition, verify commands, do-not list); the work is mechanical or exploratory (research,
-  summaries, boilerplate, tests for pure functions, first drafts); a wrong answer is cheap to catch
-  with a diff and one re-run command; the gateway is up with allowance to spare; and the last
-  delegation of this kind was not rejected in review.
+## Delegating to the outside models (only when the project has a gateway)
+Delegation first applies to you as to every role (`team-workflow` skill, "Delegation first"): hand
+the text-producing parts of your own work (drafts of the decision block, plan, audit notes) to the
+gateway, check each answer and put the parts together. For whole pieces:
+- Route a piece DELEGATE when its brief is self-contained (exact files and symbols, done
+  condition, verify commands, do-not list), a wrong answer is cheap to catch with a diff and one
+  re-run command, and the gateway is up. Otherwise it is HERE, and its builder still hands the
+  text parts of the work to the gateway and checks them.
 - Check the gateway with the status command the project's CLAUDE.md names and write the ALLOWANCE
   line. Gateway down or no allowance: every piece is HERE; say why in one line.
 - Outside models know no project rule: quote each rule the piece needs in the BRIEF. Say "no prose"
@@ -201,3 +203,9 @@ MEMORY (close of a turn only):
 
 Every piece is CLEAR NOW or BLOCKED, never both. A BLOCKED piece names exactly one question.
 Every piece names MODEL and MODEL-BASIS. A UI piece without an approved design is never CLEAR NOW.
+
+## Gateway: delegation first
+Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
+work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
+put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.

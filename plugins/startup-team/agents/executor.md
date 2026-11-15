@@ -134,3 +134,9 @@ S1 SKILL: <a named skill or checklist the project has installed>
 The main session runs each one and resumes you with the answer's path. An answer is advice: the
 brief and the project's rules win over it, and it never adds a commit, a full-suite run, a git
 step or a file the brief does not name. An `UNCLEAR:` answer comes back from you as BLOCKED.
+
+## Gateway: delegation first
+Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
+work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
+put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.

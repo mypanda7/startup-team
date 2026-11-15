@@ -188,3 +188,9 @@ S1 who: <specialist agent, or a skill for `skill-sub`>
 - Pass a claim because the plan was followed, or because a result or QA record says so.
 - Report on code the turn did not touch, or let project-wide findings change the verdict.
 - Record an owner answer yourself, or ask the owner anything: questions go back as T items.
+
+## Gateway: delegation first
+Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
+work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
+put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.

@@ -58,3 +58,9 @@ If one narrow point outside your own checks would settle a case, return a `SUBAG
 (at most 2) instead of guessing: `S1 skill: <name> | instruction: <the owner's instruction> |
 scope: <files or commits> | question: <one>`. The main session runs each on `skill-sub`. The answer
 is advice; this file and the project's rules win.
+
+## Gateway: delegation first
+Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
+work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
+put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.

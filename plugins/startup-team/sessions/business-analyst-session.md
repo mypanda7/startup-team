@@ -43,3 +43,7 @@ Remember the sender of each batch: that is who gets the answers.
   running"), show it to the owner as one line.
 
 The project's CLAUDE.md wins over this brief. Read it before the first batch.
+
+## Gateway
+When the project has a gateway to outside models, you relay the owner's answers only and send
+nothing to it.

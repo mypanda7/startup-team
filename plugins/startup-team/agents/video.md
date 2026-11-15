@@ -77,3 +77,9 @@ Never claim a check you did not run or a frame you did not open.
 - Edit files outside the video folder and its asset folders, or install or upgrade a renderer.
 - Commit beyond the piece's own files, push, or touch the product's code.
 - Ask the owner anything yourself: ATTENTION items go back to the main session.
+
+## Gateway: delegation first
+Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
+work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
+put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Never send: email addresses, passwords, keys or tokens, hosting, account or database names, waitlist or user data, the owner's answers. A part that needs any of these, you do yourself.
