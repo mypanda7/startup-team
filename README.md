@@ -68,6 +68,10 @@ the session that installed the plugin, with no restart:
    desktop app and that the team keeps using its sub-agents.
 4. On 0 ("Not now"), do nothing more: the `setup-offer` hook asks again at the start of the next session.
 
+Two optional steps follow in the AI Tech Lead's setup run: a code graph of the project (when the
+graph tool is installed), and the outside models: it asks once whether to set up FreeLLMAPI, then
+checks the local router, the key variable and the private words, and proposes the CLAUDE.md section.
+
 Weren't asked? Run `/startup-team:start-team` in a new session. Until the team is set up, the
 question comes on your first message in every new session; a new session may also show a one-line
 notice. If a setup stopped halfway, open AI

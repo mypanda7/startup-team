@@ -322,6 +322,12 @@ look-alike, an unknown placeholder or a lone bracket is left as it is and listed
 the last-used time of the map it uses, and each `launch` deletes the maps unused for longer (the
 ledger records how many, never their contents); `launch --keep-maps-days N` changes the 7.
 
+Setup: `/startup-team:start-team` (in the Tech Lead) asks once whether to set up the outside
+models. On yes it looks for FreeLLMAPI, the default router, on 127.0.0.1:31415 then :3001, guides
+the owner to install it and save the key variable themselves, collects the private words, and
+writes the project's `# Gateway (outside models)` CLAUDE.md section on the owner's yes. Any other
+OpenAI-compatible endpoint works by editing that section; `gateway.py` itself names no router.
+
 ### Delegation first (only in a project whose CLAUDE.md has a gateway section)
 When the project's CLAUDE.md names the gateway's base URL, key variable and commands, this rule
 applies to every session, agent and sub-agent of the team (the Business Analyst relays the owner's

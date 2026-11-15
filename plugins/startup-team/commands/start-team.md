@@ -4,7 +4,8 @@ description: Start the AI Tech Lead session; run inside it, start its Business A
 Set up the team's standing sessions: the AI Tech Lead, a session of its own, and its six sub
 sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), which sit under it
 in the sidebar. `$ARGUMENTS` may name a subset of the sub sessions (`business-analyst`,
-`designer`, `developer`, `qa`, `devops`, `security`); with no argument, all six.
+`designer`, `developer`, `qa`, `devops`, `security`); with no argument, all six. The argument
+`gateway`, run in the Tech Lead, runs only step 11 and asks its question again.
 
 The desktop app nests a session under the session that started it, and allows `start_session`
 only on a turn the owner typed. So setup takes two runs of this command: run in any other
@@ -86,7 +87,63 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
     only named in the project's CLAUDE.md but not installed does not count. Otherwise run
     `claude plugin install <name>@startup-team --scope local`.
     Apply none of a companion's own hooks, settings or setup questions.
-11. Tell me in one line which sub sessions were found and which were started, and name any role
+11. Outside models (optional; the code graph step, when there is one, comes before this one). A
+    failure anywhere in this step never fails the setup; report it in one line and go on.
+    Skip it when `.handoff/gateway-setup-declined` exists (unless `$ARGUMENTS` is `gateway`), or
+    when the project's CLAUDE.md already has a `# Gateway (outside models)` section: then only run
+    the `health` command of 11.1 against its base URL and report the result in one line. When
+    `.handoff/gateway-setup-pending` exists, do not ask again: resume at 11.1.
+    Otherwise ask me once, as the only question: "Set up FreeLLMAPI so the team can hand text work
+    to free models?" If this session has, or can load, a question dialog, ask it there with two
+    options, "Set it up" (= 1) and "Not now" (= 0); a dialog I dismiss counts as "Not now". Only if
+    the dialog can't be shown, ask it as text ending "1 = yes, 0 = no." On "Not now", write
+    `.handoff/gateway-setup-declined` (one line, today's date) and go on: this project is not asked
+    again; `/startup-team:start-team gateway` asks again. On "Set it up", the sub-steps below, in
+    order, each reported in one line. `<plugin folder>` is this plugin's absolute folder.
+    1. Find a running local router, only at these two addresses, in this order:
+       `python <plugin folder>/skills/team-workflow/scripts/gateway.py --base-url http://127.0.0.1:31415 --key-env FREELLMAPI_API_KEY health`,
+       then the same with `http://127.0.0.1:3001`. `ok <n>` at either: that address is the base URL,
+       go to 11.4. Report `auth`, `down <reason>` and `refused: ...` as they are. If both say
+       `down`, go to 11.2. If either says the key variable is unset (it refuses before contacting
+       anything, so a router may or may not be running), or `auth`, go to 11.3.
+    2. No router answers: tell me where to get FreeLLMAPI (https://github.com/tashfeenahmed/freellmapi,
+       its Releases page or its desktop app), and that I install it and add my provider keys in
+       its dashboard myself: the team never installs it and never handles a key. Write
+       `.handoff/gateway-setup-pending` (one line, today's date). Stop this step; it resumes at
+       11.1 the next time this command runs here.
+    3. The key is missing or refused: ask me to copy the unified key from FreeLLMAPI's dashboard and
+       save it as a user environment variable named `FREELLMAPI_API_KEY`, never pasting it into the
+       chat, then to restart the session. If FreeLLMAPI may not be installed yet, add the pointer of
+       11.2. Write `.handoff/gateway-setup-pending` and stop this step, as in 11.2.
+    4. Masking needs the project's private words. If `.handoff/private-words.txt` is missing or
+       lists no word (blank lines and `#` lines don't count), ask me for them in one question: the
+       project and company names, domains, hosts, account names and people's names. Write my
+       answer to it, one per line. Check that `.handoff/` is git-ignored
+       (`git check-ignore -q .handoff/`) and tell me in one line if it is not.
+    5. Show me the exact text of a `# Gateway (outside models)` section for the project's
+       CLAUDE.md, and write it only on my yes (on a no, stop this step and write the pending
+       marker):
+       ```
+       # Gateway (outside models)
+       - Base URL: <the address found in 11.1>. Key variable: FREELLMAPI_API_KEY (the name only;
+         the key is never written, pasted or printed).
+       - Commands, with the plugin at <plugin folder>: `python <plugin folder>/skills/team-workflow/scripts/gateway.py
+         --base-url <base URL> --key-env FREELLMAPI_API_KEY health | launch --brief <file> --out
+         <file> --terms <file> | list | log <id>` (plus `mask` / `unmask` to check locally).
+       - Every brief is masked before it leaves: the words in .handoff/private-words.txt, emails,
+         secret-shaped text and the terms the anonymizer agent lists. The real values come back
+         only in the answer. A task whose point is a secret or personal value is never sent.
+       - Stays here, never delegated: code for auth, permissions, payments and database changes;
+         reading or writing files, running commands or tests, pushes, deploys, approvals and
+         questions to the owner.
+       - Every answer is checked here against the request and this file's rules before it is used.
+       ```
+    6. Run the `health` command again with the base URL; then ONE trial launch: write
+       `.handoff/gateway/trial-brief.txt` holding "Rewrite in plain words: The meeting has been moved
+       to a later time." and run `launch --brief .handoff/gateway/trial-brief.txt --out
+       .handoff/gateway/trial-answer-<date>.txt`. Report ok or failed and the ledger id. On ok,
+       delete `.handoff/gateway-setup-pending` if it exists.
+12. Tell me in one line which sub sessions were found and which were started, and name any role
     still missing because its start failed or was refused, with the app's reason: running this
     command again here starts just that one. Then any worktree or duplicate sessions from step 3;
     then which companions were installed and which kept, and that they load in sessions started
