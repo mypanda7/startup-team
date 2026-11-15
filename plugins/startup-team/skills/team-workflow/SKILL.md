@@ -305,13 +305,22 @@ invisible characters); it misses unusual email forms ("name at domain", full-wid
 `--allow-host` is a convention, not enforced. The brief writer stays responsible for what is sent.
 Masking, always on for `launch` (there is no way to send unmasked text): every line of
 `.handoff/private-words.txt` (case-insensitive, also inside longer words and across line breaks),
-every email-shaped and secret-shaped string (a private-key header, a `password=`/`api_key:` style
-assignment, a known key prefix, a long token-like string) and every line of `--terms` is replaced
-by a numbered placeholder such as `⟦PRIVATE_1⟧`, `⟦EMAIL_1⟧`, `⟦SECRET_1⟧`, `⟦TERM_1⟧` (one per
-value). The guards then run on the MASKED text, so a hit refuses with nothing sent. The map
-(placeholder -> real value) is kept only in `.handoff/gateway/maps/<task id>.json`, never sent or
-printed; the answer gets the real values back before `--out` is written, and the ledger records
-the counts per type and any placeholder that could not be restored (`unrestored`).
+every email address (Unicode letters included, e.g. an accented name or domain), every
+secret-shaped string (a private-key header; any name holding secret, password, passwd, token or
+key followed by `=` or `:` and a value, such as `SECRET_KEY=`, `apikey=`, `api-key:`; a `Bearer`
+token; a URL with `user:password@`; the prefixes `sk-`, `ghp_`, `gho_`, `github_pat_`, `xoxb-`,
+`xoxp-`, `AIza`, `AKIA`; a long token-like string) and every line of `--terms` is replaced by an
+opaque placeholder such as `⟦a7f3-1⟧`: a random tag per task and a number, one per value. The
+type is kept only in the map and the ledger counts, so a placeholder holds no word a list could
+hold. The guards then run on the MASKED text, skipping placeholders, so a hit refuses with nothing
+sent. The `--model` value is checked the same way (private words, emails, secret shapes) and is
+never masked: a hit refuses. The map (placeholder -> real value) is kept only in
+`.handoff/gateway/maps/<task id>.json`, never sent or printed. The answer gets the real values
+back before `--out` is written; only an exact bracketed placeholder is restored, and a bare
+look-alike, an unknown placeholder or a lone bracket is left as it is and listed in the ledger's
+`unrestored`. Maps are deleted after 7 days of not being used: each `launch` and `unmask` updates
+the last-used time of the map it uses, and each `launch` deletes the maps unused for longer (the
+ledger records how many, never their contents); `launch --keep-maps-days N` changes the 7.
 
 ### Delegation first (only in a project whose CLAUDE.md has a gateway section)
 When the project's CLAUDE.md names the gateway's base URL, key variable and commands, this rule

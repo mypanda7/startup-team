@@ -332,8 +332,8 @@ the key variable and the commands. Then every session, agent and sub-agent (exce
 Analyst) hands the text parts of its work to the outside models, checks each answer, redoes what
 fails and puts the parts together. Everything identifying is masked first: the project's private
 words, emails, secret-shaped text and the terms the `anonymizer` agent lists become placeholders
-like `⟦PRIVATE_1⟧`, and the script puts the real values back into the answer. The map stays on
-the machine. The script refuses, before sending anything, a non-local host the project didn't
+like `⟦a7f3-1⟧`, and the script puts the real values back into the answer. The map stays on
+the machine and is deleted after 7 days of not being used. The script refuses, before sending anything, a non-local host the project didn't
 allow, a brief that still holds a private word, an email or a secret after masking, and a missing
 key, and it never prints or stores the key.
 
