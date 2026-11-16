@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""startup-team tool: turn folders, shared agent memory and the learning loop.
+"""startup-team tool: turn folders, shared agent memory, the learning loop and the plugin loadout.
 
 All data lives in the project's git-ignored .handoff/ folder:
   .handoff/<stamp>-<slug>/            one folder per task (decision, answers, results, audit)
@@ -17,10 +17,12 @@ Usage:
   team.py learn list
   team.py learn decide <id> 1|0
   team.py learn apply <id> --repo <clone of the team repository>
+  team.py loadout inventory [--json] | plan --needs a,b | on|off <plugin> [--approved] [--by W] | selftest
 """
 import argparse
 import datetime
 import json
+import os
 import re
 import subprocess
 import sys
@@ -299,6 +301,228 @@ def learn_apply(a) -> None:
     print("must stay generic too). The owner merges it; the push guard checks it again.")
 
 
+# ---- loadout: which plugins a session lists, and switching them for this project ----
+
+TEAM_PLUGIN = "startup-team@"
+
+
+def claude_home() -> Path:
+    return Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude")
+
+
+def same_path(a: str, b) -> bool:
+    return os.path.normcase(os.path.normpath(str(a))) == os.path.normcase(os.path.normpath(str(b)))
+
+
+def listed_chars(path: Path) -> tuple:
+    """(description characters, hidden) from a skill, command or agent file's frontmatter."""
+    try:
+        t = path.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+    except OSError:
+        return 0, False
+    m = re.match(r"---\s*\n(.*?)\n---", t, re.S)
+    if not m:
+        return 0, False
+    d = re.search(r"^description:\s*(.*?)(?=^\S+:|\Z)", m.group(1), re.S | re.M)
+    hidden = bool(re.search(r"^disable-model-invocation:\s*true", m.group(1), re.M))
+    return (len(d.group(1).strip()) if d else 0), hidden
+
+
+def enabled_map(proj: Path, home: Path) -> dict:
+    """Explicit enabledPlugins values; local settings win over project, project over user."""
+    out = {}
+    for f in (home / "settings.json", proj / ".claude" / "settings.json", proj / ".claude" / "settings.local.json"):
+        try:
+            out.update(json.loads(f.read_text(encoding="utf-8")).get("enabledPlugins") or {})
+        except (OSError, ValueError, AttributeError):
+            pass
+    return out
+
+
+def inventory(proj: Path, home: Path) -> dict:
+    plugins = []
+    try:
+        inst = json.loads((home / "plugins" / "installed_plugins.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        inst = None
+    if inst is None:  # fall back to the CLI's own listing (names only)
+        try:
+            out = subprocess.run(["claude", "plugin", "list"], capture_output=True, text=True, timeout=60).stdout
+        except (OSError, subprocess.SubprocessError):
+            out = ""
+        inst = {"plugins": {n: [{"scope": "?"}] for n in re.findall(r"\b([\w.-]+@[\w.-]+)\b", out)}}
+    enabled = enabled_map(proj, home)
+    for name, entries in sorted(inst.get("plugins", {}).items()):
+        for e in entries:
+            if e.get("projectPath") and not same_path(e["projectPath"], proj):
+                continue
+            r = Path(e.get("installPath") or "/nonexistent")
+            sk = [listed_chars(p) for p in r.rglob("SKILL.md")] if r.is_dir() else []
+            cm = [listed_chars(p) for p in r.glob("commands/*.md")]
+            ag = [listed_chars(p) for p in r.glob("agents/*.md")]
+            meta = {}
+            try:
+                meta = json.loads((r / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                pass
+            chars = sum(c for c, h in sk + cm if not h) + sum(c for c, _ in ag)
+            plugins.append({
+                "name": name, "scope": e.get("scope", "?"), "enabled": enabled.get(name, True),
+                "skills": len(sk), "commands": len(cm), "agents": len(ag),
+                "hooks": bool(list(r.rglob("hooks.json")) if r.is_dir() else False) or "hooks" in meta,
+                "mcp": (r / ".mcp.json").exists() or "mcpServers" in meta,
+                "tokens": chars // 4,
+            })
+    md = proj / "CLAUDE.md"
+    try:
+        sessions = {k: {"id": v.get("id"), "title": v.get("title")}
+                    for k, v in json.loads((proj / ".handoff" / "team-sessions.json").read_text(encoding="utf-8")).items()}
+    except (OSError, ValueError, AttributeError):
+        sessions = {}
+    return {"date": now(), "plugins": plugins,
+            "claude_md_tokens": len(md.read_text(encoding="utf-8")) // 4 if md.exists() else 0,
+            "sessions": sessions}
+
+
+def always_on(proj: Path) -> set:
+    md = proj / "CLAUDE.md"
+    text = md.read_text(encoding="utf-8") if md.exists() else ""
+    return {w.strip().strip("`") for line in re.findall(r"^ALWAYS ON:(.*)$", text, re.M) for w in line.split(",") if w.strip()}
+
+
+def find_plugin(inv: dict, name: str):
+    for p in inv["plugins"]:
+        if p["name"] == name or p["name"].split("@")[0] == name:
+            return p
+    return None
+
+
+def switch(action: str, name: str, proj: Path, home: Path, scope: str = "local", approved: bool = False,
+           by: str = "main", run=None) -> tuple:
+    """Return (exit code, message). Refusals are exit 2 and change nothing."""
+    if scope != "local":
+        return 2, "refused: only --scope local (this project) is switched"
+    inv = inventory(proj, home)
+    p = find_plugin(inv, name)
+    if not p:
+        return 2, f"refused: {name} is not installed for this project"
+    if p["name"].startswith(TEAM_PLUGIN):
+        return 2, "refused: the team's own plugin is never switched"
+    al = always_on(proj)
+    if action == "off" and (p["name"] in al or p["name"].split("@")[0] in al):
+        return 2, f"refused: {p['name']} is on the project's ALWAYS ON line"
+    if action == "off" and (p["hooks"] or p["mcp"]) and not approved:
+        return 2, f"refused: {p['name']} has hooks or MCP servers; switching it off needs the owner's yes (--approved)"
+    cmd = ["claude", "plugin", "enable" if action == "on" else "disable", p["name"], "--scope", "local"]
+    code = (run or (lambda c: subprocess.run(c, cwd=proj).returncode))(cmd)
+    if code != 0:
+        return 1, f"failed: {' '.join(cmd)} exited {code}"
+    append(proj / ".handoff" / "loadout" / "log.jsonl",
+           {"date": now(), "action": action, "plugin": p["name"], "tokens": p["tokens"], "by": by})
+    return 0, f"{action} {p['name']} (~{p['tokens']} tok {'added' if action == 'on' else 'saved'}; takes effect in a new or cleared session)"
+
+
+def lo_inventory(a) -> None:
+    proj = root()
+    inv = inventory(proj, claude_home())
+    out = handoff() / "loadout" / "inventory.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(inv, indent=1), encoding="utf-8")
+    if a.json:
+        print(json.dumps(inv, indent=1))
+        return
+    print(f"{'plugin':34} {'scope':6} {'on':3} {'skills':>6} {'cmds':>4} {'agents':>6} hooks mcp {'~tok':>6}")
+    for p in inv["plugins"]:
+        print(f"{p['name']:34} {p['scope']:6} {'yes' if p['enabled'] else 'no':3} {p['skills']:6} {p['commands']:4} "
+              f"{p['agents']:6} {'yes' if p['hooks'] else '-':5} {'yes' if p['mcp'] else '-':3} {p['tokens']:6}")
+    print(f"listed by enabled plugins: ~{sum(p['tokens'] for p in inv['plugins'] if p['enabled'])} tok; "
+          f"CLAUDE.md ~{inv['claude_md_tokens']} tok; standing sessions: "
+          + (", ".join(f"{k} ({v['title']})" for k, v in inv["sessions"].items()) or "none"))
+    print(f"written: {out.as_posix()} (rough: characters / 4)")
+
+
+def plan(inv: dict, needs: list, al: set) -> list:
+    rows = []
+    for p in inv["plugins"]:
+        short = p["name"].split("@")[0]
+        need = p["name"] in needs or short in needs
+        if p["name"].startswith(TEAM_PLUGIN) or p["name"] in al or short in al:
+            continue
+        if need and not p["enabled"]:
+            rows.append(("on", p, ""))
+        elif not need and p["enabled"]:
+            rows.append(("off", p, " (needs the owner's yes: hooks or MCP)" if p["hooks"] or p["mcp"] else ""))
+    return rows
+
+
+def lo_plan(a) -> None:
+    proj = root()
+    inv = inventory(proj, claude_home())
+    rows = plan(inv, [n.strip() for n in a.needs.split(",") if n.strip()], always_on(proj))
+    for act, p, note in rows:
+        print(f"{act:3} {p['name']} ~{p['tokens']} tok{note}")
+    saved = sum(p["tokens"] for act, p, _ in rows if act == "off") - sum(p["tokens"] for act, p, _ in rows if act == "on")
+    print(f"{'nothing to switch' if not rows else 'rough saving'}: ~{saved} tok per session (nothing changed)")
+
+
+def lo_switch(a) -> None:
+    code, msg = switch(a.cmd, a.plugin, root(), claude_home(), a.scope, a.approved, a.by)
+    print(msg)
+    sys.exit(code)
+
+
+def lo_selftest(_a) -> None:
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        t = Path(tmp)
+        home, proj = t / "home", t / "proj"
+
+        def plug(name, skill_desc, hidden=False, hooks=False):
+            r = t / "cache" / name
+            (r / "skills" / "s").mkdir(parents=True)
+            (r / "skills" / "s" / "SKILL.md").write_text(
+                f"---\nname: s\ndescription: {skill_desc}\n" + ("disable-model-invocation: true\n" if hidden else "") + "---\nbody\n",
+                encoding="utf-8")
+            if hooks:
+                (r / "hooks").mkdir()
+                (r / "hooks" / "hooks.json").write_text("{}", encoding="utf-8")
+            return {"scope": "local", "projectPath": str(proj), "installPath": str(r)}
+
+        (home / "plugins").mkdir(parents=True)
+        (proj / ".claude").mkdir(parents=True)
+        (home / "plugins" / "installed_plugins.json").write_text(json.dumps({"plugins": {
+            "startup-team@m": [plug("team", "x" * 40)],
+            "light@m": [plug("light", "y" * 400)],
+            "hidden@m": [plug("hidden", "z" * 400, hidden=True)],
+            "hooked@m": [plug("hooked", "w" * 80, hooks=True)],
+            "pinned@m": [plug("pinned", "v" * 80)],
+            "elsewhere@m": [dict(plug("elsewhere", "u" * 80), projectPath=str(t / "other"))],
+        }}), encoding="utf-8")
+        (proj / ".claude" / "settings.local.json").write_text(json.dumps({"enabledPlugins": {"hidden@m": False}}), encoding="utf-8")
+        (proj / "CLAUDE.md").write_text("# x\nALWAYS ON: pinned\n", encoding="utf-8")
+        inv = inventory(proj, home)
+        by = {p["name"]: p for p in inv["plugins"]}
+        assert "elsewhere@m" not in by, "another project's plugin listed"
+        assert by["light@m"]["tokens"] == 100 and by["hidden@m"]["tokens"] == 0, "cost counting"
+        assert by["hooked@m"]["hooks"] and not by["light@m"]["hooks"], "hook detection"
+        assert by["light@m"]["enabled"] and not by["hidden@m"]["enabled"], "enabled state"
+        ran = []
+        run = lambda c: ran.append(c) or 0
+        assert switch("off", "startup-team", proj, home, run=run)[0] == 2
+        assert switch("off", "light", proj, home, scope="user", run=run)[0] == 2
+        assert switch("off", "pinned", proj, home, run=run)[0] == 2
+        assert switch("off", "hooked", proj, home, run=run)[0] == 2
+        assert switch("off", "nothere", proj, home, run=run)[0] == 2
+        assert not ran, "a refusal ran a command"
+        assert switch("off", "light", proj, home, run=run)[0] == 0
+        assert switch("off", "hooked", proj, home, approved=True, run=run)[0] == 0
+        assert ran[0] == ["claude", "plugin", "disable", "light@m", "--scope", "local"], ran[0]
+        assert len(read(proj / ".handoff" / "loadout" / "log.jsonl")) == 2, "log lines"
+        acts = {(act, p["name"]) for act, p, _ in plan(inv, ["hidden"], always_on(proj))}
+        assert acts == {("on", "hidden@m"), ("off", "light@m"), ("off", "hooked@m")}, acts
+    print("loadout selftest ok")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="startup-team: turn folders, shared memory, learning loop")
     sub = p.add_subparsers(dest="area", required=True)
@@ -334,7 +558,7 @@ def main() -> None:
     lp.add_argument("--text", required=True)
     lp.add_argument("--evidence", required=True)
     lp.add_argument("--source", default="main")
-    lp.add_argument("--agent", default="all", choices=("all", "tech-lead", "architect", "designer", "executor", "qa", "auditor", "devops", "security", "skill-sub", "dispatcher", "messenger", "video"))
+    lp.add_argument("--agent", default="all", choices=("all", "tech-lead", "architect", "designer", "executor", "qa", "auditor", "devops", "security", "skill-sub", "dispatcher", "messenger", "video", "activator"))
     lp.set_defaults(fn=learn_propose)
     lap = le.add_parser("apply")
     lap.add_argument("id")
@@ -345,6 +569,22 @@ def main() -> None:
     ld.add_argument("id")
     ld.add_argument("answer", choices=("0", "1"))
     ld.set_defaults(fn=learn_decide)
+
+    lo = sub.add_parser("loadout").add_subparsers(dest="cmd", required=True)
+    li = lo.add_parser("inventory")
+    li.add_argument("--json", action="store_true")
+    li.set_defaults(fn=lo_inventory)
+    lpl = lo.add_parser("plan")
+    lpl.add_argument("--needs", required=True)
+    lpl.set_defaults(fn=lo_plan)
+    for c in ("on", "off"):
+        ls = lo.add_parser(c)
+        ls.add_argument("plugin")
+        ls.add_argument("--scope", default="local")
+        ls.add_argument("--approved", action="store_true", help="the owner's yes, never given by an agent itself")
+        ls.add_argument("--by", default="main")
+        ls.set_defaults(fn=lo_switch)
+    lo.add_parser("selftest").set_defaults(fn=lo_selftest)
 
     a = p.parse_args()
     a.fn(a)

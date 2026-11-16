@@ -96,6 +96,7 @@ claude plugin update startup-team@startup-team
 | `agents/auditor` | PASS or FAIL against the owner's request, with evidence it re-ran itself. |
 | `agents/devops` | Read-only analysis, and proposals for every push, deploy or server change. |
 | `agents/security` | Security analysis of the owner's own project. Findings only, no fixes. |
+| `agents/activator` | A cheap sub-agent that switches this project's plugins on only when a task needs them and off after, with `team.py loadout`, and names the sub sessions a task needs. Never uninstalls or edits settings. |
 | `agents/skill-sub` | A read-only helper that answers one narrow question for another agent, using one named skill. |
 | `agents/dispatcher` | Launches and watches pieces delegated to cheaper outside models through a gateway. Does nothing without one. |
 | `agents/messenger` | Carries one question to, or reads replies from, a channel outside the app that the project names. |

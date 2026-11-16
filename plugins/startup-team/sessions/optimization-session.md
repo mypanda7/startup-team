@@ -18,6 +18,7 @@ beside the `team-workflow` skill. Then:
   `agents/architect.md` and `agents/auditor.md` under the plugin folder. Nothing is sent to
   yourself: show each result to the owner and save it in the turn folder (`decision.md`,
   `plan-<piece>.md`, `audit.md`) yourself.
+- After triage, run `activator` START as a sub-agent with your decision block.
 - You keep the turn folder and the shared memory, and message each sub session directly, by the
   session id in `.handoff/team-sessions.json`, under a first line `[startup-team:<name>]`, as the
   `team-workflow` skill says. There is no relay through the Tech Lead.
@@ -40,7 +41,7 @@ beside the `team-workflow` skill. Then:
 5. Install it for this project: `claude plugin marketplace update startup-team`, then
    `claude plugin update startup-team@startup-team` with the project's scope.
 6. End each task by stating the commit and whether it is pushed, in one line.
-7. Close: clear and re-brief each idle sub session (`team-workflow` skill, step 12, "Close").
+7. Close: run `activator` CLOSE as a sub-agent (`team-workflow` skill, "Loadout"), then clear and re-brief each idle sub session (`team-workflow` skill, step 12, "Close").
 
 ## Standing rules
 - Scope is the owner's request. Never widen it, and never apply a default over a point the owner

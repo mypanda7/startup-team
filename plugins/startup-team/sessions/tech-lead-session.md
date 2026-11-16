@@ -32,6 +32,8 @@ session the same way.) Then:
   the plugin folder) on that turn; it starts the six sub sessions under you. Then handle the
   `REQUEST:` request. If the owner types that same request here, reply in one line that it is
   already in progress and do not triage it again.
+- After triage, run `activator` START as a sub-agent; at close, `activator` CLOSE first
+  (`team-workflow` skill, "Loadout").
 - When a task closes, clear and re-brief each idle sub session (`team-workflow` skill, step 12,
   "Close"), so no turn re-reads a finished task's history.
 The rest of this brief, from "How requests reach you" on, covers the turns another session's

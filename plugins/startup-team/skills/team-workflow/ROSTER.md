@@ -85,6 +85,10 @@ the Agent tool, read-only, scoped to the instruction and the turn's commits.
 | `agent-skills:web-performance-auditor` | A performance point would settle a checklist item |
 | `agent-skills:security-auditor` | ON DEMAND: only in a turn where the owner asked for a security check |
 
+Which companions are switched on for a task is the `activator`'s job (`team.py loadout`; SKILL.md,
+"Loadout"): it reads this roster to name what a task needs, and switches on only a companion that
+must be enabled to work (hooks, MCP tools, agents); a skill that is only read stays off.
+
 ## How a borrowed skill is run
 
 - With `skill-sub` (read-only), brief = PARENT / SKILL / INSTRUCTION / SCOPE / QUESTION verbatim.

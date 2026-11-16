@@ -30,6 +30,7 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    SendMessage, and wait for its decision block. A session whose title starts with `[run]` is a role session and never counts as a standing session. Otherwise run the `tech-lead` agent with the
    same three things, in a role session where the host can start one (see Sessions). Save the block as `decision.md` and show it unchanged. Skip triage only for
    a one-line answer or a pure question.
+   Then run `activator` START (a sub-agent, see "Loadout") with the decision block.
 3. **Questions.** Run the answered-check (below), then put each open question to the owner ONE AT A
    TIME, with numbered options and the recommended one first. If there is a Business Analyst session
    for this project (see "Standing sessions"), send it the whole batch in one message (each question with an id, its options
@@ -54,8 +55,8 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
 11. **Ship.** `devops` (the DevOps sub session when the project has one) PROPOSE for any push, merge, deploy or server change. The owner approves each.
 12. **Close.** Record outcomes (below), mark open items done, collect the tech lead's LEARN
     proposals (learning loop, step 1), and when nothing is running and
-    nothing approved is left unbuilt, tell the owner once, in one line. Then clear and re-brief
-    each idle sub session (step details). Replies to the owner stay short: the result first, no
+    nothing approved is left unbuilt, tell the owner once, in one line. Then run `activator`
+    CLOSE, and clear and re-brief each idle sub session it lists (step details). Replies to the owner stay short: the result first, no
     repeated background.
 
 ## Step details
@@ -103,6 +104,18 @@ These add to the numbered steps above.
   building, QA testing, a fix round, DevOps with live work). Nothing is lost: the records live in
   the turn folder and the shared memory. If the app refuses a clear, tell the owner in one line
   which sessions are left. Without a clear tool, skip this silently.
+
+## Loadout
+`activator` (a cheap sub-agent, `agents/activator.md`) keeps each session lean with `team.py
+loadout`: `inventory` (plugins for this project, on or off, rough listing tokens, CLAUDE.md size,
+standing sessions), `plan --needs a,b` (changes nothing), `on|off <plugin>` (this project, local
+scope only, logged to `.handoff/loadout/log.jsonl`) and `selftest`. It runs at task start and close,
+never on every message. It refuses the team's own plugin, a plugin on the CLAUDE.md `ALWAYS ON:`
+line, and switching off a plugin with hooks or MCP servers without the owner's yes. It only
+switches and names sessions: it never starts, clears or messages one, never uninstalls or deletes,
+and never edits hooks, settings files or CLAUDE.md. A switch takes effect in a new or cleared
+session; starting a session needs a turn the owner typed. The token counts are rough (characters
+/ 4).
 
 ## Operations skills
 Outside the build chain, the plugin has skills for running a product, read by path as said at the
@@ -219,7 +232,7 @@ session by message, and no new one is started. So `tech-lead`, `designer`, `qa`,
 standing session when one exists, and `executor` runs go to the Developer session when one
 exists; otherwise they open a role session like the others. `architect` and `auditor` runs go to the
 Tech Lead session when one exists, and otherwise open a role session.
-`skill-sub` stays a sub-agent: its answer is short and its parent needs it at once.
+`skill-sub` and `activator` stay sub-agents: their answers are short and are needed at once.
 Fall back to sub-agents, for the whole task, when there is no such tool, when a start is refused,
 or when the owner says "here" or "no sessions". In that fallback the main session also asks the
 owner's questions itself, one at a time.
