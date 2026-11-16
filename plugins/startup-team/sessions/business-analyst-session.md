@@ -42,6 +42,7 @@ Remember the sender of each batch: that is who gets the answers.
 - When the main session sends an idle notification ("all tasks are complete and nothing is
   running"), show it to the owner as one line.
 - Replies to the owner stay short: the result first, no repeated background.
+- Checkpoints: when the main session asks, write `.handoff/checkpoints/<your name>.md` (at most 30 lines) and reply with its path; after a clear, start from that checkpoint; find older detail with `team.py records find <words>` and open only the files it names.
 
 The project's CLAUDE.md wins over this brief. Read it before the first batch.
 

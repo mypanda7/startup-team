@@ -18,6 +18,7 @@ Usage:
   team.py learn decide <id> 1|0
   team.py learn apply <id> --repo <clone of the team repository>
   team.py loadout inventory [--json] | plan --needs a,b | on|off <plugin> [--approved] [--by W] | selftest
+  team.py records index | find <words...> [--kind K] [--last N] | selftest
 """
 import argparse
 import datetime
@@ -523,6 +524,119 @@ def lo_selftest(_a) -> None:
     print("loadout selftest ok")
 
 
+# ---- records: a searchable index of the record files, so sessions open only what they need ----
+
+RECORD_KINDS = ("decision", "answers", "brief", "result", "qa", "audit", "plan", "devops")
+SKIP_DIRS = {"memory", "gateway", "loadout"}
+STOP = set("""this that with from have will what when where which there their them they then than
+into only must also each been were your here more some such over just like does done none line
+file files said says name names para make made after before under same other these those about
+need needs used uses using owner piece pieces team session sessions""".split())
+
+
+def record_kind(rel: Path) -> str:
+    if rel.parts[0] == "checkpoints":
+        return "checkpoint"
+    stem = rel.stem.lower()
+    return next((k for k in RECORD_KINDS if stem == k or stem.startswith(k + "-")), "other")
+
+
+def record_row(h: Path, f: Path) -> dict:
+    rel = f.relative_to(h)
+    text = f.read_text(encoding="utf-8", errors="replace")
+    title = next((l.strip().lstrip("#").strip() for l in text.splitlines() if l.strip()), "")[:100]
+    if SECRET.search(title) or EMAIL.search(title):
+        title = "[title withheld]"
+    words = [w for w in re.findall(r"[a-z][a-z0-9-]{3,}", text.lower())
+             if w not in STOP and not SECRET.search(w) and not EMAIL.search(w)]
+    keys = [w for w, _ in sorted(((w, words.count(w)) for w in set(words)), key=lambda x: (-x[1], x[0]))[:12]]
+    return {"path": rel.as_posix(), "turn": "" if rel.parts[0] == "checkpoints" else rel.parts[0],
+            "kind": record_kind(rel), "title": title, "keywords": keys,
+            "size": f.stat().st_size, "mtime": int(f.stat().st_mtime)}
+
+
+def records_index(h: Path) -> list:
+    """Rebuild .handoff/records-index.jsonl, re-reading only files whose modified time changed."""
+    old = {r["path"]: r for r in read(h / "records-index.jsonl")}
+    rows = []
+    for f in sorted(h.rglob("*.md")):
+        rel = f.relative_to(h)
+        if len(rel.parts) < 2 or rel.parts[0] in SKIP_DIRS:
+            continue
+        r = old.get(rel.as_posix())
+        rows.append(r if r and r.get("mtime") == int(f.stat().st_mtime) else record_row(h, f))
+    (h / "records-index.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    return rows
+
+
+def records_find(h: Path, words: list, kind: str = None, last: int = None, limit: int = 5) -> list:
+    rows = records_index(h)
+    if kind:
+        rows = [r for r in rows if r["kind"] == kind]
+    if last:  # only the n newest turn folders (checkpoints always count)
+        turns = sorted({r["turn"] for r in rows if r["turn"]})[-last:]
+        rows = [r for r in rows if not r["turn"] or r["turn"] in turns]
+    q = [w.lower() for w in words]
+    scored = []
+    for r in rows:
+        hay = (r["path"] + " " + r["title"]).lower()
+        s = sum(3 * (w in hay) + 2 * any(k.startswith(w) for k in r["keywords"]) for w in q)
+        if s:
+            scored.append((s, r["mtime"], r))
+    return [r for _, _, r in sorted(scored, key=lambda x: (-x[0], -x[1]))[:limit]]
+
+
+def rec_index(_a) -> None:
+    rows = records_index(handoff())
+    print(f"{len(rows)} record files indexed in .handoff/records-index.jsonl")
+
+
+def rec_find(a) -> None:
+    hits = records_find(handoff(), a.words, a.kind, a.last)
+    for r in hits:
+        print(f".handoff/{r['path']}  [{r['kind']}]  {r['title']}")
+    if not hits:
+        print("no record matches")
+        sys.exit(4)
+
+
+def rec_selftest(_a) -> None:
+    import os as _os
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        h = Path(tmp)
+        (h / "20260101-0900-alpha").mkdir()
+        (h / "20260102-0900-beta").mkdir()
+        (h / "checkpoints").mkdir()
+        (h / "memory").mkdir()
+        (h / "20260101-0900-alpha" / "decision.md").write_text("# Decision\nwidget widget widget gateway\n", encoding="utf-8")
+        (h / "20260102-0900-beta" / "result-P1.md").write_text("PIECE: widget fix\nwidget sprocket\n", encoding="utf-8")
+        (h / "20260102-0900-beta" / "qa-final.md").write_text("token = abcdef1234567890\nsprocket\n", encoding="utf-8")
+        (h / "checkpoints" / "developer.md").write_text("Developer checkpoint\nnext: sprocket\n", encoding="utf-8")
+        (h / "memory" / "notes.md").write_text("widget\n", encoding="utf-8")
+        rows = {r["path"]: r for r in records_index(h)}
+        assert "memory/notes.md" not in rows, "memory folder indexed"
+        assert len(rows) == 4, rows.keys()
+        assert rows["20260101-0900-alpha/decision.md"]["kind"] == "decision"
+        assert rows["20260102-0900-beta/result-P1.md"]["kind"] == "result"
+        assert rows["20260102-0900-beta/qa-final.md"]["kind"] == "qa"
+        assert rows["checkpoints/developer.md"]["kind"] == "checkpoint" and rows["checkpoints/developer.md"]["turn"] == ""
+        assert rows["20260102-0900-beta/qa-final.md"]["title"] == "[title withheld]", "secret in title"
+        assert rows["20260101-0900-alpha/decision.md"]["keywords"][0] == "widget"
+        assert len(records_find(h, ["widget"])) == 2
+        hits = records_find(h, ["gateway"])
+        assert [r["path"] for r in hits] == ["20260101-0900-alpha/decision.md"], hits
+        assert records_find(h, ["sprocket", "fix"])[0]["path"] == "20260102-0900-beta/result-P1.md", "title match ranks first"
+        assert [r["path"] for r in records_find(h, ["widget"], kind="result")] == ["20260102-0900-beta/result-P1.md"]
+        assert all(r["turn"] != "20260101-0900-alpha" for r in records_find(h, ["widget"], last=1))
+        assert records_find(h, ["nothingmatches"]) == []
+        f = h / "20260102-0900-beta" / "result-P1.md"
+        f.write_text("PIECE: gear fix\n", encoding="utf-8")
+        _os.utime(f, (f.stat().st_atime, f.stat().st_mtime + 5))
+        assert {r["path"]: r for r in records_index(h)}["20260102-0900-beta/result-P1.md"]["title"] == "PIECE: gear fix"
+    print("records selftest ok")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="startup-team: turn folders, shared memory, learning loop")
     sub = p.add_subparsers(dest="area", required=True)
@@ -585,6 +699,15 @@ def main() -> None:
         ls.add_argument("--by", default="main")
         ls.set_defaults(fn=lo_switch)
     lo.add_parser("selftest").set_defaults(fn=lo_selftest)
+
+    rc = sub.add_parser("records").add_subparsers(dest="cmd", required=True)
+    rc.add_parser("index").set_defaults(fn=rec_index)
+    rf = rc.add_parser("find")
+    rf.add_argument("words", nargs="+")
+    rf.add_argument("--kind", choices=RECORD_KINDS + ("checkpoint", "other"))
+    rf.add_argument("--last", type=int, help="only the N newest turn folders")
+    rf.set_defaults(fn=rec_find)
+    rc.add_parser("selftest").set_defaults(fn=rec_selftest)
 
     a = p.parse_args()
     a.fn(a)

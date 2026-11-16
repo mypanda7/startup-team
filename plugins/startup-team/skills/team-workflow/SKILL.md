@@ -99,12 +99,33 @@ These add to the numbered steps above.
 - **Step 12, clear the sub sessions.** Every turn re-reads a session's whole history, so once the
   task is closed (QA, audit and any push done) clear each idle standing sub session (in the
   desktop app: `clear_session`) and then send it a re-brief under `[startup-team:<name>]`: its
-  role, the paths of its standing brief and agent file under the installed plugin folder, and a
-  short summary (the standing owner rules, anything still open for it). A clear wipes the standing
-  brief, so the re-brief always follows. Never clear a session that is mid-task (a builder
+  role, the paths of its standing brief and agent file under the installed plugin folder, its
+  checkpoint path and at most five lines of summary ("Checkpoints", the pointer re-brief). A clear
+  wipes the standing brief, so the re-brief always follows. Never clear a session that is mid-task (a builder
   building, QA testing, a fix round, DevOps with live work). Nothing is lost: the records live in
   the turn folder and the shared memory. If the app refuses a clear, tell the owner in one line
   which sessions are left. Without a clear tool, skip this silently.
+
+## Checkpoints
+Long histories are re-read on every turn, so sessions stay short and the detail stays in files.
+- **Checkpoint file.** `.handoff/checkpoints/<session name>.md`, written by the session itself, at
+  most 30 lines: its role, the task and piece in hand, what is done (with commits), what is next,
+  open questions, and the paths of the records that hold the detail.
+- **Threshold.** Where the host reports a session's context size, check each standing sub session
+  between pieces. Past the project's `CHECKPOINT AT: <n>k` CLAUDE.md line (default 150k tokens),
+  ask it to write its checkpoint, wait for the reply, then clear and re-brief it. Never while it is
+  building, testing, in a fix round or holding live work. Without a size report, do it after every
+  third piece a session finished in one task.
+- **Pointer re-brief.** Under `[startup-team:<name>]`: the role, the brief path, the agent file
+  path, the checkpoint path, "find more with `team.py records find <words>`", and at most five
+  lines of summary. Step 12's task-close clear uses the same re-brief.
+- **Main session.** It cannot clear itself. Past the threshold at a task's close, it writes its
+  own checkpoint and tells the owner once, in one line, that typing /clear and then "resume"
+  continues from it. On "resume" it reads its checkpoint first.
+- **Looking things up.** A session that needs older detail runs `team.py records find <words>
+  [--kind k] [--last n]` (paths, kinds and titles only; `records index` rebuilds
+  `.handoff/records-index.jsonl`) and opens only the files it names, instead of asking for a
+  recap. Code files are found with the code graph when the project has one ("Code graph").
 
 ## Loadout
 `activator` (a cheap sub-agent, `agents/activator.md`) keeps each session lean with `team.py
