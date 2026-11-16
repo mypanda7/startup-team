@@ -56,7 +56,9 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
 11. **Ship.** `devops` (the DevOps sub session when the project has one) PROPOSE for any push, merge, deploy or server change. The owner approves each.
 12. **Close.** Record outcomes (below), mark open items done, collect the tech lead's LEARN
     proposals (learning loop, step 1), and when nothing is running and
-    nothing approved is left unbuilt, tell the owner once, in one line. Then run `activator`
+    nothing approved is left unbuilt, tell the owner once, in one line. Run `team.py conversations
+    build`, add one row to the summary's table and update its "Where things stand" ("Conversation
+    summary"). Then run `activator`
     CLOSE, and clear and re-brief each idle sub session it lists (step details). Replies to the owner stay short: the result first, no
     repeated background.
 
@@ -117,7 +119,7 @@ Long histories are re-read on every turn, so sessions stay short and the detail 
   building, testing, in a fix round or holding live work. Without a size report, do it after every
   third piece a session finished in one task.
 - **Pointer re-brief.** Under `[startup-team:<name>]`: the role, the brief path, the agent file
-  path, the checkpoint path, "find more with `team.py records find <words>`", and at most five
+  path, the checkpoint path, `.handoff/conversations/SUMMARY.md`, "find more with `team.py records find <words>`", and at most five
   lines of summary. Step 12's task-close clear uses the same re-brief.
 - **Main session.** It cannot clear itself. Past the threshold at a task's close, it writes its
   own checkpoint and tells the owner once, in one line, that typing /clear and then "resume"
@@ -126,6 +128,18 @@ Long histories are re-read on every turn, so sessions stay short and the detail 
   [--kind k] [--last n]` (paths, kinds and titles only; `records index` rebuilds
   `.handoff/records-index.jsonl`) and opens only the files it names, instead of asking for a
   recap. Code files are found with the code graph when the project has one ("Code graph").
+
+## Conversation summary
+`.handoff/conversations/SUMMARY.md` is the hand-kept map of past work: one row per task (when, asked
+for, outcome, chat file, records) and "Where things stand". `team.py conversations build` writes the
+sub files from the project's session transcripts, one per session and day
+(`<session>-<YYYYMMDD>.md`: what the owner typed and each turn's final reply, redacted), and creates
+the summary from a template only when it is missing; it never changes it otherwise.
+- A session that needs past context reads the summary first, when it exists, and never loads past
+  transcripts or whole turn folders. It opens a sub file only when the task needs it, and Greps
+  before reading a whole one.
+- At each task's close (step 12) the main session rebuilds the sub files, adds one row and updates
+  "Where things stand". Keep the summary under about 60 lines.
 
 ## Loadout
 `activator` (a cheap sub-agent, `agents/activator.md`) keeps each session lean with `team.py

@@ -135,7 +135,15 @@ def record_start(root: str, session_id: str) -> None:
         pass
 
 
+SUMMARY_LINE = ("Past context: read .handoff/conversations/SUMMARY.md first; open its sub files only when "
+                "the task needs them.")
+
+
 def session_start(payload: dict, session_id: str) -> None:
+    for base in (os.environ.get("CLAUDE_PROJECT_DIR"), payload.get("cwd")):
+        if isinstance(base, str) and os.path.isfile(os.path.join(base, ".handoff", "conversations", "SUMMARY.md")):
+            print(SUMMARY_LINE)
+            break
     found = find_notes(payload)
     if not found:
         return

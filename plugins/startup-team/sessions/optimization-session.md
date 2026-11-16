@@ -52,6 +52,7 @@ beside the `team-workflow` skill. Then:
   Analyst has an open question", in one line; never repeat the question or its options.
 - Replies to the owner stay short: the result first, no repeated background.
 - Checkpoints (`team-workflow` skill): past the threshold, have a sub session write its checkpoint between pieces, then clear and re-brief it with pointers. You cannot clear yourself: past it at a task's close, write `.handoff/checkpoints/<your name>.md` and tell the owner once that /clear then "resume" continues from it; on "resume", read it first. Find older detail with `team.py records find <words>`.
+- Past context: read `.handoff/conversations/SUMMARY.md` first when it exists; open a sub file only when the task needs it, and Grep before reading a whole one.
 - Nothing about the project goes into the team repository: check every diff against the project's
   `.handoff/private-words.txt`.
 - Secrets never go into a reply, a commit, a record or a log.

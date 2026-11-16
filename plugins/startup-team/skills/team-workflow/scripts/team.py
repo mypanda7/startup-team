@@ -19,6 +19,7 @@ Usage:
   team.py learn apply <id> --repo <clone of the team repository>
   team.py loadout inventory [--json] | plan --needs a,b | on|off <plugin> [--approved] [--by W] | selftest
   team.py records index | find <words...> [--kind K] [--last N] | selftest
+  team.py conversations build | selftest
 """
 import argparse
 import datetime
@@ -653,6 +654,170 @@ def rec_selftest(_a) -> None:
     print("records selftest ok")
 
 
+# ---- conversations: per-session, per-day chat files plus a hand-kept SUMMARY.md ----
+
+CHAT_CUT = 3000  # shortcut: long replies are cut at 3000 chars; the transcript holds the rest
+SUMMARY_TEMPLATE = """# Conversation summary (read this first, open a sub file only when the task needs it)
+
+Last updated <date>. One entry per task. Paths are relative to `.handoff/`.
+- **Chat** = what the owner typed and each reply, in `conversations/<session>-<date>.md`.
+- **Records** = the task's turn folder (`decision.md`, `answers.md`, `result-*.md`, `qa-*.md`, `audit.md`).
+- Search instead of reading whole files: Grep `conversations/` for a word, or `team.py records find <words>`.
+
+## Where things stand
+- (what is live, what is committed but not shipped, what waits on the owner)
+
+## Tasks, oldest first
+| # | When | Asked for | Outcome | Chat | Records |
+|---|------|-----------|---------|------|---------|
+
+## Keeping this current
+At each task's close: run `team.py conversations build`, add one row above and update "Where things
+stand". Keep this file under about 60 lines.
+"""
+
+
+def transcripts_dir(proj: Path) -> Path:
+    # Claude Code names a project's transcript folder after its path, every non-alphanumeric as "-"
+    return claude_home() / "projects" / re.sub(r"[^A-Za-z0-9]", "-", str(proj.resolve()))
+
+
+def chat_text(content):
+    if isinstance(content, list):
+        if any(isinstance(b, dict) and b.get("type") == "tool_result" for b in content):
+            return None  # a tool result, not a message
+        content = "\n".join(b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text")
+    return content or ""
+
+
+def owner_said(raw: str) -> str:
+    cmd = re.search(r"<command-name>(.*?)</command-name>", raw, re.S)
+    if cmd:
+        args = re.search(r"<command-args>(.*?)</command-args>", raw, re.S)
+        return (cmd.group(1) + " " + (args.group(1) if args else "")).strip()
+    raw = re.sub(r"<(system-reminder|pasted_content[^>]*)>.*?</\1>", "", raw, flags=re.S).strip()
+    return "" if raw.startswith(("<", "[Request interrupted")) else raw
+
+
+def chat_clean(s: str) -> str:
+    s = EMAIL.sub("[REDACTED]", SECRET.sub("[REDACTED]", s.strip()))
+    return s if len(s) <= CHAT_CUT else s[:CHAT_CUT] + "\n[cut: the rest is in the transcript]"
+
+
+def conversations_build(proj: Path, src: Path):
+    """Write .handoff/conversations/<session>-<YYYYMMDD>.md; return (files, owner messages) or None."""
+    if not src.is_dir():
+        return None
+    out = proj / ".handoff" / "conversations"
+    out.mkdir(parents=True, exist_ok=True)
+    turns = sorted(p.name for p in (proj / ".handoff").iterdir() if p.is_dir() and re.match(r"\d{8}-\d{4}", p.name))
+    files, owner_count = {}, 0
+    for path in sorted(src.glob("*.jsonl")):
+        title, entries, reply = "session", [], None
+        for line in path.open(encoding="utf-8", errors="replace"):
+            try:
+                d = json.loads(line)
+                if d.get("type") == "custom-title":
+                    title = d.get("customTitle") or title
+                if d.get("isSidechain") or d.get("type") not in ("user", "assistant"):
+                    continue
+                when = datetime.datetime.fromisoformat(d["timestamp"].replace("Z", "+00:00")).astimezone()
+                content = d["message"].get("content")
+            except (ValueError, KeyError, TypeError, AttributeError):
+                continue
+            if d["type"] == "assistant":
+                for b in content if isinstance(content, list) else []:
+                    if isinstance(b, dict) and b.get("type") == "text" and b.get("text", "").strip():
+                        reply = (when, "Reply", b["text"])  # keep only the turn's last text
+                continue
+            raw = chat_text(content)
+            if raw is None:
+                continue
+            if reply:  # a new message closes the previous turn
+                entries.append(reply)
+                reply = None
+            human = (d.get("origin") or {}).get("kind") == "human" and not d.get("isMeta")
+            said = owner_said(raw) if human else ""
+            if said:
+                entries.append((when, "OWNER", said))
+        if reply:
+            entries.append(reply)
+        if not any(who == "OWNER" for _, who, _ in entries):
+            continue  # a session the owner never typed in
+        slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-") or "session"
+        for when, who, said in entries:
+            key = f"{slug}-{when:%Y%m%d}.md"
+            files.setdefault(key, [f"# {title}, {when:%Y-%m-%d}\nTranscript: {path}\n"]).append(
+                f"\n## {when:%H:%M} {who}\n{chat_clean(said)}\n")
+            owner_count += who == "OWNER"
+    for name, parts in files.items():
+        started = [t for t in turns if t.startswith(name[-11:-3])]
+        if started:
+            parts.insert(1, "Turn folders started this day: " + ", ".join(started) + "\n")
+        (out / name).write_text("".join(parts), encoding="utf-8")
+    summary = out / "SUMMARY.md"
+    if not summary.exists():
+        summary.write_text(SUMMARY_TEMPLATE.replace("<date>", datetime.date.today().isoformat()), encoding="utf-8")
+    return len(files), owner_count
+
+
+def conv_build(_a) -> None:
+    proj = root()
+    src = transcripts_dir(proj)
+    got = conversations_build(proj, src)
+    if got is None:
+        print(f"no transcript folder for this project ({src.as_posix()}); nothing written")
+        return
+    print(f"{got[0]} files, {got[1]} owner messages -> .handoff/conversations/")
+
+
+def conv_selftest(_a) -> None:
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        t = Path(tmp)
+        proj, src = t / "proj", t / "transcripts"
+        (proj / ".handoff" / "20260301-0900-demo").mkdir(parents=True)
+        src.mkdir()
+        assert conversations_build(proj, t / "missing") is None and not (proj / ".handoff" / "conversations").exists()
+        ts = "2026-03-01T10:00:00Z"
+
+        def u(content, human=True, **kw):
+            return dict({"type": "user", "timestamp": ts, "origin": {"kind": "human"} if human else {},
+                         "message": {"content": content}}, **kw)
+
+        def a(text):
+            return {"type": "assistant", "timestamp": ts, "message": {"content": [{"type": "text", "text": text}]}}
+
+        rows = [{"type": "custom-title", "customTitle": "Demo Chat"},
+                u("please ask-all-users and fix the widget <system-reminder>hidden rule</system-reminder>"),
+                a("first draft reply"),
+                u([{"type": "tool_result", "content": "tool output here"}], human=False),
+                a("final reply one"),
+                u("<command-name>/demo-cmd</command-name><command-args>now</command-args>"),
+                a("x" * 4000),
+                u("my password=hunter2secret and ghp_abcdefghijklmnopqrstuvwxyz"),
+                a("noted"),
+                dict(a("sidechain text"), isSidechain=True)]
+        (src / "s1.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows) + "not json\n", encoding="utf-8")
+        (src / "s2.jsonl").write_text(json.dumps(a("no owner here")) + "\n", encoding="utf-8")
+        assert conversations_build(proj, src) == (1, 3)
+        out = proj / ".handoff" / "conversations"
+        day = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone()
+        body = (out / f"demo-chat-{day:%Y%m%d}.md").read_text(encoding="utf-8")
+        assert "ask-all-users" in body and "hidden rule" not in body, "owner kept, reminder dropped"
+        assert "tool output" not in body and "first draft" not in body and "final reply one" in body
+        assert "/demo-cmd now" in body and "sidechain" not in body
+        assert "hunter2" not in body and "abcdefghijklmnop" not in body and "[REDACTED]" in body
+        assert "[cut: the rest is in the transcript]" in body and "x" * 3001 not in body
+        if day.strftime("%Y%m%d") == "20260301":
+            assert "Turn folders started this day: 20260301-0900-demo" in body
+        assert "| # | When | Asked for | Outcome | Chat | Records |" in (out / "SUMMARY.md").read_text(encoding="utf-8")
+        (out / "SUMMARY.md").write_text("hand-kept\n", encoding="utf-8")
+        conversations_build(proj, src)
+        assert (out / "SUMMARY.md").read_text(encoding="utf-8") == "hand-kept\n", "SUMMARY.md changed"
+    print("conversations selftest ok")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="startup-team: turn folders, shared memory, learning loop")
     sub = p.add_subparsers(dest="area", required=True)
@@ -724,6 +889,10 @@ def main() -> None:
     rf.add_argument("--last", type=int, help="only the N newest turn folders")
     rf.set_defaults(fn=rec_find)
     rc.add_parser("selftest").set_defaults(fn=rec_selftest)
+
+    cv = sub.add_parser("conversations").add_subparsers(dest="cmd", required=True)
+    cv.add_parser("build").set_defaults(fn=conv_build)
+    cv.add_parser("selftest").set_defaults(fn=conv_selftest)
 
     a = p.parse_args()
     a.fn(a)

@@ -43,6 +43,7 @@ answer a question for them.
   open question", in one line; never repeat the question or its options.
 - Replies to the owner stay short: the result first, no repeated background.
 - Checkpoints: when the main session asks, write `.handoff/checkpoints/<your name>.md` (at most 30 lines) and reply with its path; after a clear, start from that checkpoint; find older detail with `team.py records find <words>` and open only the files it names.
+- Past context: read `.handoff/conversations/SUMMARY.md` first when it exists; open a sub file only when the task needs it, and Grep before reading a whole one.
 
 ## Gateway: delegation first
 Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your

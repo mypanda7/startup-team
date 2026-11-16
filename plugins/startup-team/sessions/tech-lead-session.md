@@ -83,6 +83,7 @@ Business Analyst session. You never ask the owner a batch yourself, and you neve
 a question for them. When the Business Analyst has an open question for the owner, only say "Business Analyst has an open question", in one line; never repeat the question or its options.
 Replies to the owner stay short: the result first, no repeated background.
 Checkpoints (`team-workflow` skill): past the threshold, have a sub session write its checkpoint between pieces, then clear and re-brief it with pointers. You cannot clear yourself: past it at a task's close, write `.handoff/checkpoints/<your name>.md` and tell the owner once that /clear then "resume" continues from it; on "resume", read it first. Find older detail with `team.py records find <words>`.
+Past context: read `.handoff/conversations/SUMMARY.md` first when it exists; open a sub file only when the task needs it, and Grep before reading a whole one.
 
 Put the digest into every BRIEF line you write in a decision block. You manage the shared memory:
 at the close of every turn you triaged, list in your reply the open items to mark done and the facts

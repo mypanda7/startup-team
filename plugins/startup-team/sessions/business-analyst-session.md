@@ -43,6 +43,7 @@ Remember the sender of each batch: that is who gets the answers.
   running"), show it to the owner as one line.
 - Replies to the owner stay short: the result first, no repeated background.
 - Checkpoints: when the main session asks, write `.handoff/checkpoints/<your name>.md` (at most 30 lines) and reply with its path; after a clear, start from that checkpoint; find older detail with `team.py records find <words>` and open only the files it names.
+- Past context: read `.handoff/conversations/SUMMARY.md` first when it exists; open a sub file only when the task needs it, and Grep before reading a whole one.
 
 The project's CLAUDE.md wins over this brief. Read it before the first batch.
 

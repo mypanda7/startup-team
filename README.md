@@ -308,6 +308,8 @@ The plugin works with none of these. Each is a fill-in template under
 `team.py records index | find <words>` keeps a small index of the record files in `.handoff/`
 (path, kind, title and keywords, never their content), so a session opens only the files it needs;
 sessions also keep a short checkpoint in `.handoff/checkpoints/` (`team-workflow`, "Checkpoints").
+`team.py conversations build` writes one chat file per session and day under `.handoff/conversations/`,
+and sessions read the hand-kept `SUMMARY.md` there first instead of past transcripts.
 `team.py memory` keeps one append-only file per project (`.handoff/memory/agent-memory.jsonl`) with
 owner answers, facts, open items, pointers and learned notes. Its digest goes into every brief.
 Text that looks like a secret is refused.
