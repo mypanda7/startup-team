@@ -30,7 +30,8 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    SendMessage, and wait for its decision block. A session whose title starts with `[run]` is a role session and never counts as a standing session. Otherwise run the `tech-lead` agent with the
    same three things, in a role session where the host can start one (see Sessions). Save the block as `decision.md` and show it unchanged. Skip triage only for
    a one-line answer or a pure question.
-   Then run `activator` START (a sub-agent, see "Loadout") with the decision block.
+   Then run `activator` START (a sub-agent, see "Loadout") with the decision block, and start
+   only the missing sub sessions the pieces need ("Standing sessions", on demand).
 3. **Questions.** Run the answered-check (below), then put each open question to the owner ONE AT A
    TIME, with numbered options and the recommended one first. If there is a Business Analyst session
    for this project (see "Standing sessions"), send it the whole batch in one message (each question with an id, its options
@@ -152,14 +153,25 @@ role and end with it. A role whose standing session exists for the project gets 
 `/startup-team:start-team`, run in the session where the owner answers the setup offer, starts
 only a session of its own titled "AI Tech Lead", where the owner carries on; there the AI Tech
 Lead is the main session (by `sessions/tech-lead-session.md`, section "When you are the main
-session"). After one reply from the owner there, the AI Tech Lead runs `start-team` itself and
-starts up to six sub sessions under it, from the briefs in `sessions/` (Business Analyst,
-Designer, Developer, QA Engineer, DevOps and Security). It writes `.handoff/team-sessions.json`, each role's
+session"). After one reply from the owner there, the AI Tech Lead runs `start-team` itself to
+finish the setup; it starts no sub session then. Each sub session (Business Analyst, Designer,
+Developer, QA Engineer, DevOps and Security, from the briefs in `sessions/`) starts under it the
+first time a task needs it. It writes `.handoff/team-sessions.json`, each role's
 session id and title, and every rule below that finds a session reads that registry first, so a
 renamed session is still found. When the Business Analyst has an open question for the owner, only say "Business Analyst has an open question", in one line; never repeat the question or its options. Only a turn the owner started may call `start_session` (the app refuses it on
 a turn another session's message started), so the AI Tech Lead is started by the session where the
 owner answered the setup offer, and the sub sessions by the AI Tech Lead on a turn the owner typed
-there, always with `use_worktree: false`, in the project's folder. They work only in the desktop app, where a
+there, always with `use_worktree: false`, in the project's folder.
+
+**On demand.** After triage, on a turn the owner typed, the main session starts only the missing
+sub sessions the task's pieces need (the `activator`'s list, or the decision block's routes), by
+the `start-team` rules (found first by registry, then by title; never a second one;
+`use_worktree: false`; the project's folder; registry updated), then sends the work. The AI Tech
+Lead does this with `/startup-team:start-team <names>`. When a role is first needed on a turn
+another session's message started, that run goes to a role session where one can be started, else
+a sub-agent (Business Analyst: the main session asks the owner itself, one at a time), and the
+standing session is started on the owner's next typed turn only if the task still needs it. Never
+start a session just in case. A sub session that already exists is used, never duplicated. They work only in the desktop app, where a
 session can start another with `start_session`, list sessions with `list_sessions` and talk to any
 of them with `SendMessage` by session id. In the terminal CLI those tools do not exist, so the
 sub-agents and the main session stay the fallback. Only the Developer session writes source; every

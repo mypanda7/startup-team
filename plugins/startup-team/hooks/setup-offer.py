@@ -30,24 +30,24 @@ DONE_MARKER = os.path.join(".handoff", "team-setup-done")
 STARTED_MARKER = os.path.join(".handoff", "team-setup-started")
 
 NOTICE = ("startup-team is installed but the team isn't set up: choose Set up now, or reply 1, to "
-          "create the AI Tech Lead and its sub sessions")
+          "create the AI Tech Lead")
 
-HALF_NOTICE = ("startup-team setup isn't finished: open AI Tech Lead and type a reply there to create "
-               "the sub sessions")
+HALF_NOTICE = ("startup-team setup isn't finished: open AI Tech Lead and type a reply there to finish "
+               "the setup")
 
-REMINDER = """Team setup (startup-team) isn't finished: the setup started, but the sub sessions don't
-exist yet. If this session is the Tech Lead (its id is the `tech-lead` entry of
+REMINDER = """Team setup (startup-team) isn't finished: the setup started, but the AI Tech Lead
+has not finished it yet. If this session is the Tech Lead (its id is the `tech-lead` entry of
 `.handoff/team-sessions.json`, or else its title ends with "Tech Lead"), run /startup-team:start-team
-on this owner turn; it starts the sub sessions here. Otherwise, before anything else, tell the owner
-in one line: \"Setup isn't finished: open AI Tech Lead and type a reply there to create the sub sessions.\"
+on this owner turn; it finishes the setup here. Otherwise, before anything else, tell the owner
+in one line: \"Setup isn't finished: open AI Tech Lead and type a reply there to finish the setup.\"
 If no Tech Lead session exists for this project, say instead that setup stopped before the AI Tech
 Lead was created, and that deleting `.handoff/team-setup-started` brings the setup question back.
 Then carry on with the owner's request. Say it at most once in this session."""
 
 OFFER = """Team setup (startup-team): before anything else this turn, say "startup-team installed
 successfully." and ask the owner, as the only question:
-"Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer,
-QA Engineer, DevOps, Security) and install the companion plugins (off by default)?"
+"Create the AI Tech Lead session (its sub sessions start the first time a task needs them) and
+install the companion plugins (off by default)?"
 - First choice: if this session has, or can load, a tool that asks the owner a question with
   clickable options (in Claude Code: AskUserQuestion), ask it there with exactly two options:
   "Set up now" (= 1: creates the sessions and installs the companion plugins, off by default) and "Not now" (= 0:
@@ -60,19 +60,20 @@ the companion plugins, off by default. Where the project's CLAUDE.md names `TEAM
 the AI Team Optimization session beside the AI Tech Lead (the question itself stays as above).
 Do not start the owner's request until they answer.
 - On 1 ("Set up now"): run /startup-team:start-team on that owner turn. It creates the AI Tech Lead
-  session (with the owner's pending request); the six sub sessions and the companion plugins are
-  set up inside it after one reply there. Tell the owner to open AI Tech Lead and reply there once.
+  session (with the owner's pending request); the companion plugins are set up inside it after one
+  reply there, and each sub session starts the first time a task needs it. Tell the owner to open AI Tech Lead and reply there once.
 - On 0 ("Not now"): carry on with their request; the offer returns in the next session.
 Ask at most once in this session: once it was asked (answered or not), never ask it again here.
 Skip the offer silently when this session has no start_session tool (the terminal CLI), or when
 the team already exists: a Tech Lead session for this project folder (the `tech-lead` id in
 `.handoff/team-sessions.json` is a live session there, or else this session's or a listed
-session's title ends with "Tech Lead") whose sub sessions are in that registry. Then create
+session's title ends with "Tech Lead") whose setup finished (in an older project: whose sub
+sessions are in that registry). Then create
 `.handoff/team-setup-done` in the project folder (one line: today's date) and continue.
-A Tech Lead without its sub sessions is a half-done setup: never write `team-setup-done` for it.
+A Tech Lead whose setup run never finished is a half-done setup: never write `team-setup-done` for it.
 If this session is that Tech Lead, run /startup-team:start-team on this owner turn instead of
 asking. Otherwise skip the question and tell the owner in one line:
-\"Setup isn't finished: open AI Tech Lead and type a reply there to create the sub sessions.\""""
+\"Setup isn't finished: open AI Tech Lead and type a reply there to finish the setup.\""""
 
 
 def first_offer(session_id: str) -> bool:

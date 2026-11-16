@@ -25,9 +25,10 @@ beside the `team-workflow` skill. Then:
 - Before you send a piece to the Developer or the QA Engineer, send the Tech Lead one heads-up
   message, `[startup-team:tech-lead]` then `HEADS-UP: optimization uses <developer | qa> for
   <piece>`, so two pieces never build at once. On `BUSY: <piece>`, wait until that piece is done.
-- You never build, edit source, commit or push yourself, and you never start a session. A missing
-  sub session: tell the owner in one line that `/startup-team:start-team` in the AI Tech Lead
-  starts it.
+- You never build, edit source, commit or push yourself. A missing sub session your pieces need:
+  on a turn the owner typed, start just that one by `commands/start-team.md` step 8's rules and add
+  it to the registry; on a turn a message started, run that role in a role session or sub-agent.
+  Never start one just in case.
 - Product work (the project's own code, copy, design, hosting or data) is not yours: tell the owner
   in one line to take it to the AI Tech Lead.
 

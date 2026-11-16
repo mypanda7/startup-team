@@ -50,7 +50,7 @@ the session that installed the plugin, with no restart:
 
 1. Say "startup-team installed successfully."
 2. Ask the owner only this, and wait for the answer:
-   "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security) and install the companion plugins (off by default)?"
+   "Create the AI Tech Lead session (its sub sessions start the first time a task needs them) and install the companion plugins (off by default)?"
    - First choice: if the session has, or can load, a tool that asks a question with clickable
      options (in Claude Code: AskUserQuestion), ask it there with exactly two options: "Set up
      now" (= 1: creates the sessions and installs the companion plugins, off by default) and "Not now" (= 0: asks
@@ -62,8 +62,9 @@ the session that installed the plugin, with no restart:
 3. On 1 ("Set up now"), on that same owner turn: find the installed plugin's folder with `claude plugin list`,
    read its `commands/start-team.md` and follow it step by step (the `/startup-team:start-team`
    command itself is not loaded until a new session). It creates the AI Tech Lead session; the
-   owner opens it and replies there once, and the AI Tech Lead then creates its six sub sessions
-   and installs the companion plugins, off by default. Without a
+   owner opens it and replies there once, and the AI Tech Lead then finishes the setup and
+   installs the companion plugins, off by default; each sub session starts the first time a task
+   needs it. Without a
    `start_session` tool (the terminal CLI), say in one line that standing sessions need the
    desktop app and that the team keeps using its sub-agents.
 4. On 0 ("Not now"), do nothing more: the `setup-offer` hook asks again at the start of the next session.
@@ -75,7 +76,7 @@ checks the local router, the key variable and the private words, and proposes th
 Weren't asked? Run `/startup-team:start-team` in a new session. Until the team is set up, the
 question comes on your first message in every new session; a new session may also show a one-line
 notice. If a setup stopped halfway, open AI
-Tech Lead and type a reply there: it creates the sub sessions (new sessions remind you until then).
+Tech Lead and type a reply there: it finishes the setup (new sessions remind you until then).
 As a last resort, deleting `.handoff/team-setup-started` in the project brings the question back.
 
 Update later with:
@@ -146,8 +147,8 @@ names another rules file.
 In a host that can start sessions (the Claude desktop app), the team works in two kinds of session.
 
 - **Standing sessions** are long-lived: one Tech Lead session per project and, under it, up to six
-  sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), started once and used
-  for every task.
+  sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), each started the
+  first time a task needs it and then used for every task.
 - **Role sessions** are opened for one run of a role and end with it, so the owner can open, steer
   and stop each run on its own.
 
@@ -159,13 +160,13 @@ work goes to the Tech Lead session, and opens a role session only when there is 
 ### Standing sessions
 
 `/startup-team:start-team` (or "Set up now" in the setup offer) starts the "AI Tech Lead", a
-session of its own, where you carry on. Reply there once and it starts its six sub sessions under
-it in the Claude desktop app's sidebar, each from its brief in `sessions/`, in the project's own
-folder (never a worktree). The app nests a session under the one that started it, and only lets a
-turn the owner typed call `start_session`, so that one reply is what lets the AI Tech Lead start
-them. Pass any of
-`business-analyst`, `designer`, `developer`, `qa`, `devops` or `security` to start only those sub
-sessions.
+session of its own, where you carry on. Reply there once and it finishes the setup. It starts no
+sub session then: each one starts under it in the Claude desktop app's sidebar the first time a
+task needs it, from its brief in `sessions/`, in the project's own folder (never a worktree). The
+app nests a session under the one that started it, and only lets a turn the owner typed call
+`start_session`, so a sub session first needed on a turn another session started runs in a role
+session or as a sub-agent until your next typed turn. Pass any of `business-analyst`, `designer`,
+`developer`, `qa`, `devops` or `security` to start those now, or `all` for all six.
 
 ```
 AI Tech Lead (you work here)   triages, plans, audits
@@ -204,7 +205,7 @@ An existing session is used, whoever started it, and a second one is never start
 one session matches a role, they are listed and the owner says which one to use. The command keeps
 the title of the session it runs in: run elsewhere it starts only the AI Tech Lead (and AI Team
 Optimization, where the project names `TEAM REPO CLONE:`); run in the AI
-Tech Lead it starts only the six sub sessions. Only the
+Tech Lead it starts only the sub sessions you name (none with no argument). Only the
 Developer session writes source.
 
 ### Role sessions

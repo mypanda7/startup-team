@@ -1,10 +1,12 @@
 ---
-description: Start the AI Tech Lead session (and AI Team Optimization where the project names a team repo clone); run inside it, start its Business Analyst, Designer, Developer, QA Engineer, DevOps and Security sub sessions
+description: Start the AI Tech Lead session (and AI Team Optimization where the project names a team repo clone); run inside it, finish the setup; sub sessions start when a task first needs them (or name them, or `all`)
 ---
-Set up the team's standing sessions: the AI Tech Lead, a session of its own, and its six sub
-sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), which sit under it
-in the sidebar. `$ARGUMENTS` may name a subset of the sub sessions (`business-analyst`,
-`designer`, `developer`, `qa`, `devops`, `security`); with no argument, all six. The argument
+Set up the team's standing sessions: the AI Tech Lead, a session of its own, and its sub sessions
+(Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), which sit under it in the
+sidebar. Sub sessions start on demand: with no argument, case B starts none, and each one starts the
+first time a task needs it (`team-workflow` skill, "Sessions"). `$ARGUMENTS` may name sub sessions
+to start now (`business-analyst`, `designer`, `developer`, `qa`, `devops`, `security`), or `all`
+for all six. The argument
 `gateway`, run in the Tech Lead, runs only step 12 and asks its question again.
 Where the project's CLAUDE.md names `TEAM REPO CLONE: <path>`, case A also starts "AI Team
 Optimization", a second session of its own beside the AI Tech Lead (never under it), where the
@@ -13,7 +15,7 @@ owner improves the team itself.
 The desktop app nests a session under the session that started it, and allows `start_session`
 only on a turn the owner typed. So setup takes two runs of this command: run in any other
 session, it starts only the AI Tech Lead (case A); run in the AI Tech Lead on a turn the owner
-typed there, it starts the sub sessions under it (case B). Follow these steps in order.
+typed there, it finishes the setup and starts the named sub sessions under it (case B). Follow these steps in order.
 
 1. If you have no `start_session` tool (the terminal CLI), say in one line that standing sessions
    need the desktop app and that the team keeps using its sub-agents. Stop.
@@ -67,21 +69,23 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
      Optimization, so each is a session of its own. Without one, leave them where they are.
    - Write the registry's `tech-lead` entry, and `optimization` when it was found or started
      (step 9 shows the format), keeping every other entry.
-   - Tell me in one line: when the Tech Lead has no sub sessions yet, open AI Tech Lead (link it)
-     and type a reply there once to create the six sub sessions; when it already has them, that the
-     team already exists, with the AI Tech Lead linked. Link AI Team Optimization too when it was
+   - Tell me in one line: when the setup is not finished (no `team-setup-done`), open AI Tech Lead
+     (link it) and type a reply there once to finish it; when it is, that the team already exists,
+     with the AI Tech Lead linked. Link AI Team Optimization too when it was
      found or started. Do not write `team-setup-done`. Stop.
 6. **Case B: this session is the Tech Lead.** If this turn was started by another session's
    message, not typed by me, say in one line that the app refuses session starts on such a turn and
    ask me to reply here once. Stop. Otherwise create `.handoff/team-setup-started` if it is
    missing, read `sessions/tech-lead-session.md` and keep it, with the `team-workflow` skill, as
    your standing method.
-7. For each named sub session, in the table's order: one match by step 3, use it as it is, whoever
+7. The named sub sessions are those `$ARGUMENTS` names, all six for `all`, and none with no
+   argument. For each named sub session, in the table's order: one match by step 3, use it as it is, whoever
    started it. More than one: list them and ask me which one to use; never guess, and start none
    for that role meanwhile.
-8. Before the first `start_session` call, create `<project folder>/.handoff/team-setup-done`
-   holding one line, today's date, so the setup offer (the `setup-offer` hook) stops and the new
-   sub sessions' hooks stay quiet. Then start each sub session that has none with ONE
+8. Note whether `<project folder>/.handoff/team-setup-done` already exists (then this run is an
+   on-demand start, and steps 10 to 12 are skipped). Create it if missing, holding one line,
+   today's date, before any `start_session` call, so the setup offer (the `setup-offer` hook) stops
+   and new sub sessions' hooks stay quiet. Then start each named sub session that has none with ONE
    `start_session` call, so it sits under this session:
    - initiation `user_asked`, the title and name from the table
    - context `fresh`, `use_worktree: false`, never a worktree, whatever else I said
@@ -200,7 +204,8 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
        to a later time." and run `launch --brief .handoff/gateway/trial-brief.txt --out
        .handoff/gateway/trial-answer-<date>.txt`. Report ok or failed and the ledger id. On ok,
        delete `.handoff/gateway-setup-pending` if it exists.
-13. Tell me in one line which sub sessions were found and which were started, and name any role
+13. Tell me in one line which sub sessions were found and which were started (with no argument:
+    none, and each one starts the first time a task needs it), and name any role
     still missing because its start failed or was refused, with the app's reason: running this
     command again here starts just that one. Then any worktree or duplicate sessions from step 3;
     then which companions were installed (disabled) and which kept (with their state), and that I
@@ -219,4 +224,4 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
 | Security | Security | `security` | opus | `sessions/security-session.md` | none |
 
 This command starts no session beyond the AI Tech Lead and AI Team Optimization (case A) and the
-Tech Lead's six sub sessions (case B). Case B never starts AI Team Optimization.
+Tech Lead's named sub sessions (case B). Case B never starts AI Team Optimization.
