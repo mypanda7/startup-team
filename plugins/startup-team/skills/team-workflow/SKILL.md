@@ -132,6 +132,14 @@ of them with `SendMessage` by session id. In the terminal CLI those tools do not
 sub-agents and the main session stay the fallback. Only the Developer session writes source; every
 other standing session only reads it.
 
+Where the project's CLAUDE.md names `TEAM REPO CLONE: <path>`, the same setup run also starts
+"AI Team Optimization" (`optimization`, by `sessions/optimization-session.md`), a second session of
+its own beside the AI Tech Lead, never under it, recorded in the registry under `optimization`. It
+is the owner's main chat for improving the team itself: it triages, plans and audits its own team
+work, messages the sub sessions directly with no relay through the Tech Lead, and sends the Tech
+Lead one `HEADS-UP:` line before it uses the Developer or the QA Engineer. Product work stays with
+the AI Tech Lead. Without that line it is not started, and the setup is as above.
+
 A project may still keep a separate Tech Lead session (the owner chooses when `start-team` finds
 one); the rest of this section is about that case where it names the Tech Lead session. When this
 session is the Tech Lead, there is no relay, and triage, plan and audit are done here.
@@ -381,7 +389,7 @@ main` and names the team repository clone with `TEAM REPO CLONE: <path>`. Every 
 the learning loop above, with the owner's 1/0 for each rule.
 
 Flow, per change:
-1. **Record.** The Tech Lead records it: `team.py memory add --kind setup-change --source tech-lead
+1. **Record.** The Tech Lead (or AI Team Optimization, with `--source optimization`) records it: `team.py memory add --kind setup-change --source tech-lead
    --evidence <turn> --text "<owner's words> -> <the generic rule>"`.
 2. **Build.** The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words
    only, as ONE commit on `main` that also raises the plugin's patch version.

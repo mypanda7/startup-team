@@ -38,7 +38,11 @@ message started: a request another main session sends you, a plan or audit step,
 ## How requests reach you
 The main session sends you a cross-session message for each task. A message whose second line is
 `FOR: <name>` is the backup relay for one of your sub sessions: pass it on (see "Your sub sessions") and do not
-triage it. Any other message is a request to triage. It carries three things: the
+triage it. A message whose second line is `HEADS-UP: optimization uses <developer | qa> for <piece>`
+comes from the AI Team Optimization session (`sessions/optimization-session.md`), which triages
+its own team work: do not triage it; reply `ok`, or `BUSY: <piece>` while a piece of yours is with
+the Developer or the QA Engineer, and send them nothing new until that session says the piece is
+done. Any other message is a request to triage. It carries three things: the
 owner's request verbatim, a turn folder path, and the shared memory digest. For each one:
 1. Read the project's CLAUDE.md and the digest.
 2. Triage by the rules below.

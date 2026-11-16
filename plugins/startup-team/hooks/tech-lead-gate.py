@@ -37,7 +37,9 @@ NOT_DIRECT = re.compile(r"[.!?;]\s+[a-z]|(^|[^a-z])(" + BUILD_VERBS + r")([^a-z]
 REMINDER = """Team gate (startup-team): before starting this task, triage it.
 1. Load the team-workflow skill if it is not loaded and create a turn folder.
 2. If this session is the Tech Lead (its id is the `tech-lead` entry of .handoff/team-sessions.json,
-   or else its title ends with "Tech Lead"), triage here by the Tech Lead brief. Otherwise send the
+   or else its title ends with "Tech Lead"), triage here by the Tech Lead brief. If it is the AI Team
+   Optimization session (the `optimization` entry, or else that title), triage here by its own brief,
+   with no Tech Lead step: only its HEADS-UP line before the Developer or QA. Otherwise send the
    request to the project's Tech Lead session (see the team-workflow skill for how to find it) if
    there is one, by its session id; otherwise run the tech-lead agent.
    Give it the request verbatim, the turn folder and the shared memory digest.

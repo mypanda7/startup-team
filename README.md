@@ -174,6 +174,8 @@ AI Tech Lead (you work here)   triages, plans, audits
     ├── QA Engineer      runs the product, PASS or FAIL
     ├── DevOps           proposes every push or deploy
     └── Security         analysis only
+
+AI Team Optimization           improves the team itself (only with TEAM REPO CLONE)
 ```
 
 You carry on in the AI Tech Lead: on your turns it is the main session, so it triages, plans and
@@ -188,6 +190,7 @@ only says "Business Analyst has an open question", in one line. A project whose 
 | Session | What it does | Main session uses it for |
 |---|---|---|
 | AI Tech Lead (main session) | Triages, plans backend pieces by the `architect` method and audits each turn by the `auditor` method; starts and leads the sub sessions. Never builds, edits source, commits or pushes. | Each request (a decision block), each plan and each audit. |
+| AI Team Optimization (main session for team work) | Only where the project's CLAUDE.md names `TEAM REPO CLONE:`; started beside the AI Tech Lead, never under it. Triages, plans and audits its own changes to the team (setup, sessions, agents, hooks, skills, token use, gateway, code graph), messages the sub sessions directly with no relay through the Tech Lead, and sends the Tech Lead a `HEADS-UP:` line before it uses the Developer or QA. Never does product work. | Every change to the team: built in the clone, tested, audited, pushed, installed. |
 | Business Analyst | Relays questions to the owner one at a time and sends each answer back verbatim. Never answers or decides. | Question batches. |
 | Designer | Proposes, briefs and reviews UI by the `designer` agent's method. Never builds. | Every design step. |
 | Developer | Builds one piece at a time from a brief by the `executor` agent's method, with one local commit each. Never pushes or deploys. | Every build piece. |
@@ -198,7 +201,8 @@ only says "Business Analyst has an open question", in one line. A project whose 
 A session exists for a role when there is a session whose id `.handoff/team-sessions.json` names for the role and that `list_sessions` shows non-archived in the project's folder, whatever its title is now; failing that, a non-archived session whose `cwd` is the project's folder (compared ignoring case, slash direction and a trailing slash; a worktree or subfolder does not count) and whose title is the role's title, ignoring case and spaces (for the Tech Lead, a title that ends with "Tech Lead", so "AI Tech Lead" matches; a title that only contains the word does not), found with `list_sessions` and messaged by its session id. A session whose title starts with `[run]` is a role session and never counts as a standing session.
 An existing session is used, whoever started it, and a second one is never started. If more than
 one session matches a role, they are listed and the owner says which one to use. The command keeps
-the title of the session it runs in: run elsewhere it starts only the AI Tech Lead; run in the AI
+the title of the session it runs in: run elsewhere it starts only the AI Tech Lead (and AI Team
+Optimization, where the project names `TEAM REPO CLONE:`); run in the AI
 Tech Lead it starts only the six sub sessions. Only the
 Developer session writes source.
 
