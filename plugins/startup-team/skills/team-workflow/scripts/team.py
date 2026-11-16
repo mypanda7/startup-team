@@ -547,8 +547,9 @@ def record_row(h: Path, f: Path) -> dict:
     title = next((l.strip().lstrip("#").strip() for l in text.splitlines() if l.strip()), "")[:100]
     if SECRET.search(title) or EMAIL.search(title):
         title = "[title withheld]"
-    words = [w for w in re.findall(r"[a-z][a-z0-9-]{3,}", text.lower())
-             if w not in STOP and not SECRET.search(w) and not EMAIL.search(w)]
+    # blank whole secret and email matches before splitting, so no part of a value becomes a keyword
+    clean = SECRET.sub(" ", EMAIL.sub(" ", text))
+    words = [w for w in re.findall(r"[a-z][a-z0-9-]{3,}", clean.lower()) if w not in STOP]
     keys = [w for w, _ in sorted(((w, words.count(w)) for w in set(words)), key=lambda x: (-x[1], x[0]))[:12]]
     return {"path": rel.as_posix(), "turn": "" if rel.parts[0] == "checkpoints" else rel.parts[0],
             "kind": record_kind(rel), "title": title, "keywords": keys,
@@ -593,6 +594,10 @@ def rec_index(_a) -> None:
 
 def rec_find(a) -> None:
     hits = records_find(handoff(), a.words, a.kind, a.last)
+    try:  # a console that cannot show a character prints "?" instead of failing
+        sys.stdout.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
     for r in hits:
         print(f".handoff/{r['path']}  [{r['kind']}]  {r['title']}")
     if not hits:
@@ -623,6 +628,17 @@ def rec_selftest(_a) -> None:
         assert rows["checkpoints/developer.md"]["kind"] == "checkpoint" and rows["checkpoints/developer.md"]["turn"] == ""
         assert rows["20260102-0900-beta/qa-final.md"]["title"] == "[title withheld]", "secret in title"
         assert rows["20260101-0900-alpha/decision.md"]["keywords"][0] == "widget"
+        # secret shapes: no part of the value may reach the title or the keywords
+        vals = ["zqvalpwdxyzz", "zqvalapikeyzz", "zqvalghptokenzz0123456789", "deadbeef" * 5]
+        shapes = (f"password={vals[0]}\napi_key: {vals[1]}\nghp_{vals[2]}\n{vals[3]}\n" * 3 + "mail zq@example.com\n")
+        for name, text in (("body", "harmless title\n" + shapes), ("title", f"password={vals[0]} ghp_{vals[2]}\n" + shapes)):
+            f = h / "20260102-0900-beta" / f"other-{name}.md"
+            f.write_text(text, encoding="utf-8")
+            r = record_row(h, f)
+            blob = (r["title"] + " " + " ".join(r["keywords"])).lower()
+            for v in vals + ["example"]:
+                assert not any(part in blob for part in (v.lower(), v.lower()[4:12])), (name, v, r)
+            f.unlink()
         assert len(records_find(h, ["widget"])) == 2
         hits = records_find(h, ["gateway"])
         assert [r["path"] for r in hits] == ["20260101-0900-alpha/decision.md"], hits
