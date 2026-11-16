@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Ship (one finished branch, to live)
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 The method for the main session and `devops`. It never weakens the chain: nothing ships before
 `qa` and the `auditor`'s PASS, and every push, pull request, merge, tag and deploy goes through
 `devops` PROPOSE and the owner's 1. Asking for "ship" starts this skill; it is not the 1 for its

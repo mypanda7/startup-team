@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Feature tests (the right tests, not the most tests)
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 For the `tech-lead` and `architect` when they plan a piece, the `executor` when it writes the
 tests, and `qa` when it judges them. The output is a visible tier call the owner can override, not
 silent test generation. Green tests never replace `qa` or the `auditor`.

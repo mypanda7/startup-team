@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Triage log
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 One durable record of what was triaged, how it ended and why, so the same ticket or error cluster
 is never worked out from scratch twice. `scan-errors`, `scan-tickets` and `reply-tickets` read it
 before any verdict and append to it after one.

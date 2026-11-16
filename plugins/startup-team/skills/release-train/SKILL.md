@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Release train (the scheduled release, and rollback)
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 For the main session and `devops`. The release is a production deploy. Every push, merge, tag,
 deploy, restart and rollback goes through `devops` PROPOSE and the owner's 1, and the go/no-go in
 phase 3 is the owner's alone: never infer it from momentum or from an approval in an earlier

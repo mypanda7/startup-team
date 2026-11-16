@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Scan errors
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 Read the error log, group the rows by cause, check each group against what the project already
 knows, and hand the owner a report they can answer with numbers. You report; you do not fix.
 

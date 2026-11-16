@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Scan tickets
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 For each ticket in scope, find out what is really going on and say what you would do about it,
 with the evidence. A keyword match against the notes is where the work starts, not where it ends.
 

@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Start an epic
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 You drive ONE epic from backlog to open pull requests, card by card. You are a thin
 orchestrator: the team chain in `team-workflow` builds each card; this skill adds the order, the
 single source of truth and the acceptance loop.

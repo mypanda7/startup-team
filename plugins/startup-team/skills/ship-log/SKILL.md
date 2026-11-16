@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Ship log
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 Everything that reached production gets a record, exactly once. The mark in a state file says
 where the last pass stopped, so nobody has to remember a starting point. This skill writes
 records into the project's own systems; notes for readers are `release-notes`.

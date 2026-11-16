@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Test gate (what must run before this merge, and did it)
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 For `qa`, `devops` and the main session. The gate decides WHAT to test, runs it, and says whether
 the change may go on. It feeds the chain; it replaces neither `qa`'s walk of the product nor the
 `auditor`. `ship`, `wrap`, `hotfix` and `release-train` call it as their test step. Runs on local

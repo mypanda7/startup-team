@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Hotfix (a production fix ahead of the regular release)
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 For the main session and `devops`. A hotfix is the fast lane, not a lane without gates: the fix
 still passes `qa` and the `auditor`'s PASS, and every push, merge, deploy, restart and tag goes
 through `devops` PROPOSE and the owner's 1. Asking for a hotfix is not the 1 for its steps.

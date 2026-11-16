@@ -42,15 +42,15 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
    - The Tech Lead, by step 3. More than one matches: list them and ask me which one leads (I
      archive the others); start and message none meanwhile. Exactly one: reuse it, never start a
      second one, and send it, by session id, the lines `[startup-team:tech-lead]`,
-     `PLUGIN FOLDER: <absolute path of this plugin's folder>`, the `FIRST:` line below when it has
-     no sub sessions yet, and `REQUEST: <my pending request, verbatim>` when there is one.
+     `PLUGIN FOLDER: <absolute path of this plugin's folder>`, the `FIRST:` line below when
+     `.handoff/team-setup-done` does not exist, and `REQUEST: <my pending request, verbatim>` when there is one.
    - None: start it with ONE `start_session` call: initiation `user_asked`, title `AI Tech Lead`,
      name `tech-lead`, model from the table (unless the project's CLAUDE.md names another),
      context `fresh`, `use_worktree: false` (never a worktree: it would not be found by step 3,
      nor see the project's `.handoff/`). Prompt: `[startup-team:tech-lead]`, the full text of
      `sessions/tech-lead-session.md` (the `sessions` and `agents` folders sit beside the
      `commands` folder), `PLUGIN FOLDER: <absolute path of this plugin's folder>`, the line
-     `FIRST: no sub sessions exist yet; ask the owner to type a reply here once (no dialog), then
+     `FIRST: the setup is not finished yet; ask the owner to type a reply here once (no dialog), then
      run start-team from the plugin folder on that typed turn`, and `REQUEST: <my pending request, verbatim>` when there is
      one. Background: at least 80 characters on which project folder it serves and that it leads
      the team.

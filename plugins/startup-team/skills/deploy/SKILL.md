@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Deploy (manual, scope-aware; and the automatic deploy's switch)
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 For `devops`. Checking is ANALYSE and needs no approval. Everything that changes a host (the
 deploy itself, a migration, a restart, a cache clear, pausing or resuming the automatic deploy,
 editing its markers) is `devops` PROPOSE and the owner's 1, with the full proposal block. What is

@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Announcement (what shipped, for a named reader)
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 For the main session. This skill writes a text file and shows it in chat. It sends nothing:
 posting or mailing an announcement is the owner's act, or a separate step with the owner's 1.
 

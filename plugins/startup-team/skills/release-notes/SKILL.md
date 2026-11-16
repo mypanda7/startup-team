@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Release notes (from history, never from memory)
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 For the main session. This skill edits one notes file and nothing else: it does not commit, tag,
 push, build or deploy. Shipping the file goes the normal way (`wrap` or `ship`, through `devops`
 PROPOSE and the owner's 1).

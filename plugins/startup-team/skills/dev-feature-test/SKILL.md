@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Feature test loop
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 A scoped **run, read, fix, repeat** cycle on the local test environment, so that green here
 predicts green in CI. Read `testing-rules` first: this skill is one use of it. It proves a branch
 while it is being built; the verdict before a merge is `test-gate`.

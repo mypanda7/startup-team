@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Reply to tickets
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 Write the answer a customer can act on, grounded in what the project's notes and data actually
 say, and stop. The owner reads every draft before it goes out.
 

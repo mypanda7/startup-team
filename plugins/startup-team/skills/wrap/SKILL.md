@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Wrap (end of session, to the integration branch)
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 For the main session. A wrap parks progress; it does not release. Every push, pull request and
 merge goes through `devops` PROPOSE and the owner's 1. Work that was built this turn still passes
 `qa` and the `auditor` before it merges; a wrap of unfinished work says plainly that it is

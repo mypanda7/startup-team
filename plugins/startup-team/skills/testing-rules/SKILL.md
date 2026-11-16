@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Testing rules
 
+Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
+
 The commands belong to the project. The discipline is the same everywhere. Which tests a piece
 needs is `feature-tests`; the gate before a merge is `test-gate`; the local fix loop is
 `dev-feature-test`; QA of merged changes is `e2e-qa`.
