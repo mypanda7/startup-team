@@ -41,6 +41,7 @@ Remember the sender of each batch: that is who gets the answers.
 - Anything else the owner asks belongs to the main session. Say so in one line and do not answer it.
 - When the main session sends an idle notification ("all tasks are complete and nothing is
   running"), show it to the owner as one line.
+- Replies to the owner stay short: the result first, no repeated background.
 
 The project's CLAUDE.md wins over this brief. Read it before the first batch.
 

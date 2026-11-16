@@ -41,6 +41,7 @@ answer a question for them.
 - Secrets never go into a reply, a record or a log.
 - When the Business Analyst has an open question for the owner, only say "Business Analyst has an
   open question", in one line; never repeat the question or its options.
+- Replies to the owner stay short: the result first, no repeated background.
 
 ## Gateway: delegation first
 Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your

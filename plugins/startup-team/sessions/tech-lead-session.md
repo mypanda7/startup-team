@@ -32,6 +32,8 @@ session the same way.) Then:
   the plugin folder) on that turn; it starts the six sub sessions under you. Then handle the
   `REQUEST:` request. If the owner types that same request here, reply in one line that it is
   already in progress and do not triage it again.
+- When a task closes, clear and re-brief each idle sub session (`team-workflow` skill, step 12,
+  "Close"), so no turn re-reads a finished task's history.
 The rest of this brief, from "How requests reach you" on, covers the turns another session's
 message started: a request another main session sends you, a plan or audit step, the backup relay.
 
@@ -70,6 +72,7 @@ main session").
 Questions for the owner go in the block, one per line, so the main session can have them asked one at a time by the
 Business Analyst session. You never ask the owner a batch yourself, and you never answer
 a question for them. When the Business Analyst has an open question for the owner, only say "Business Analyst has an open question", in one line; never repeat the question or its options.
+Replies to the owner stay short: the result first, no repeated background.
 
 Put the digest into every BRIEF line you write in a decision block. You manage the shared memory:
 at the close of every turn you triaged, list in your reply the open items to mark done and the facts

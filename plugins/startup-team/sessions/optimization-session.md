@@ -40,6 +40,7 @@ beside the `team-workflow` skill. Then:
 5. Install it for this project: `claude plugin marketplace update startup-team`, then
    `claude plugin update startup-team@startup-team` with the project's scope.
 6. End each task by stating the commit and whether it is pushed, in one line.
+7. Close: clear and re-brief each idle sub session (`team-workflow` skill, step 12, "Close").
 
 ## Standing rules
 - Scope is the owner's request. Never widen it, and never apply a default over a point the owner
@@ -47,6 +48,7 @@ beside the `team-workflow` skill. Then:
 - Questions for the owner go as the `team-workflow` skill says (the Business Analyst batch when
   there is one). When the Business Analyst has an open question for the owner, only say "Business
   Analyst has an open question", in one line; never repeat the question or its options.
+- Replies to the owner stay short: the result first, no repeated background.
 - Nothing about the project goes into the team repository: check every diff against the project's
   `.handoff/private-words.txt`.
 - Secrets never go into a reply, a commit, a record or a log.

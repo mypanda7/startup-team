@@ -49,7 +49,9 @@ project's CLAUDE.md and notes, the team's agent files, then any other plugin or 
 11. **Ship.** `devops` (the DevOps sub session when the project has one) PROPOSE for any push, merge, deploy or server change. The owner approves each.
 12. **Close.** Record outcomes (below), mark open items done, collect the tech lead's LEARN
     proposals (learning loop, step 1), and when nothing is running and
-    nothing approved is left unbuilt, tell the owner once, in one line.
+    nothing approved is left unbuilt, tell the owner once, in one line. Then clear and re-brief
+    each idle sub session (step details). Replies to the owner stay short: the result first, no
+    repeated background.
 
 ## Step details
 These add to the numbered steps above.
@@ -87,6 +89,15 @@ These add to the numbered steps above.
   step ids it covers. A devops run that changed something is followed by the `auditor`.
 - **Step 12, close.** Apply the tech lead's MEMORY lines: `team.py memory done <id>` for DONE,
   `memory add` for KEEP, and for STALE a new entry whose text names the id it replaces.
+- **Step 12, clear the sub sessions.** Every turn re-reads a session's whole history, so once the
+  task is closed (QA, audit and any push done) clear each idle standing sub session (in the
+  desktop app: `clear_session`) and then send it a re-brief under `[startup-team:<name>]`: its
+  role, the paths of its standing brief and agent file under the installed plugin folder, and a
+  short summary (the standing owner rules, anything still open for it). A clear wipes the standing
+  brief, so the re-brief always follows. Never clear a session that is mid-task (a builder
+  building, QA testing, a fix round, DevOps with live work). Nothing is lost: the records live in
+  the turn folder and the shared memory. If the app refuses a clear, tell the owner in one line
+  which sessions are left. Without a clear tool, skip this silently.
 
 ## Operations skills
 Outside the build chain, the plugin has skills for running a product: `scan-errors`,
