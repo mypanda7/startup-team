@@ -1,6 +1,7 @@
 ---
 name: test-accounts
 description: Create, list or delete throwaway test accounts on a test environment only, run-stamped so a sign-up or onboarding flow can be retested any number of times. Use when QA needs a fresh user in a given state (never onboarded, invited but not yet joined, a limited-role admin), or when old test accounts need purging. Refuses production.
+disable-model-invocation: true
 ---
 
 # Test accounts

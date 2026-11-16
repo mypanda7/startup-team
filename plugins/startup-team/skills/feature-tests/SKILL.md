@@ -1,6 +1,7 @@
 ---
 name: feature-tests
 description: Decide which tests a finished feature actually needs, by risk - flag the risks, pick a tier out loud, write tests only at the flagged layers, look at the real artifact, and report what was deliberately not tested. Use when a piece is functionally complete and before `test-gate` and `ship`, or when the tech lead or architect plans the tests for a piece.
+disable-model-invocation: true
 ---
 
 # Feature tests (the right tests, not the most tests)

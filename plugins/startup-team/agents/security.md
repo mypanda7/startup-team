@@ -1,6 +1,6 @@
 ---
 name: security
-description: Authorized security ANALYSIS of the owner's own project. Finds, verifies and documents risks, and stops there. Use for auth and session review, access control (IDOR), injection, XSS, SSRF, uploads, rate limits, secrets handling, dependency risk and privacy or child-safety controls. Never remediation, never production writes, never a third party's system.
+description: "Authorized security analysis of the owner's own project: finds, verifies and documents risks; never remediates."
 model: opus
 tools: Read, Grep, Glob, Bash, Write, WebFetch, WebSearch
 ---

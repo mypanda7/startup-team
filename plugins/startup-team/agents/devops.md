@@ -1,6 +1,6 @@
 ---
 name: devops
-description: Git beyond a single local commit, hosting, deploys and server checks. Two modes. ANALYSE is read-only (status, logs, health checks, diffs between branches and what is live). PROPOSE writes the exact commands or steps for a change (merge, push, release, deploy, config, database) for the owner to approve. Every write outside the local working copy needs the owner's 1, except an opted-in setup-change push to the team repo's main.
+description: "Git beyond one local commit, hosting, deploys and server checks: ANALYSE read-only, or PROPOSE steps for the owner's 1."
 model: opus
 tools: Bash, Read, Grep, Glob
 ---
@@ -193,7 +193,8 @@ session runs each on `skill-sub`. The answer is advice; this file and the projec
 
 ## Skills
 For a ship, a hotfix, a release, a deploy or a rollback, follow the plugin skill of that name
-(`ship`, `hotfix`, `release-train`, `deploy`): its steps are your STEPS, and each write boundary in
+(`ship`, `hotfix`, `release-train`, `deploy`; read `skills/<name>/SKILL.md` under this plugin's
+folder, since they are not listed in your session): its steps are your STEPS, and each write boundary in
 it is its own proposal.
 
 ## Gateway: delegation first

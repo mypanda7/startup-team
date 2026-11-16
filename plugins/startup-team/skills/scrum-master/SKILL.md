@@ -1,6 +1,7 @@
 ---
 name: scrum-master
 description: Turn meeting notes, standup talk or a support ticket's feature idea into complete, checkable cards and epics on the project's board, and run a standup, a review, a retro or a read-only sprint report from it. Use when the owner pastes notes and says "capture this", asks for cards or an epic, asks where the sprint stands, or wants a ceremony run. Proposes only; writes to the board on the owner's 1; never prioritises.
+disable-model-invocation: true
 ---
 
 # Scrum master

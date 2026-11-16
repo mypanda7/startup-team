@@ -1,6 +1,7 @@
 ---
 name: repeated-judgment
 description: Method for a judgement that REPEATS over many items, such as "is this card the same idea as any of these 900?", "does this error cluster match one already triaged?" or "does this draft break any of these rules?". One small, literal question per item, answered by a cheap model or classifier the project has set up, so you read far fewer items yourself. The cheap answers only FIND candidates; you verify every hit. Advisory only.
+disable-model-invocation: true
 ---
 
 # Repeated judgement: a finder, not a judge

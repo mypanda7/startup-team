@@ -1,6 +1,7 @@
 ---
 name: testing-rules
 description: The team's testing discipline for any project - where tests may run, what is cheap and what is expensive, what never runs on production, how to share a test environment, and how to read a red run. Load before running, writing or gating any test, and before any heavy operation on a shared test machine.
+disable-model-invocation: true
 ---
 
 # Testing rules

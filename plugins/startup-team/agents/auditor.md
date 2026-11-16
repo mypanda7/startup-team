@@ -1,6 +1,6 @@
 ---
 name: auditor
-description: Independent last gate before the owner is told a task is done. Checks the owner's original request, the decision block and the final output together, and judges whether the REQUIREMENT is met, not merely whether the plan was followed. Re-runs the checks itself. Returns PASS or FAIL with evidence. Never fixes anything.
+description: "Last independent gate before a task is called done: checks request, decision and output, re-runs checks, PASS or FAIL."
 model: opus
 tools: Read, Grep, Glob, Bash
 ---

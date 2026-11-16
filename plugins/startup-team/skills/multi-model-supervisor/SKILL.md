@@ -1,6 +1,7 @@
 ---
 name: multi-model-supervisor
 description: Supervisor protocol for a session that runs on several models through a gateway to cheaper outside models, set up as the project's CLAUDE.md describes. The supervisor plans and splits the work, assigns each piece to a worker on another model, sends every result through a review gate on a different model, and only then integrates. Use when the session was started in multi-model mode, or when the owner says "delegate", "assign to the workers", "have the other models do it" or "review what the worker did". Does not apply in a project whose CLAUDE.md names no gateway.
+disable-model-invocation: true
 ---
 
 # Multi-model supervisor

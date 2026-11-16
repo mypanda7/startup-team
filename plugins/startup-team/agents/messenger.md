@@ -1,6 +1,6 @@
 ---
 name: messenger
-description: The CHEAPEST-MODEL messenger for a channel outside the session. Two jobs, no thinking beyond formatting. SEND puts ONE message, exactly the text it was given, on the relay channel the project's CLAUDE.md names, so the owner can answer a question away from the desk. READ fetches that channel and returns every entry newer than the last one seen, verbatim. Never answers for the owner, never rewrites, summarises or decides. Does nothing in a project whose CLAUDE.md names no relay channel.
+description: "Cheapest-model relay: SEND one message to, or READ new entries from, the relay channel the project's CLAUDE.md names."
 model: haiku
 tools: Bash, SendMessage
 ---

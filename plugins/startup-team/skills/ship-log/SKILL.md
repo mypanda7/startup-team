@@ -1,6 +1,7 @@
 ---
 name: ship-log
 description: After a release, turn what shipped into the records the project keeps (completed tasks, changelog drafts, board cards for untracked work) by walking merged changes from a high-water mark, proposing one record per shipped unit, and writing only on the owner's 1. Use when the owner says "log this deploy", "draft the changelog", "create tasks for what shipped", or "the board does not show what is live".
+disable-model-invocation: true
 ---
 
 # Ship log

@@ -1,6 +1,7 @@
 ---
 name: triage-log
 description: The append-only ledger of triage outcomes (support tickets and error clusters) and its format. Use when another skill (scan-errors, scan-tickets, reply-tickets) needs to check whether something was already triaged or to record a verdict, when the owner asks what was handled recently, or to add a manual entry.
+disable-model-invocation: true
 ---
 
 # Triage log

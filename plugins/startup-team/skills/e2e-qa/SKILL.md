@@ -1,6 +1,7 @@
 ---
 name: e2e-qa
 description: QA recent merges with end-to-end specs, from a high-water mark - walk every merged change since the last pass, write or extend specs for the ones that touch what a user sees, run them against the test environment, and give EVERY change a disposition in a ledger. Also covers running the end-to-end suite from a developer machine and reading its reds. Use after merges land, or when asked which changes still lack end-to-end coverage.
+disable-model-invocation: true
 ---
 
 # End-to-end QA from a high-water mark

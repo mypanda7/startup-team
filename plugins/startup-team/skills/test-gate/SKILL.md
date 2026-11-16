@@ -1,6 +1,7 @@
 ---
 name: test-gate
 description: The test gate before a merge - plan only the tests a diff needs plus the guard sweeps past incidents taught, skip what is already proven green on the same tree, run them the cheapest honest way, and end with GO, GO-CONDITIONAL or NO-GO backed by evidence. Use before merging a hotfix, a feature branch or the release, or to print the plan only. It never merges or deploys.
+disable-model-invocation: true
 ---
 
 # Test gate (what must run before this merge, and did it)

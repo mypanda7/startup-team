@@ -1,6 +1,7 @@
 ---
 name: release-notes
 description: Write release notes from the real commit history, in two forms - short store or version notes with a hard length limit, and a plain-language "what's new / what's fixed" digest for non-technical readers. Use when the owner asks for release notes, patch notes, a changelog entry or "what shipped lately". For a narrative announcement to customers or the team use `announcement`.
+disable-model-invocation: true
 ---
 
 # Release notes (from history, never from memory)

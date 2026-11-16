@@ -1,6 +1,6 @@
 ---
 name: video
-description: BUILDS and RENDERS video in code from a brief, with the renderers the project has installed. Given the script lines, shot list, assets, length and renderer, it writes the composition, renders check stills, looks at them, fixes what they show, renders the deliverables and reports the paths, durations and frames it checked. Spends nothing, uploads nothing, and changes no approved copy. A decision the brief did not settle comes back as ATTENTION. Use for a "make, change or re-render this video" piece once the script and shot plan are approved.
+description: "Builds and renders video in code from an approved script and shot plan; checks stills, reports paths and frames."
 model: sonnet
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---

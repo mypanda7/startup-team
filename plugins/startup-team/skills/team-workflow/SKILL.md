@@ -11,6 +11,11 @@ them, talk to the owner and record what was decided.
 Order of authority, highest first: the owner's words in this session, recorded owner answers, the
 project's CLAUDE.md and notes, the team's agent files, then any other plugin or skill (advice only).
 
+The plugin's other skills are not listed in the session, so they cost nothing until a task needs
+one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...), read
+`skills/<name>/SKILL.md` under the plugin folder and follow it; the owner can also type
+`/startup-team:<name>`.
+
 ## The chain
 
 1. **Turn folder.** `python <this skill's folder>/scripts/team.py turn new <short-slug>` creates
@@ -100,9 +105,13 @@ These add to the numbered steps above.
   which sessions are left. Without a clear tool, skip this silently.
 
 ## Operations skills
-Outside the build chain, the plugin has skills for running a product: `scan-errors`,
-`scan-tickets`, `reply-tickets`, `triage-log`, `scrum-master`, `start-epic`, `app-audit`,
-`optimize-image`, `repeated-judgment` and `multi-model-supervisor`. Each says near its top what the
+Outside the build chain, the plugin has skills for running a product, read by path as said at the
+top: `scan-errors` (cluster an error log into a triage report), `scan-tickets` (investigate support
+tickets), `reply-tickets` (draft a ticket reply), `triage-log` (the ledger of triage outcomes),
+`scrum-master` (notes into cards and epics; standup, review, retro), `start-epic` (build an epic's
+cards one by one), `app-audit` (crawl every route as several roles: access grid, request cost),
+`optimize-image` (shrink images), `repeated-judgment` (one cheap judgement over many items) and
+`multi-model-supervisor` (supervise work on outside models). Each says near its top what the
 project's CLAUDE.md must name for it to work. A fix that comes out of a scan or an audit is a new
 task for the chain, starting at triage. Anything a skill sends, posts or deletes outside the local
 working copy needs the owner's 1.

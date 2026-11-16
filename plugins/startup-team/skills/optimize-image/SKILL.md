@@ -1,6 +1,7 @@
 ---
 name: optimize-image
 description: Shrink a raster image or a folder of them (modern format plus a recompressed fallback) without trusting the tool blindly - dry run first, compare the result with the original by eye, and apply only on the owner's OK. Use when the owner names an image or a public assets folder to optimise, or a page is heavy because of its images.
+disable-model-invocation: true
 ---
 
 # Optimise an image

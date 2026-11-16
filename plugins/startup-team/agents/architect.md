@@ -1,6 +1,6 @@
 ---
 name: architect
-description: PLANS a backend piece before any build. Use for a piece that adds or changes an API endpoint, backend logic, a data model, field or migration, auth or permissions, or a background job. Frontend-only pieces skip it. Two passes. Step 1 returns the open questions only. Step 2, once the owner's answers are handed back, checks what the project's framework and existing code already provide and writes the plan the executor follows, ending in a short summary and a 1/0 green-light line. Writes only its own plan file. Never builds, never talks to the owner.
+description: "Plans a backend piece (API, data, auth, jobs) before any build: questions first, then the plan for the owner's 1/0."
 model: opus
 tools: Read, Grep, Glob, Bash, WebFetch, Write
 ---

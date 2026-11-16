@@ -50,10 +50,10 @@ the session that installed the plugin, with no restart:
 
 1. Say "startup-team installed successfully."
 2. Ask the owner only this, and wait for the answer:
-   "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security) and turn on the companion plugins?"
+   "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security) and install the companion plugins (off by default)?"
    - First choice: if the session has, or can load, a tool that asks a question with clickable
      options (in Claude Code: AskUserQuestion), ask it there with exactly two options: "Set up
-     now" (= 1: creates the sessions and turns on the companion plugins) and "Not now" (= 0: asks
+     now" (= 1: creates the sessions and installs the companion plugins, off by default) and "Not now" (= 0: asks
      again next session). A dialog dismissed without a choice counts as "Not now".
    - Back-up, only when the dialog can't be shown (no such tool, or the call fails or is
      refused): ask it as text ending "1 = yes, 0 = no." and wait. A typed 1/yes or 0/no counts
@@ -63,7 +63,7 @@ the session that installed the plugin, with no restart:
    read its `commands/start-team.md` and follow it step by step (the `/startup-team:start-team`
    command itself is not loaded until a new session). It creates the AI Tech Lead session; the
    owner opens it and replies there once, and the AI Tech Lead then creates its six sub sessions
-   and turns on the companion plugins. Without a
+   and installs the companion plugins, off by default. Without a
    `start_session` tool (the terminal CLI), say in one line that standing sessions need the
    desktop app and that the team keeps using its sub-agents.
 4. On 0 ("Not now"), do nothing more: the `setup-offer` hook asks again at the start of the next session.
@@ -230,6 +230,10 @@ Every skill says near its top what the project's CLAUDE.md must name for it to w
 environments, commands, where records live). Nothing in a skill weakens the chain: each push,
 merge, tag, deploy, send or delete is proposed and waits for the owner's 1.
 
+Only `team-workflow` is listed in a session; the others cost nothing until a task needs one. Type
+`/startup-team:<name>` to run one, and the main session reads `skills/<name>/SKILL.md` when a step
+names it. Agent descriptions are one line each for the same reason.
+
 | Skill | Use it to |
 |---|---|
 | `ship` | Take one finished, audited branch live. Runs only when asked. |
@@ -277,7 +281,10 @@ claude plugin install agent-skills@startup-team --scope local
 claude plugin update agent-skills@startup-team --scope local
 ```
 
-`/startup-team:companions` does this for the ones you choose. The companions are `agent-skills`,
+Companions are off by default: setup installs each one and disables it for the project, so none is
+listed in a session; agents read a disabled companion's files from the plugin cache when a task
+needs one. Turn one on with `claude plugin enable <name>@<marketplace> --scope local` (`disable`
+turns it off). `/startup-team:companions` installs or updates the ones you choose. The companions are `agent-skills`,
 `antislop`, `taste-skill`, `ui-ux-pro-max`, `frontend-design`, `design`, `humanizer` and `ponytail`.
 The links are not pinned to a version, so an update brings whatever the author has published.
 

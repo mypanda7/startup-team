@@ -1,6 +1,7 @@
 ---
 name: app-audit
 description: Whole-app audit on a test environment - crawl every route as several role personas, build the access-control grid (who reaches what, against who should), mine per-route request cost (repeated, refetched, slowest, largest), probe endpoints with someone else's ids in both directions, and sweep for the interface faults a crawler cannot see. Use when asked to find access gaps, speed up data loading, check that a permission fix did not lock out legitimate users, or hunt dead-control regressions.
+disable-model-invocation: true
 ---
 
 # App audit

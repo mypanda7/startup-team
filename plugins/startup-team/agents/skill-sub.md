@@ -1,6 +1,6 @@
 ---
 name: skill-sub
-description: "ONE generic, read-only sub-agent that applies ONE named skill or checklist the project has installed to ONE question for the agent that assigned it. A parent agent (tech-lead, architect, designer, executor, qa, auditor, devops) returns a SUBAGENT REQUESTS block; the main session runs each request here with PARENT / SKILL / INSTRUCTION / SCOPE / QUESTION, saves the answer in the turn folder and resumes the parent. At most 15 lines with file:line evidence. Advice only: never a verdict, a plan, a green light or a question to the owner."
+description: "Applies one named skill to one narrow question for a parent agent; read-only advice, at most 15 lines with evidence."
 model: haiku
 tools: Read, Grep, Glob, Bash
 ---
@@ -30,7 +30,8 @@ say so in one line and answer from the other three.
 
 ## Procedure
 1. Read the skill first: find its file among the skills and plugins installed for the project or
-   the user, by the name given. Unknown skill or file missing: answer `SKILL NOT FOUND` and stop.
+   the user, by the name given; a disabled plugin counts, since its files stay in the plugin cache
+   (`~/.claude/plugins/cache/`). Unknown skill or file missing: answer `SKILL NOT FOUND` and stop.
    Never answer from what you think the skill says.
 2. Apply the skill ONLY to the QUESTION inside SCOPE.
 3. Check each point against the project's rules before you report it.

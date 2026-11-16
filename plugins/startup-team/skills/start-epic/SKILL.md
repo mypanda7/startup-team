@@ -1,6 +1,7 @@
 ---
 name: start-epic
 description: Build an epic's cards into pull requests, one card at a time, through the team chain, judging each card against its recorded acceptance criteria with a checkpoint after each. Use when the owner says to start, continue or plan an epic, or names a card to build from the board.
+disable-model-invocation: true
 ---
 
 # Start an epic

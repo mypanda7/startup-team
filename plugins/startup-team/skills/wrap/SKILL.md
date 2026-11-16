@@ -1,6 +1,7 @@
 ---
 name: wrap
 description: End-of-session checkpoint - update the project notes, commit what is pending, and get the session's work onto the integration branch through a pull request, without touching the live branch or deploying. Use when the owner says to wrap up, park the work or close the session. To take a finished branch live use `ship`.
+disable-model-invocation: true
 ---
 
 # Wrap (end of session, to the integration branch)

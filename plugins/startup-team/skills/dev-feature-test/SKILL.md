@@ -1,6 +1,7 @@
 ---
 name: dev-feature-test
 description: Run the current feature branch's tests on the local test environment in a fix loop - scope the tests to the feature, run them plus the same lint and format gate CI runs, fix what the failure literally points to, and repeat until green, with a cap. Use when the owner or the executor wants "is my branch green" before a pull request, or names a test module, an area or a single case to run.
+disable-model-invocation: true
 ---
 
 # Feature test loop

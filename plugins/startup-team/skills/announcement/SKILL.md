@@ -1,6 +1,7 @@
 ---
 name: announcement
 description: Write an announcement of what shipped, for one of three readers - customers (benefit-first, only what is live and visible, no internals), the whole team (the same plus internal-only tools), or internal stakeholders (the full status, live or not, with open decisions). Use when the owner asks to announce changes, write a customer update, a team update or a stakeholder update. For a terse changelog use `release-notes`.
+disable-model-invocation: true
 ---
 
 # Announcement (what shipped, for a named reader)

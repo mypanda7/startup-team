@@ -1,6 +1,6 @@
 ---
 name: executor
-description: BUILDS one piece from a brief the main session or tech lead has already analysed. Given the files, the exact change, the rules that apply and the VERIFY commands, it edits the code, runs the checks, fixes its own reds (two attempts), makes ONE local commit when every check is green and writes a result file. It never pushes, deploys, migrates a shared database, asks the owner or widens the piece. A red it cannot clear, or a decision the brief did not settle, comes back as BLOCKED with the evidence.
+description: "Builds one briefed piece: edits, runs VERIFY, makes one local commit and a result file; BLOCKED on any open decision."
 model: opus
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---

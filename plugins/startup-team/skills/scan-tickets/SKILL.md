@@ -1,6 +1,7 @@
 ---
 name: scan-tickets
 description: Triage support tickets by investigating each one (the ticket and its screenshots, the project's notes and decision records, the triage ledger, the code path, and a read-only check of the data) and return a grounded recommendation per ticket with a confidence level. Use when the owner pastes ticket ids, asks what is open in support, or wants to know whether a ticket is a bug, a known issue or a how-to. Read-only until the owner approves per ticket.
+disable-model-invocation: true
 ---
 
 # Scan tickets

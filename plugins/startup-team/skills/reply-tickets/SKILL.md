@@ -1,6 +1,7 @@
 ---
 name: reply-tickets
 description: Draft a grounded, plain-language reply to one or more support tickets and show it to the owner; send, assign or close only on the owner's 1 for that reply. Use after scan-tickets, or when the owner says "reply to", "answer" or "close" a ticket. Sending cannot be undone, so drafting is the default.
+disable-model-invocation: true
 ---
 
 # Reply to tickets

@@ -47,16 +47,16 @@ Then carry on with the owner's request. Say it at most once in this session."""
 OFFER = """Team setup (startup-team): before anything else this turn, say "startup-team installed
 successfully." and ask the owner, as the only question:
 "Create the AI Tech Lead session and its six sub sessions (Business Analyst, Designer, Developer,
-QA Engineer, DevOps, Security) and turn on the companion plugins?"
+QA Engineer, DevOps, Security) and install the companion plugins (off by default)?"
 - First choice: if this session has, or can load, a tool that asks the owner a question with
   clickable options (in Claude Code: AskUserQuestion), ask it there with exactly two options:
-  "Set up now" (= 1: creates the sessions and turns on the companion plugins) and "Not now" (= 0:
+  "Set up now" (= 1: creates the sessions and installs the companion plugins, off by default) and "Not now" (= 0:
   asks again next session). A dialog the owner dismisses without choosing counts as "Not now".
 - Back-up, only when the dialog can't be shown (no such tool, or the call fails or is refused):
   ask it as text ending "1 = yes, 0 = no." and wait. A typed 1/yes or 0/no counts either way; any
   other free-text answer from the dialog is the owner's own words.
-The agents, sub-agents and skills already came with the package; 1 creates the sessions and turns
-on the companion plugins. Where the project's CLAUDE.md names `TEAM REPO CLONE:`, 1 also creates
+The agents, sub-agents and skills already came with the package; 1 creates the sessions and installs
+the companion plugins, off by default. Where the project's CLAUDE.md names `TEAM REPO CLONE:`, 1 also creates
 the AI Team Optimization session beside the AI Tech Lead (the question itself stays as above).
 Do not start the owner's request until they answer.
 - On 1 ("Set up now"): run /startup-team:start-team on that owner turn. It creates the AI Tech Lead

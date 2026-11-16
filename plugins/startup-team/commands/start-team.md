@@ -100,7 +100,10 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
     this project, from any marketplace, wins and stays the one in use: do not install the team's
     copy beside it, and leave an installed `<name>@startup-team` as it is (no reinstall). A copy
     only named in the project's CLAUDE.md but not installed does not count. Otherwise run
-    `claude plugin install <name>@startup-team --scope local`.
+    `claude plugin install <name>@startup-team --scope local`, then
+    `claude plugin disable <name>@startup-team --scope local`: companions are off by default. Their
+    files stay in the plugin cache and agents read them from there by path when a task needs one.
+    An already-enabled copy from any marketplace is left as it is and reported as enabled.
     Apply none of a companion's own hooks, settings or setup questions.
 11. Code graph (optional). A failure anywhere in this step never fails the setup; report it in one
     line and go on. Skip it when `.handoff/graph-setup-declined` exists, or when
@@ -200,8 +203,9 @@ typed there, it starts the sub sessions under it (case B). Follow these steps in
 13. Tell me in one line which sub sessions were found and which were started, and name any role
     still missing because its start failed or was refused, with the app's reason: running this
     command again here starts just that one. Then any worktree or duplicate sessions from step 3;
-    then which companions were installed and which kept, and that they load in sessions started
-    from now on.
+    then which companions were installed (disabled) and which kept (with their state), and that I
+    turn one on with `claude plugin enable <name>@<marketplace> --scope local` (`disable` turns it
+    off).
 
 | Session | Title | Name | Model | Brief | Agent file |
 |---|---|---|---|---|---|

@@ -1,6 +1,6 @@
 ---
 name: tech-lead
-description: FIRST STOP for every non-trivial task. Reads the owner's request, never assumes, and returns one decision block that splits the work into one-run pieces, says which are clear now and which wait on a question, and names the route, agent, model, files touched and review check for each piece. Decides the model per piece and learns from recorded outcomes. Manages the shared memory. Read-only. Does not build.
+description: "First stop for every non-trivial task: reads the request and returns one decision block of one-run pieces and questions."
 model: sonnet
 tools: Read, Grep, Glob, Bash
 ---
