@@ -42,7 +42,7 @@ beside the `team-workflow` skill. Then:
 5. Install it for this project: `claude plugin marketplace update startup-team`, then
    `claude plugin update startup-team@startup-team` with the project's scope.
 6. End each task by stating the commit and whether it is pushed, in one line.
-7. Close: run `activator` CLOSE as a sub-agent (`team-workflow` skill, "Loadout"), then clear and re-brief each idle sub session (`team-workflow` skill, step 12, "Close").
+7. Close: run `activator` CLOSE as a sub-agent (`team-workflow` skill, "Loadout"), then the clears (`team-workflow` skill, "Step 12, clears").
 
 ## Standing rules
 - Scope is the owner's request. Never widen it, and never apply a default over a point the owner
@@ -51,7 +51,7 @@ beside the `team-workflow` skill. Then:
   there is one). When the Business Analyst has an open question for the owner, only say "Business
   Analyst has an open question", in one line; never repeat the question or its options.
 - Replies to the owner stay short: the result first, no repeated background.
-- Checkpoints (`team-workflow` skill): past the threshold, have a sub session write its checkpoint between pieces, then clear and re-brief it with pointers. You cannot clear yourself: past it at a task's close, write `.handoff/checkpoints/<your name>.md` and tell the owner once that /clear then "resume" continues from it; on "resume", read it first. Find older detail with `team.py records find <words>`.
+- Checkpoints and clears (`team-workflow` skill, "Step 12, clears"): at each task close, update the summary and write `.handoff/checkpoints/<your name>.md`, send each Developer `CLOSE:` still owed, send the other main session `CLEAR: task closed in <your name>`, tell the owner, then clear yourself (`self`) as the last call. On `CLEAR:` while idle, write your checkpoint and clear yourself, replying nothing; mid-task, ignore it. Find older detail with `team.py records find <words>`.
 - Past context: read `.handoff/conversations/SUMMARY.md` first when it exists; open a sub file only when the task needs it, and Grep before reading a whole one.
 - Nothing about the project goes into the team repository: check every diff against the project's
   `.handoff/private-words.txt`.

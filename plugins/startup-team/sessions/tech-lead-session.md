@@ -41,8 +41,6 @@ session the same way.) Then:
   if the task still needs it.
 - After triage, run `activator` START as a sub-agent; at close, `activator` CLOSE first
   (`team-workflow` skill, "Loadout").
-- When a task closes, clear and re-brief each idle sub session (`team-workflow` skill, step 12,
-  "Close"), so no turn re-reads a finished task's history.
 The rest of this brief, from "How requests reach you" on, covers the turns another session's
 message started: a request another main session sends you, a plan or audit step, the backup relay.
 
@@ -82,7 +80,7 @@ Questions for the owner go in the block, one per line, so the main session can h
 Business Analyst session. You never ask the owner a batch yourself, and you never answer
 a question for them. When the Business Analyst has an open question for the owner, only say "Business Analyst has an open question", in one line; never repeat the question or its options.
 Replies to the owner stay short: the result first, no repeated background.
-Checkpoints (`team-workflow` skill): past the threshold, have a sub session write its checkpoint between pieces, then clear and re-brief it with pointers. You cannot clear yourself: past it at a task's close, write `.handoff/checkpoints/<your name>.md` and tell the owner once that /clear then "resume" continues from it; on "resume", read it first. Find older detail with `team.py records find <words>`.
+Checkpoints and clears (`team-workflow` skill, "Step 12, clears"): at each task close, update the summary and write `.handoff/checkpoints/<your name>.md`, send each Developer `CLOSE:` still owed, send the other main session `CLEAR: task closed in <your name>`, tell the owner, then clear yourself (`self`) as the last call. On `CLEAR:` while idle, write your checkpoint and clear yourself, replying nothing; mid-task, ignore it. Find older detail with `team.py records find <words>`.
 Past context: read `.handoff/conversations/SUMMARY.md` first when it exists; open a sub file only when the task needs it, and Grep before reading a whole one.
 
 Put the digest into every BRIEF line you write in a decision block. You manage the shared memory:

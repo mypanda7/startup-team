@@ -30,8 +30,8 @@ cache by path. Return the standing sub sessions the task needs (by the block's r
 session starts or wakes only those.
 
 **CLOSE.** Read `.handoff/loadout/log.jsonl`. Switch OFF what was switched on for this task and is
-not used since. List the standing sub sessions that are idle, for the main session to clear and
-re-brief (`team-workflow` skill, step 12).
+not used since. List the standing sub sessions that are idle and have not cleared themselves
+(`team-workflow` skill, "Step 12, clears").
 
 **STUDY.** Run `inventory`, then give at most five suggestions, ranked by rough saving, each as a
 1/0 proposal for the owner (what, why, ~tokens saved per session).

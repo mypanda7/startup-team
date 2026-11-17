@@ -59,7 +59,7 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
     nothing approved is left unbuilt, tell the owner once, in one line. Run `team.py conversations
     build`, add one row to the summary's table and update its "Where things stand" ("Conversation
     summary"). Then run `activator`
-    CLOSE, and clear and re-brief each idle sub session it lists (step details). Replies to the owner stay short: the result first, no
+    CLOSE and end with the clears (step details). Replies to the owner stay short: the result first, no
     repeated background.
 
 ## Step details
@@ -98,15 +98,22 @@ These add to the numbered steps above.
   step ids it covers. A devops run that changed something is followed by the `auditor`.
 - **Step 12, close.** Apply the tech lead's MEMORY lines: `team.py memory done <id>` for DONE,
   `memory add` for KEEP, and for STALE a new entry whose text names the id it replaces.
-- **Step 12, clear the sub sessions.** Every turn re-reads a session's whole history, so once the
-  task is closed (QA, audit and any push done) clear each idle standing sub session (in the
-  desktop app: `clear_session`) and then send it a re-brief under `[startup-team:<name>]`: its
-  role, the paths of its standing brief and agent file under the installed plugin folder, its
-  checkpoint path and at most five lines of summary ("Checkpoints", the pointer re-brief). A clear
-  wipes the standing brief, so the re-brief always follows. Never clear a session that is mid-task (a builder
-  building, QA testing, a fix round, DevOps with live work). Nothing is lost: the records live in
-  the turn folder and the shared memory. If the app refuses a clear, tell the owner in one line
-  which sessions are left. Without a clear tool, skip this silently.
+- **Step 12, clears.** The host re-sends a session's whole history with every message, so every
+  history stays near empty and context comes from the summary, checkpoints and records. The clear
+  tool takes `self` and acts when the turn ends, so say and write everything first.
+  - Sub sessions (Business Analyst, Designer, QA Engineer, DevOps, Security) clear themselves at
+    the end of the turn in which they reported a piece, wrote its record and hold nothing that can
+    come back. The Developer keeps its history through fix rounds and clears itself on
+    `[startup-team:developer]` + `CLOSE: <piece>`, sent after the audit passes (or right after its
+    report when no QA follows); it does not reply.
+  - Main sessions (Tech Lead, Team Optimization), in order: update the summary and write their
+    checkpoint; send each Developer CLOSE still owed; send the other main session
+    `[startup-team:<its name>]` + `CLEAR: task closed in <own name>`; tell the owner the result;
+    clear `self` as the turn's last call.
+  - On `CLEAR:`, a main session that is idle (nothing building, no question or approval open)
+    writes its checkpoint and clears itself, sending nothing back; mid-task it ignores the line.
+  - A refused clear (Remote Control, pinned, queued work, owner declined): tell the owner once, in
+    one line, which session and why; never change those settings. Without a clear tool, skip it.
 
 ## Checkpoints
 Long histories are re-read on every turn, so sessions stay short and the detail stays in files.
@@ -115,15 +122,16 @@ Long histories are re-read on every turn, so sessions stay short and the detail 
   open questions, and the paths of the records that hold the detail.
 - **Threshold.** Where the host reports a session's context size, check each standing sub session
   between pieces. Past the project's `CHECKPOINT AT: <n>k` CLAUDE.md line (default 150k tokens),
-  ask it to write its checkpoint, wait for the reply, then clear and re-brief it. Never while it is
+  ask it to write its checkpoint and clear itself. Never while it is
   building, testing, in a fix round or holding live work. Without a size report, do it after every
   third piece a session finished in one task.
-- **Pointer re-brief.** Under `[startup-team:<name>]`: the role, the brief path, the agent file
-  path, the checkpoint path, `.handoff/conversations/SUMMARY.md`, "find more with `team.py records find <words>`", and at most five
-  lines of summary. Step 12's task-close clear uses the same re-brief.
-- **Main session.** It cannot clear itself. Past the threshold at a task's close, it writes its
-  own checkpoint and tells the owner once, in one line, that typing /clear and then "resume"
-  continues from it. On "resume" it reads its checkpoint first.
+- **Pointer brief.** The message that starts a piece is the brief, under `[startup-team:<name>]`:
+  the role, the brief path, the agent file path, the checkpoint path,
+  `.handoff/conversations/SUMMARY.md`, the record paths, "find more with `team.py records find
+  <words>`", and at most five lines of summary. No separate re-brief follows a clear. Agents and
+  sub-agents get paths too, never pasted history or transcripts; skills have no history of their own.
+- **After a clear.** A session regains its role from the registry and the gate, reads its
+  checkpoint and the summary first, and opens sub files only when the task needs them.
 - **Looking things up.** A session that needs older detail runs `team.py records find <words>
   [--kind k] [--last n]` (paths, kinds and titles only; `records index` rebuilds
   `.handoff/records-index.jsonl`) and opens only the files it names, instead of asking for a
