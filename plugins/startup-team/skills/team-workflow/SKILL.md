@@ -103,6 +103,10 @@ These add to the numbered steps above.
   tool takes `self` and acts when the turn ends, so say and write everything first. The host may ask
   the owner to approve a clear outside auto or bypass mode, and drops a `self` clear when the owner
   speaks first.
+  - Clearing is part of every session's own close, never something a main session cascades: before
+    any clear, a session writes its checkpoint and runs `team.py conversations build`, so the task's
+    chat lands in the history files first. Agents and sub-agents keep no history: their record file
+    is their history, and they end when they return.
   - Sub sessions (Business Analyst, Designer, QA Engineer, DevOps, Security) clear themselves at
     the end of the turn in which they reported a piece, wrote its record and hold nothing that can
     come back (a FAIL awaiting a re-test or an open owner question does). The Developer keeps its
