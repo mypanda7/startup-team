@@ -41,6 +41,9 @@ session the same way.) Then:
   if the task still needs it.
 - After triage, run `activator` START as a sub-agent; at close, `activator` CLOSE first
   (`team-workflow` skill, "Loadout").
+- At a task's close, when the registry has no `optimization` entry and the project has a
+  gateway: run `gateway.py ... scores` and follow `team-workflow` skill, "Delegation first",
+  continuous improvement.
 - At a task's close: update the summary and write your checkpoint, then tell the owner. No clear
   and no `RESET:` at close; sessions are cleared before their next task (`team-workflow` skill,
   "Step 12, clears").
@@ -350,6 +353,8 @@ Every piece names MODEL and MODEL-BASIS. A UI piece without an approved design i
 Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
 work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
 put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Per part: `pick --job <type>`, `launch --job <type> --model <picked>`, check, then always
+`review <id> pass|fail` (also on a fail, before redoing it).
 Everything identifying is masked before it leaves: run `anonymizer` on the brief, pass its list with `--terms`, then `launch`; the script restores the real values in the answer.
 
 ## Code graph

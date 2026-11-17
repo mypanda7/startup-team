@@ -364,7 +364,9 @@ words, emails, secret-shaped text and the terms the `anonymizer` agent lists bec
 like `⟦a7f3-1⟧`, and the script puts the real values back into the answer. The map stays on
 the machine and is deleted after 7 days of not being used. The script refuses, before sending anything, a non-local host the project didn't
 allow, a brief that still holds a private word, an email or a secret after masking, and a missing
-key, and it never prints or stores the key.
+key, and it never prints or stores the key. `pick --job <type>`, `review <id> pass|fail` and
+`scores` keep a per-job score of every model from the sessions' own verdicts, so each job goes to
+the model with the best pass rate at the fewest tokens, with an occasional try of another model.
 
 ## Requirements
 

@@ -43,7 +43,9 @@ beside the `team-workflow` skill. Then:
 5. Install it for this project: `claude plugin marketplace update startup-team`, then
    `claude plugin update startup-team@startup-team` with the project's scope.
 6. End each task by stating the commit and whether it is pushed, in one line.
-7. Close: run `activator` CLOSE as a sub-agent (`team-workflow` skill, "Loadout"); clear nothing at close (`team-workflow` skill, "Step 12, clears": sessions are cleared before their next task).
+7. Close: where the project has a gateway, run `gateway.py ... scores` and follow "Delegation
+   first", continuous improvement (a changed best model: one memory line; a job under 60%: one
+   line to the owner). Run `activator` CLOSE as a sub-agent (`team-workflow` skill, "Loadout"); clear nothing at close (`team-workflow` skill, "Step 12, clears": sessions are cleared before their next task).
 
 ## Standing rules
 - Scope is the owner's request. Never widen it, and never apply a default over a point the owner
@@ -62,6 +64,8 @@ beside the `team-workflow` skill. Then:
 Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
 work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
 put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+Per part: `pick --job <type>`, `launch --job <type> --model <picked>`, check, then always
+`review <id> pass|fail` (also on a fail, before redoing it).
 Everything identifying is masked before it leaves: run `anonymizer` on the brief, pass its list with `--terms`, then `launch`; the script restores the real values in the answer.
 
 ## Code graph

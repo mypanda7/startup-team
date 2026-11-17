@@ -1,7 +1,10 @@
 """startup-team gateway: send a delegated piece to an OpenAI-compatible endpoint and keep a ledger.
 
   gateway.py health
-  gateway.py launch --brief <file> --out <file> [--terms <file>] [--model <name>] [--max-brief-kb n]
+  gateway.py launch --brief <file> --out <file> [--job <type>] [--terms <file>] [--model <name>] [--max-brief-kb n]
+  gateway.py review <id> pass|fail [--note <text>]   (sends nothing; appends a review row)
+  gateway.py scores [--job <type>]                   (sends nothing; per job and model)
+  gateway.py pick --job <type>                       (sends nothing; prints one model name)
   gateway.py list [--last n]
   gateway.py log <id>
   gateway.py mask --brief <file> --out <file> [--terms <file>]      (sends nothing)
@@ -30,7 +33,11 @@ or printed; the answer gets the real values back (only exact bracketed placehold
 is written. A map not used for --keep-maps-days days (default 7) is deleted at the next launch.
 The --model value is checked like the brief (private words, emails, secret shapes); it is never
 masked.
-Ledger: <project>/.handoff/gateway/ledger.jsonl. Python 3.9+, standard library only.
+Ledger: <project>/.handoff/gateway/ledger.jsonl. Python 3.9+, standard library only. Launch rows
+carry a `job` type; review rows ({"kind": "review", id, verdict, note, time}) are only ever appended.
+pick: among models with >= 3 reviewed launches for the job, the highest pass rate, ties -> the lower
+median tokens of passed answers. About 1 pick in 5 (from the ledger's launch count, so it is
+deterministic) explores a model with < 3 reviews for that job instead. No data: "auto".
 """
 import argparse
 import contextlib
@@ -66,6 +73,8 @@ SECRET_SHAPES = (
                                       r"gho_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,}|xox[bp]-[A-Za-z0-9-]{8,}|"
                                       r"AIza[0-9A-Za-z_-]{20,}|AKIA[0-9A-Z]{12,})")),
 )
+MIN_REVIEWS = 3   # reviewed launches a model needs for a job before pick trusts its score
+EXPLORE_EVERY = 5  # one pick in this many explores an under-reviewed model
 LONG_TOKEN = re.compile(r"[A-Za-z0-9+/_=-]{40,}")
 _SEEN_KEYS = set()  # every key value read this run, so any output can be scrubbed of it
 
@@ -121,6 +130,58 @@ def read_ledger(project: Path) -> list:
         if isinstance(row, dict):
             rows.append(row)
     return rows
+
+
+def job_type(text) -> str:
+    return " ".join(str(text or "").lower().split()) or "general"
+
+
+def score_table(rows: list) -> dict:
+    """{(job, model): {"launches", "reviewed", "passed", "tokens": [tokens of passed answers]}}.
+
+    Counts answered launches by the model that actually answered; the latest review of an id wins."""
+    verdicts = {r.get("id"): r.get("verdict") for r in rows if r.get("kind") == "review"}
+    table = {}
+    for r in rows:
+        if r.get("kind") == "review" or r.get("status") != "done":
+            continue
+        model = r.get("model_answered") or r.get("model_asked") or "auto"
+        s = table.setdefault((job_type(r.get("job")), model),
+                             {"launches": 0, "reviewed": 0, "passed": 0, "tokens": []})
+        s["launches"] += 1
+        v = verdicts.get(r.get("id"))
+        if v in ("pass", "fail"):
+            s["reviewed"] += 1
+        if v == "pass":
+            s["passed"] += 1
+            if isinstance(r.get("tokens"), (int, float)):
+                s["tokens"].append(r["tokens"])
+    return table
+
+
+def median(values: list):
+    v = sorted(values)
+    if not v:
+        return None
+    mid = len(v) // 2
+    return v[mid] if len(v) % 2 else (v[mid - 1] + v[mid]) / 2
+
+
+def pick_model(rows: list, job: str) -> str:
+    job = job_type(job)
+    table = score_table(rows)
+    trusted = [(m, s) for (j, m), s in table.items() if j == job and s["reviewed"] >= MIN_REVIEWS]
+    best = min(trusted, key=lambda ms: (-ms[1]["passed"] / ms[1]["reviewed"],
+                                        median(ms[1]["tokens"]) if ms[1]["tokens"] else float("inf"),
+                                        ms[0]), default=(None,))[0]
+    launches = sum(1 for r in rows if r.get("kind") != "review" and "status" in r)
+    if launches % EXPLORE_EVERY == EXPLORE_EVERY - 1:
+        reviewed = {m: s["reviewed"] for (j, m), s in table.items() if j == job}
+        fresh = sorted(m for m in {m for (_, m) in table} - {"auto"} if reviewed.get(m, 0) < MIN_REVIEWS)
+        if fresh:
+            return fresh[(launches // EXPLORE_EVERY) % len(fresh)]
+        return "auto"
+    return best or "auto"
 
 
 def get_key(key_env: str) -> str:
@@ -360,7 +421,7 @@ def cmd_launch(a) -> int:
     task_id = time.strftime("%Y%m%d-%H%M%S") + "-" + secrets.token_hex(2)
     row = {"id": task_id, "time": time.strftime("%Y-%m-%d %H:%M:%S"), "model_asked": None,
            "model_answered": None, "status": "refused", "tokens": None, "brief": a.brief,
-           "out": a.out, "error_class": None, "error": None}
+           "out": a.out, "error_class": None, "error": None, "job": job_type(a.job)}
     try:
         check_host(a.base_url, a.allow_host)
         key = get_key(a.key_env)
@@ -422,7 +483,7 @@ def cmd_launch(a) -> int:
 
 
 def cmd_list(a) -> int:
-    for r in read_ledger(Path(a.project))[-a.last:]:
+    for r in [r for r in read_ledger(Path(a.project)) if r.get("kind") != "review"][-a.last:]:
         print(f"{r.get('id')} {r.get('time')} {r.get('status')} {r.get('model_answered') or r.get('model_asked')} "
               f"tokens={r.get('tokens')} out={r.get('out')}")
     return 0
@@ -430,14 +491,49 @@ def cmd_list(a) -> int:
 
 def cmd_log(a) -> int:
     for r in read_ledger(Path(a.project)):
-        if r.get("id") == a.id:
-            for k in ("id", "time", "status", "model_asked", "model_answered", "tokens", "brief",
+        if r.get("id") == a.id and r.get("kind") != "review":
+            for k in ("id", "time", "status", "job", "model_asked", "model_answered", "tokens", "brief",
                       "brief_bytes", "masked", "maps_deleted", "out", "out_bytes", "error_class", "error"):
                 print(f"{k}: {r.get(k)}")
             print(f"unrestored: {len(r.get('unrestored') or [])}")
             return 0
     print(f"no task {a.id}")
     return 1
+
+
+def cmd_review(a) -> int:
+    """Append a review row for an answered launch. Old rows are never edited."""
+    project = Path(a.project)
+    note = " ".join((a.note or "").split())
+    if len(note) > 200:
+        print("refused: the note is over 200 characters")
+        return 2
+    if not any(r.get("id") == a.id and r.get("kind") != "review" and r.get("status") == "done"
+               for r in read_ledger(project)):
+        print(f"refused: no answered launch {a.id}")
+        return 2
+    append_ledger(project, {"kind": "review", "id": a.id, "verdict": a.verdict, "note": note,
+                            "time": time.strftime("%Y-%m-%d %H:%M:%S")})
+    print(f"{a.id} {a.verdict}")
+    return 0
+
+
+def cmd_scores(a) -> int:
+    rows = sorted(score_table(read_ledger(Path(a.project))).items())
+    if a.job:
+        rows = [r for r in rows if r[0][0] == job_type(a.job)]
+    print(f"{'job':<14} {'model':<32} {'launches':>8} {'reviewed':>8} {'pass':>5} {'med.tok':>8}")
+    for (job, model), s in rows:
+        rate = f"{100 * s['passed'] / s['reviewed']:.0f}%" if s["reviewed"] else "-"
+        med = median(s["tokens"])
+        med_text = "-" if med is None else f"{med:g}"
+        print(f"{job:<14} {model:<32} {s['launches']:>8} {s['reviewed']:>8} {rate:>5} {med_text:>8}")
+    return 0
+
+
+def cmd_pick(a) -> int:
+    print(pick_model(read_ledger(Path(a.project)), a.job))
+    return 0
 
 
 def cmd_mask(a) -> int:
@@ -503,6 +599,15 @@ def main(argv=None) -> int:
     la.add_argument("--max-brief-kb", type=float, default=200)
     la.add_argument("--terms", default="")
     la.add_argument("--keep-maps-days", type=float, default=7)
+    la.add_argument("--job", default="general")
+    rv = sub.add_parser("review")
+    rv.add_argument("id")
+    rv.add_argument("verdict", choices=("pass", "fail"))
+    rv.add_argument("--note", default="")
+    sc = sub.add_parser("scores")
+    sc.add_argument("--job", default="")
+    pk = sub.add_parser("pick")
+    pk.add_argument("--job", required=True)
     ma = sub.add_parser("mask")
     ma.add_argument("--brief", required=True)
     ma.add_argument("--out", required=True)
@@ -518,7 +623,7 @@ def main(argv=None) -> int:
     lo.add_argument("id")
     sub.add_parser("selftest")
     # The common options may also come after the command.
-    for sp in (he, la, li, lo, ma, um):
+    for sp in (he, la, li, lo, ma, um, rv, sc, pk):
         sp.add_argument("--base-url", dest="base_url_late")
         sp.add_argument("--key-env", dest="key_env_late")
         sp.add_argument("--allow-host", dest="allow_host_late")
@@ -532,7 +637,8 @@ def main(argv=None) -> int:
     if a.cmd == "selftest":
         return selftest()
     return {"health": cmd_health, "launch": cmd_launch, "list": cmd_list, "log": cmd_log,
-            "mask": cmd_mask, "unmask": cmd_unmask}[a.cmd](a)
+            "mask": cmd_mask, "unmask": cmd_unmask, "review": cmd_review, "scores": cmd_scores,
+            "pick": cmd_pick}[a.cmd](a)
 
 
 def run(argv=None) -> int:
@@ -826,6 +932,56 @@ def selftest() -> int:
         assert gw("list") == 0
         assert gw("log", "t-ok") == 0
         assert gw("log", "no-such-id") == 1
+
+        # review: appends, never edits, refuses an unknown or unanswered id and a long note
+        ok_id = next(r["id"] for r in read_ledger(project) if r.get("status") == "done")
+        bad_id = next(r["id"] for r in read_ledger(project) if r.get("status") == "refused")
+        before_rows = ledger_path(project).read_bytes()
+        assert gw("review", ok_id, "pass", "--note", "fine") == 0
+        assert ledger_path(project).read_bytes().startswith(before_rows)
+        last = read_ledger(project)[-1]
+        assert (last["kind"], last["id"], last["verdict"], last["note"]) == ("review", ok_id, "pass", "fine")
+        n = len(read_ledger(project))
+        assert gw("review", "no-such-id", "pass") == 2
+        assert gw("review", bad_id, "fail") == 2
+        assert gw("review", ok_id, "fail", "--note", "x" * 201) == 2
+        assert len(read_ledger(project)) == n
+        assert gw("list") == 0 and gw("log", ok_id) == 0  # review rows don't break list / log
+        front_behaviour.update(kind="ok")
+        assert gw("launch", "--base-url", base, "--brief", str(brief), "--out", str(project / "j1.txt"),
+                  "--job", " Code-Draft ") == 0
+        assert read_ledger(project)[-1]["job"] == "code-draft"
+        assert gw("scores") == 0 and gw("scores", "--job", "code-draft") == 0 and gw("pick", "--job", "x") == 0
+
+        # scores and pick on hand-made ledgers (no network)
+        def L(i, job, model, tokens=1, status="done"):
+            return {"id": f"t{i}", "status": status, "job": job, "model_answered": model, "tokens": tokens}
+
+        def R(i, v="pass"):
+            return {"kind": "review", "id": f"t{i}", "verdict": v}
+        rows = [L(1, "copy", "a", 100), L(2, "copy", "a", 300), L(3, "copy", "a", 200), L(4, "copy", "a", 50),
+                R(1), R(2), R(3, "fail"), R(3), R(4, "fail"),
+                L(5, "copy", "b", 10), L(6, "copy", "b", 20), L(7, "copy", "b", 30), L(8, None, "c", 5),
+                R(5), R(6, "fail"), R(7), L(9, "copy", "a", 9, "failed"), L(10, "copy", "a", 9, "refused")]
+        t = score_table(rows)
+        assert t[("copy", "a")] == {"launches": 4, "reviewed": 4, "passed": 3, "tokens": [100, 300, 200]}
+        assert median(t[("copy", "a")]["tokens"]) == 200 and median([1, 2, 3, 4]) == 2.5
+        assert t[("copy", "b")]["reviewed"] == 3 and t[("general", "c")]["launches"] == 1
+        # best: 10 launch rows (10 % 5 == 0, no exploration); a 75% beats b 67%; job case/space ignored
+        assert pick_model(rows, " COPY ") == "a"
+        assert pick_model(rows, "never-seen") == "auto"  # no data for the job
+        assert pick_model([], "plan") == "auto"
+        # exploration: 14 launch rows (14 % 5 == 4) -> c, the one model with < 3 reviews for copy
+        more = rows + [L(20 + i, "copy", "a", 1, "failed") for i in range(4)]
+        assert pick_model(more, "copy") == "c"
+        # tie at 3/3 passes each -> the lower median tokens of passed answers wins (6 launches)
+        tie = [L(i, "plan", m, tok) for i, (m, tok) in enumerate(
+            [("x", 100), ("x", 100), ("x", 100), ("y", 50), ("y", 60), ("y", 70)])] + [R(i) for i in range(6)]
+        assert pick_model(tie, "plan") == "y"
+        # exploring with every seen model already at 3 reviews -> "auto" (9 launches)
+        assert pick_model(tie + [L(30 + i, "q", "x") for i in range(3)], "plan") == "auto"
+        # exploring with an under-reviewed model seen under another job -> that model (9 launches)
+        assert pick_model(tie + [L(30 + i, "q", "z") for i in range(3)], "plan") == "z"
 
         for s in servers:
             s.shutdown()

@@ -445,8 +445,11 @@ and keeps a ledger in `.handoff/gateway/ledger.jsonl`. A project switches it on 
 CLAUDE.md, the base URL, the NAME of the environment variable that holds the key (the key itself
 never appears in the project, a brief, a record or a reply), and these commands:
 - `gateway.py --base-url <url> --key-env <NAME> health`: `ok <n models>`, `down <reason>` or `auth`.
-- `gateway.py ... launch --brief <file> --out <file> [--terms <file>] [--model <name>]`: masks, sends,
-  restores, and prints a task id.
+- `gateway.py ... launch --brief <file> --out <file> [--job <type>] [--terms <file>] [--model <name>]`:
+  masks, sends, restores, and prints a task id; the ledger row keeps the job type.
+- `gateway.py ... review <id> pass|fail [--note <text>]`, `scores [--job <type>]` and
+  `pick --job <type>`: record your verdict on an answer, show pass rate and median tokens per job
+  and model, and print the model to use for a job (see "Delegation first"). They send nothing.
 - `gateway.py ... mask --brief <file> --out <file> [--terms <file>]` and
   `gateway.py ... unmask --map <task id | file> --in <file> --out <file>`: check the masking locally;
   they send nothing.
@@ -492,10 +495,17 @@ OpenAI-compatible endpoint works by editing that section; `gateway.py` itself na
 When the project's CLAUDE.md names the gateway's base URL, key variable and commands, this rule
 applies to every session, agent and sub-agent of the team (the Business Analyst relays the owner's
 answers only and sends nothing). Without that section nothing here changes.
-- Your role: hand each text-producing part of your work to the outside models with
-  `gateway.py launch`: drafts of code, copy, plans, test lists, reviews, summaries. Then CHECK each
-  answer against the request and the project's rules, fix or redo it yourself when it fails, and
-  PUT THE PARTS TOGETHER. You stay responsible for the result.
+- Your main task, in every main and sub session: DELEGATE and REVIEW. Hand each text-producing
+  part of your work to the outside models: drafts of code, copy, plans, test lists, reviews,
+  summaries, briefs. Then CHECK each answer against the request and the project's rules, fix or
+  redo it yourself when it fails, and PUT THE PARTS TOGETHER. You stay responsible for the result.
+- The loop, per part: `gateway.py ... pick --job <type>` prints the model to use, then
+  `launch --job <type> --model <picked> ...`, then your check, then ALWAYS
+  `review <id> pass|fail [--note <why>]`, also on a fail and before you redo it. Job types:
+  `code-draft`, `copy`, `plan`, `test-list`, `review`, `summary`, `brief`, `general`; free text
+  only when none fits. `pick` takes, among models with at least 3 reviewed answers for that job,
+  the highest pass rate, ties to the fewer tokens; about one pick in five tries a less-tested
+  model, and with no data it says `auto` (the router chooses, and the ledger records who answered).
 - Write each brief self-contained, since the model sees nothing else: the task, the exact input,
   the rules that apply, the output format.
 - Everything identifying is masked before it leaves. Run the `anonymizer` agent on the brief (as a
@@ -511,6 +521,12 @@ answers only and sends nothing). Without that section nothing here changes.
 - A refused or failed launch, or an answer that fails your check twice: do that part yourself and
   say so in your result. The ledger records each launch; add the one-line `model-selection`
   memory entry as for any piece.
+- Continuous improvement: at each task close, AI Team Optimization (or the Tech Lead where the
+  registry has no `optimization` entry) runs `gateway.py ... scores`. When a job's best model
+  changed, it adds ONE line: `team.py memory add --kind learned --for tech-lead --tags
+  model-selection,<job> --evidence .handoff/gateway/ledger.jsonl --text "<job>: <model> now best
+  (<pass rate>, median <n> tokens)"`. A job whose pass rate over its last 10 reviews is below 60%
+  is raised to the owner in one line.
 - Every existing gate stays: design approval, the plan's green light, QA, the audit, the owner's 1.
 - A piece sent whole to the outside models (route DELEGATE) still goes through the `dispatcher`.
 

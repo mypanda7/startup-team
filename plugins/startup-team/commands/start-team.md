@@ -190,7 +190,8 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
          the key is never written, pasted or printed).
        - Commands, with the plugin at <plugin folder>: `python <plugin folder>/skills/team-workflow/scripts/gateway.py
          --base-url <base URL> --key-env FREELLMAPI_API_KEY health | launch --brief <file> --out
-         <file> --terms <file> | list | log <id>` (plus `mask` / `unmask` to check locally).
+         <file> --terms <file> --job <type> | pick --job <type> | review <id> pass|fail | scores |
+         list | log <id>` (plus `mask` / `unmask` to check locally).
        - Every brief is masked before it leaves: the words in .handoff/private-words.txt, emails,
          secret-shaped text and the terms the anonymizer agent lists. The real values come back
          only in the answer. A task whose point is a secret or personal value is never sent.
