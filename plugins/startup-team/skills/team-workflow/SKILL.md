@@ -120,8 +120,9 @@ These add to the numbered steps above.
     it on again until the cleared session has run a turn, and a clear cancels the timers that session
     set, so a session cannot wake itself. So before any clear, read the target's Remote Control state
     (`get_session`); when it is on:
-    - Clearing a session you started: turn its Remote Control off, clear it, send its re-brief, and
-      turn Remote Control on again once that turn has ended.
+    - Clearing a session you started: turn its Remote Control off, clear it, send it
+      `[startup-team:<its name>]` + `WAKE` (or its next piece, when one is due), and turn Remote
+      Control on again yourself once that turn has ended.
     - Clearing `self`: add the line `REMOTE CONTROL: on again` to your checkpoint, turn Remote
       Control off for `self`, then clear as the turn's last call. A main session first asks a helper
       to wake it: a third line `WAKE-ME: <own session id>` under the `RESET:` it sends the other main
