@@ -110,7 +110,7 @@ These add to the numbered steps above.
     sent after the audit passes (or right after its report when no QA follows), only for the piece
     it holds and while it holds no other; it does not reply.
   - Main sessions (Tech Lead, Team Optimization), in order: update the summary and write their
-    checkpoint; send each Developer CLOSE still owed; send the other main session
+    checkpoint; send each Developer CLOSE still owed; when the registry has one, send the other main session
     `[startup-team:<its name>]` + `RESET: task closed in <own name>`; tell the owner the result;
     clear `self` as the turn's last call.
   - On `RESET:` (never triaged), a main session that is idle (no piece out with any sub session, no
@@ -123,7 +123,7 @@ These add to the numbered steps above.
 ## Checkpoints
 Long histories are re-read on every turn, so sessions stay short and the detail stays in files.
 - **Checkpoint file.** `.handoff/checkpoints/<session name>.md`, written by the session itself, at
-  most 30 lines: its role, the task and piece in hand, what is done (with commits), what is next,
+  most 30 lines. Its first line names the role and the brief path; then the task and piece in hand, what is done (with commits), what is next,
   open questions, and the paths of the records that hold the detail.
 - **Threshold.** Where the host reports a session's context size, check each standing sub session
   between pieces. Past the project's `CHECKPOINT AT: <n>k` CLAUDE.md line (default 150k tokens),
@@ -135,10 +135,9 @@ Long histories are re-read on every turn, so sessions stay short and the detail 
   `.handoff/conversations/SUMMARY.md`, the record paths, "find more with `team.py records find
   <words>`", and at most five lines of summary. No separate re-brief follows a clear. Agents and
   sub-agents get paths too, never pasted history or transcripts; skills have no history of their own.
-- **After a clear.** A main session regains its role on its next typed turn from the gate (which
-  matches its id in the registry), on a message turn from the `[startup-team:<name>]` first line; a
-  sub session from the pointer brief of its next piece. It reads its checkpoint and the summary
-  first, and opens sub files only when the task needs them.
+- **After a clear.** When the session's id is a role in `.handoff/team-sessions.json`, the
+  session-start output names the role: the session reads that role's brief under the plugin folder,
+  then its checkpoint. The checkpoint's first line names the role and brief path as the backstop.
 - **Looking things up.** A session that needs older detail runs `team.py records find <words>
   [--kind k] [--last n]` (paths, kinds and titles only; `records index` rebuilds
   `.handoff/records-index.jsonl`) and opens only the files it names, instead of asking for a

@@ -35,8 +35,6 @@ BUILD_VERBS = (
 NOT_DIRECT = re.compile(r"[.!?;]\s+[a-z]|(^|[^a-z])(" + BUILD_VERBS + r")([^a-z]|$)")
 
 REMINDER = """Team gate (startup-team): before starting this task, triage it.
-0. If this session's id (`get_session` with `self`) is a role's entry in .handoff/team-sessions.json,
-   read that role's brief (sessions/ under the startup-team plugin folder) first.
 1. Load the team-workflow skill if it is not loaded and create a turn folder.
 2. If this session is the Tech Lead (its id is the `tech-lead` entry of .handoff/team-sessions.json,
    or else its title ends with "Tech Lead"), triage here by the Tech Lead brief. If it is the AI Team

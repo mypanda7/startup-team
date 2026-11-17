@@ -139,11 +139,35 @@ SUMMARY_LINE = ("Past context: read .handoff/conversations/SUMMARY.md first; ope
                 "the task needs them.")
 
 
+PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def role_line(base: str, host_id: str) -> str:
+    """The team role this session holds by .handoff/team-sessions.json, as one line, or ""."""
+    try:
+        with open(os.path.join(base, ".handoff", "team-sessions.json"), encoding="utf-8") as handle:
+            registry = json.load(handle)
+    except (OSError, ValueError):
+        return ""
+    for name, entry in registry.items() if isinstance(registry, dict) and host_id else ():
+        if isinstance(entry, dict) and entry.get("id") == host_id:
+            brief = os.path.join(PLUGIN_DIR, "sessions", name + "-session.md")
+            return (f"Team role: this is the {name} session ({entry.get('title', name)}). Read {brief} first, "
+                    f"then .handoff/checkpoints/{name}.md.")
+    return ""
+
+
 def session_start(payload: dict, session_id: str) -> None:
     for base in (os.environ.get("CLAUDE_PROJECT_DIR"), payload.get("cwd")):
-        if isinstance(base, str) and os.path.isfile(os.path.join(base, ".handoff", "conversations", "SUMMARY.md")):
+        if not isinstance(base, str) or not os.path.isdir(os.path.join(base, ".handoff")):
+            continue
+        # the desktop app's own session id is the one the registry records
+        role = role_line(base, os.environ.get("CLAUDE_CODE_HOST_SESSION_ID") or session_id)
+        if role:
+            print(role)
+        if os.path.isfile(os.path.join(base, ".handoff", "conversations", "SUMMARY.md")):
             print(SUMMARY_LINE)
-            break
+        break
     found = find_notes(payload)
     if not found:
         return
@@ -231,6 +255,18 @@ def stop(payload: dict, session_id: str) -> None:
     print(json.dumps({"systemMessage": UPDATE_LINE.format(notes=shown)}))
 
 
+def selftest() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        assert role_line(tmp, "local_a") == "", "missing registry"
+        os.makedirs(os.path.join(tmp, ".handoff"))
+        with open(os.path.join(tmp, ".handoff", "team-sessions.json"), "w", encoding="utf-8") as handle:
+            json.dump({"qa": {"id": "local_a", "title": "QA Engineer"}}, handle)
+        line = role_line(tmp, "local_a")
+        assert "qa session" in line and "qa-session.md" in line and ".handoff/checkpoints/qa.md" in line, line
+        assert role_line(tmp, "local_b") == "" and role_line(tmp, "") == "", "unknown id"
+    print("notes selftest ok")
+
+
 def main() -> None:
     if os.environ.get("STARTUP_TEAM_NOTES_OFF") == "1":
         return
@@ -254,7 +290,9 @@ def main() -> None:
         stop(payload, session_id)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and sys.argv[1:2] == ["selftest"]:
+    selftest()
+elif __name__ == "__main__":
     try:
         main()
     except Exception:
