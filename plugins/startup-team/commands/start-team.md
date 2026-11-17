@@ -11,6 +11,9 @@ for all six. The argument
 Where the project's CLAUDE.md names `TEAM REPO CLONE: <path>`, case A also starts "AI Team
 Optimization", a second session of its own beside the AI Tech Lead (never under it), where the
 owner improves the team itself.
+Team lines the project's CLAUDE.md may hold, each the owner's standing yes (`team-workflow` skill):
+`TEAM REPO CLONE: <path>`, `Setup changes: automatic, straight to main`, `Remote Control clears:
+allowed`, `Setup repair: allowed` ("Setup repair") and `Sub sessions: bypass` (step 13).
 
 The desktop app nests a session under the session that started it, and allows `start_session`
 only on a turn the owner typed. So setup takes two runs of this command: run in any other
@@ -205,7 +208,19 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
        to a later time." and run `launch --brief .handoff/gateway/trial-brief.txt --out
        .handoff/gateway/trial-answer-<date>.txt`. Report ok or failed and the ledger id. On ok,
        delete `.handoff/gateway-setup-pending` if it exists.
-13. Tell me in one line which sub sessions were found and which were started (with no argument:
+13. Sub-session permissions (run also on an on-demand start). When the project's CLAUDE.md already
+    has the line `Sub sessions: bypass`, switch each sub session this run started to
+    `bypassPermissions` with `set_session_permission_mode` and go on. Otherwise, skip this step when
+    no sub session is in the registry. Read the app settings with `get_settings` (read-only; never
+    change `bypass_permissions_mode`). Not opted in: tell me in one line to opt in under the app's
+    Settings, and go on. Opted in: ask me once "Switch the sub sessions to bypass permissions?" (the
+    question dialog, options "Switch" = 1 and "Not now" = 0; as text ending "1 = yes, 0 = no." only
+    if no dialog can be shown). On my yes, typed in this session: add the line `Sub sessions:
+    bypass` to the project's CLAUDE.md, then switch every sub session in the registry to
+    `bypassPermissions`. Main sessions (AI Tech Lead, AI Team Optimization) keep their mode; any
+    change there asks me first, every time. Why: auto mode cannot pass the Remote Control switch
+    before a clear, so each pre-task clear would otherwise wait for my click.
+14. Tell me in one line which sub sessions were found and which were started (with no argument:
     none, and each one starts the first time a task needs it), and name any role
     still missing because its start failed or was refused, with the app's reason: running this
     command again here starts just that one. Then any worktree or duplicate sessions from step 3;

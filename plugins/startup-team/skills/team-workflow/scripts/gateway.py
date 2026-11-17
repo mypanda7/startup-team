@@ -3,7 +3,7 @@
   gateway.py health
   gateway.py launch --brief <file> --out <file> [--job <type>] [--terms <file>] [--model <name>] [--max-brief-kb n]
   gateway.py review <id> pass|fail [--note <text>]   (sends nothing; appends a review row)
-  gateway.py scores [--job <type>]                   (sends nothing; per job and model)
+  gateway.py scores [--job <type>] [--last n]        (sends nothing; per job and model)
   gateway.py pick --job <type>                       (sends nothing; prints one model name)
   gateway.py list [--last n]
   gateway.py log <id>
@@ -36,8 +36,10 @@ masked.
 Ledger: <project>/.handoff/gateway/ledger.jsonl. Python 3.9+, standard library only. Launch rows
 carry a `job` type; review rows ({"kind": "review", id, verdict, note, time}) are only ever appended.
 pick: among models with >= 3 reviewed launches for the job, the highest pass rate, ties -> the lower
-median tokens of passed answers. About 1 pick in 5 (from the ledger's launch count, so it is
+median tokens of passed answers. About 1 pick in 5 (from that job's own launch count, so it is
 deterministic) explores a model with < 3 reviews for that job instead. No data: "auto".
+scores --last n: the reviewed, pass and median columns cover only each job+model's last n reviewed
+launches (ledger order); launches stay all-time.
 """
 import argparse
 import contextlib
@@ -136,26 +138,29 @@ def job_type(text) -> str:
     return " ".join(str(text or "").lower().split()) or "general"
 
 
-def score_table(rows: list) -> dict:
+def score_table(rows: list, last: int = 0) -> dict:
     """{(job, model): {"launches", "reviewed", "passed", "tokens": [tokens of passed answers]}}.
 
-    Counts answered launches by the model that actually answered; the latest review of an id wins."""
+    Counts answered launches by the model that actually answered; the latest review of an id wins.
+    last > 0: reviewed/passed/tokens cover only the last `last` reviewed launches of each key."""
     verdicts = {r.get("id"): r.get("verdict") for r in rows if r.get("kind") == "review"}
-    table = {}
+    table, seen = {}, {}
     for r in rows:
         if r.get("kind") == "review" or r.get("status") != "done":
             continue
-        model = r.get("model_answered") or r.get("model_asked") or "auto"
-        s = table.setdefault((job_type(r.get("job")), model),
-                             {"launches": 0, "reviewed": 0, "passed": 0, "tokens": []})
-        s["launches"] += 1
+        key = (job_type(r.get("job")), r.get("model_answered") or r.get("model_asked") or "auto")
+        table.setdefault(key, {"launches": 0, "reviewed": 0, "passed": 0, "tokens": []})["launches"] += 1
         v = verdicts.get(r.get("id"))
         if v in ("pass", "fail"):
+            seen.setdefault(key, []).append((v, r.get("tokens")))
+    for key, reviews in seen.items():
+        s = table[key]
+        for v, tokens in reviews[-last:] if last > 0 else reviews:
             s["reviewed"] += 1
-        if v == "pass":
-            s["passed"] += 1
-            if isinstance(r.get("tokens"), (int, float)):
-                s["tokens"].append(r["tokens"])
+            if v == "pass":
+                s["passed"] += 1
+                if isinstance(tokens, (int, float)):
+                    s["tokens"].append(tokens)
     return table
 
 
@@ -174,7 +179,7 @@ def pick_model(rows: list, job: str) -> str:
     best = min(trusted, key=lambda ms: (-ms[1]["passed"] / ms[1]["reviewed"],
                                         median(ms[1]["tokens"]) if ms[1]["tokens"] else float("inf"),
                                         ms[0]), default=(None,))[0]
-    launches = sum(1 for r in rows if r.get("kind") != "review" and "status" in r)
+    launches = sum(1 for r in rows if r.get("kind") != "review" and "status" in r and job_type(r.get("job")) == job)
     if launches % EXPLORE_EVERY == EXPLORE_EVERY - 1:
         reviewed = {m: s["reviewed"] for (j, m), s in table.items() if j == job}
         fresh = sorted(m for m in {m for (_, m) in table} - {"auto"} if reviewed.get(m, 0) < MIN_REVIEWS)
@@ -519,7 +524,7 @@ def cmd_review(a) -> int:
 
 
 def cmd_scores(a) -> int:
-    rows = sorted(score_table(read_ledger(Path(a.project))).items())
+    rows = sorted(score_table(read_ledger(Path(a.project)), a.last).items())
     if a.job:
         rows = [r for r in rows if r[0][0] == job_type(a.job)]
     print(f"{'job':<14} {'model':<32} {'launches':>8} {'reviewed':>8} {'pass':>5} {'med.tok':>8}")
@@ -606,6 +611,7 @@ def main(argv=None) -> int:
     rv.add_argument("--note", default="")
     sc = sub.add_parser("scores")
     sc.add_argument("--job", default="")
+    sc.add_argument("--last", type=int, default=0)
     pk = sub.add_parser("pick")
     pk.add_argument("--job", required=True)
     ma = sub.add_parser("mask")
@@ -962,26 +968,33 @@ def selftest() -> int:
         rows = [L(1, "copy", "a", 100), L(2, "copy", "a", 300), L(3, "copy", "a", 200), L(4, "copy", "a", 50),
                 R(1), R(2), R(3, "fail"), R(3), R(4, "fail"),
                 L(5, "copy", "b", 10), L(6, "copy", "b", 20), L(7, "copy", "b", 30), L(8, None, "c", 5),
-                R(5), R(6, "fail"), R(7), L(9, "copy", "a", 9, "failed"), L(10, "copy", "a", 9, "refused")]
+                R(5), R(6, "fail"), R(7), L(9, "copy", "a", 9, "failed"), L(10, "copy", "a", 9, "refused"),
+                L(11, "copy", "a", 9, "failed")]
         t = score_table(rows)
         assert t[("copy", "a")] == {"launches": 4, "reviewed": 4, "passed": 3, "tokens": [100, 300, 200]}
         assert median(t[("copy", "a")]["tokens"]) == 200 and median([1, 2, 3, 4]) == 2.5
         assert t[("copy", "b")]["reviewed"] == 3 and t[("general", "c")]["launches"] == 1
-        # best: 10 launch rows (10 % 5 == 0, no exploration); a 75% beats b 67%; job case/space ignored
+        # --last 2: only a's last two reviewed launches (t3 pass, t4 fail); launches stay all-time
+        assert score_table(rows, 2)[("copy", "a")] == {"launches": 4, "reviewed": 2, "passed": 1, "tokens": [200]}
+        assert score_table(rows, 10) == t and gw("scores", "--last", "10") == 0
+        # best: 10 copy launch rows (10 % 5 == 0, no exploration); a 75% beats b 67%; job case/space ignored
         assert pick_model(rows, " COPY ") == "a"
         assert pick_model(rows, "never-seen") == "auto"  # no data for the job
         assert pick_model([], "plan") == "auto"
-        # exploration: 14 launch rows (14 % 5 == 4) -> c, the one model with < 3 reviews for copy
+        # exploration: 14 copy launch rows (14 % 5 == 4) -> c, the one model with < 3 reviews for copy
         more = rows + [L(20 + i, "copy", "a", 1, "failed") for i in range(4)]
         assert pick_model(more, "copy") == "c"
         # tie at 3/3 passes each -> the lower median tokens of passed answers wins (6 launches)
         tie = [L(i, "plan", m, tok) for i, (m, tok) in enumerate(
             [("x", 100), ("x", 100), ("x", 100), ("y", 50), ("y", 60), ("y", 70)])] + [R(i) for i in range(6)]
         assert pick_model(tie, "plan") == "y"
-        # exploring with every seen model already at 3 reviews -> "auto" (9 launches)
-        assert pick_model(tie + [L(30 + i, "q", "x") for i in range(3)], "plan") == "auto"
-        # exploring with an under-reviewed model seen under another job -> that model (9 launches)
-        assert pick_model(tie + [L(30 + i, "q", "z") for i in range(3)], "plan") == "z"
+        # exploration counts the job's own launches: 9 launches in all, only 6 for plan -> no exploring
+        assert pick_model(tie + [L(30 + i, "q", "x") for i in range(3)], "plan") == "y"
+        nine = tie + [L(40 + i, "plan", "x", 1, "failed") for i in range(3)]  # 9 plan launches
+        # exploring with every seen model already at 3 reviews -> "auto"
+        assert pick_model(nine, "plan") == "auto"
+        # exploring with an under-reviewed model seen under another job -> that model
+        assert pick_model(nine + [L(50, "q", "z")], "plan") == "z"
 
         for s in servers:
             s.shutdown()

@@ -257,6 +257,12 @@ renamed session is still found. When the Business Analyst has an open question f
 a turn another session's message started), so the AI Tech Lead is started by the session where the
 owner answered the setup offer, and the sub sessions by the AI Tech Lead on a turn the owner typed
 there, always with `use_worktree: false`, in the project's folder.
+Where the project's CLAUDE.md has the line `Sub sessions: bypass` (the owner's yes, recorded by
+`start-team`, "Sub-session permissions"), a sub session started later is switched to
+`bypassPermissions` with `set_session_permission_mode` right after it starts. On "not available"
+(the app's opt-in is off), tell the owner in one line to opt in under the app's Settings, and go on.
+Main sessions (AI Tech Lead, AI Team Optimization) keep their mode; any change there asks the owner
+first, every time.
 
 **On demand.** After triage, on a turn the owner typed, the main session starts only the missing
 sub sessions the task's pieces need (the `activator`'s list, or the decision block's routes), by
@@ -447,9 +453,10 @@ never appears in the project, a brief, a record or a reply), and these commands:
 - `gateway.py --base-url <url> --key-env <NAME> health`: `ok <n models>`, `down <reason>` or `auth`.
 - `gateway.py ... launch --brief <file> --out <file> [--job <type>] [--terms <file>] [--model <name>]`:
   masks, sends, restores, and prints a task id; the ledger row keeps the job type.
-- `gateway.py ... review <id> pass|fail [--note <text>]`, `scores [--job <type>]` and
+- `gateway.py ... review <id> pass|fail [--note <text>]`, `scores [--job <type>] [--last n]` and
   `pick --job <type>`: record your verdict on an answer, show pass rate and median tokens per job
-  and model, and print the model to use for a job (see "Delegation first"). They send nothing.
+  and model (with `--last n`, over each job and model's last n reviews only), and print the model
+  to use for a job (see "Delegation first"). They send nothing.
 - `gateway.py ... mask --brief <file> --out <file> [--terms <file>]` and
   `gateway.py ... unmask --map <task id | file> --in <file> --out <file>`: check the masking locally;
   they send nothing.
@@ -525,8 +532,8 @@ answers only and sends nothing). Without that section nothing here changes.
   registry has no `optimization` entry) runs `gateway.py ... scores`. When a job's best model
   changed, it adds ONE line: `team.py memory add --kind learned --for tech-lead --tags
   model-selection,<job> --evidence .handoff/gateway/ledger.jsonl --text "<job>: <model> now best
-  (<pass rate>, median <n> tokens)"`. A job whose pass rate over its last 10 reviews is below 60%
-  is raised to the owner in one line.
+  (<pass rate>, median <n> tokens)"`. A job whose pass rate over its last 10 reviews
+  (`gateway.py ... scores --last 10`) is below 60% is raised to the owner in one line.
 - Every existing gate stays: design approval, the plan's green light, QA, the audit, the owner's 1.
 - A piece sent whole to the outside models (route DELEGATE) still goes through the `dispatcher`.
 
@@ -559,6 +566,17 @@ Flow, per change:
 5. **Rollback.** A bad change is undone with `git revert` on `main`, through the same flow.
 A failed QA, audit or privacy check, or a pull that is not a fast-forward, stops the push and goes
 to the owner.
+
+## Setup repair
+Applies only where the project's CLAUDE.md has the line `Setup repair: allowed` (the owner's
+standing yes). A session that finds a piece of the team setup missing (a standing session the
+registry names, a registry entry, a checkpoint, the `.handoff/team-setup-done` marker, the gateway
+or team lines in the project's CLAUDE.md, the early-compress environment line, the team plugin
+install) recreates it from its last owner-approved version (git history, the `start-team` steps,
+the records) and tells the owner in one line what it recreated. Never product code, copy or data;
+never a key or secret, and never the contents of `.handoff/private-words.txt` (ask the owner); no
+software or plugin the owner has not approved before. A session is still started only on a turn the
+owner typed (see Sessions). Without the line: tell the owner what is missing and ask.
 
 ## What stays in the project
 Brand and design rules, the stack, hosting and deploy steps, standing owner decisions and the

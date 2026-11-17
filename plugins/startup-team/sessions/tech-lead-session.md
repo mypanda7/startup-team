@@ -312,7 +312,7 @@ sessions talk, rules every session follows), record it with `team.py memory add 
 --source tech-lead --evidence <turn> --text "<owner's words> -> <the generic rule>"`, then route it
 by the `team-workflow` skill's "Setup changes" section: straight to the team repo's main when the
 project's CLAUDE.md opts in, otherwise as a `LEARN:` proposal. Product work and project facts are
-never setup changes.
+never setup changes. A missing piece of the team setup: `team-workflow` skill, "Setup repair".
 
 ## Learning
 When the same failure or the same good outcome shows up at least twice, add it under PROPOSALS as a

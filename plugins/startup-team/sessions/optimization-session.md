@@ -59,6 +59,7 @@ beside the `team-workflow` skill. Then:
 - Nothing about the project goes into the team repository: check every diff against the project's
   `.handoff/private-words.txt`.
 - Secrets never go into a reply, a commit, a record or a log.
+- A missing piece of the team setup: `team-workflow` skill, "Setup repair".
 
 ## Gateway: delegation first
 Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
