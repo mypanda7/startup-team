@@ -161,6 +161,7 @@ These add to the numbered steps above.
 - **Step 12, early compress.** On the owner's yes only, the project's `.claude/settings.local.json`
   gets `"env": {"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "30"}`, so every session compresses its history
   at about 30% full. It applies on each session's next start. Never set it without the owner's yes.
+  `start-team` asks it once in its step "Early compress" (skipped when the line is already set).
 
 ## Checkpoints
 Long histories are re-read on every turn, so sessions stay short and the detail stays in files.

@@ -220,7 +220,14 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
     `bypassPermissions`. Main sessions (AI Tech Lead, AI Team Optimization) keep their mode; any
     change there asks me first, every time. Why: auto mode cannot pass the Remote Control switch
     before a clear, so each pre-task clear would otherwise wait for my click.
-14. Tell me in one line which sub sessions were found and which were started (with no argument:
+14. Early compress (skipped on an on-demand start). When the project's `.claude/settings.local.json`
+    already has `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` under `env`, skip this step. Otherwise ask me once
+    "Compress session histories early, at about 30% full?" (the question dialog, options "Yes" = 1
+    and "Not now" = 0; as text ending "1 = yes, 0 = no." only if no dialog can be shown). On my yes,
+    merge `"env": {"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "30"}` into that file (create it if missing;
+    keep every other key and env entry), and tell me in one line that it applies at each session's
+    next start. On "Not now", change nothing.
+15. Tell me in one line which sub sessions were found and which were started (with no argument:
     none, and each one starts the first time a task needs it), and name any role
     still missing because its start failed or was refused, with the app's reason: running this
     command again here starts just that one. Then any worktree or duplicate sessions from step 3;
