@@ -59,7 +59,7 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
     nothing approved is left unbuilt, tell the owner once, in one line. Run `team.py conversations
     build`, add one row to the summary's table and update its "Where things stand" ("Conversation
     summary"). Then run `activator`
-    CLOSE and end with the clears (step details). Replies to the owner stay short: the result first, no
+    CLOSE. Replies to the owner stay short: the result first, no
     repeated background.
 
 ## Step details
@@ -118,8 +118,9 @@ These add to the numbered steps above.
        wait until its turn has ended (a background command of about a minute, then `get_session`
        shows it not running; a message that arrives before its turn ends cancels its clear), then
        send the task.
-  - On `RESET: before new task from <name>` (never triaged, never a piece): write your checkpoint
-    and clear `self` as the turn's last call, replying nothing. Holding something pending, skip the
+  - On `RESET: before new task from <name>` (never triaged, never a piece): write your checkpoint;
+    if your Remote Control is on, add `REMOTE CONTROL: on again` to it and turn Remote Control off
+    (Remote Control below); then clear `self` as the turn's last call, replying nothing. Holding something pending, skip the
     clear and say so in one line.
   - Limit: a message the owner types into a main session cannot be preceded by a clear, so a main
     session is cleared only when the other main session sends it a task.
@@ -133,11 +134,15 @@ These add to the numbered steps above.
     - Clearing `self` (on `RESET:`): add the line `REMOTE CONTROL: on again` to your checkpoint,
       turn Remote Control off for `self` and clear as the turn's last call. The task the sender
       sends next wakes you.
-    - On your first turn after a clear, when your checkpoint has `REMOTE CONTROL: on again`, turn
-      Remote Control on for `self` before anything else and delete the line.
+    - On your first turn after a clear, whatever message started it (a task, `WAKE` or anything
+      else), when your checkpoint has `REMOTE CONTROL: on again`, turn Remote Control on for `self`
+      before anything else and delete the line.
+    - A clear that is refused or dropped after Remote Control was turned off: turn it on again at
+      once and delete the line. A session whose Remote Control was on always ends up on again.
     - Clearing a session you started: turn its Remote Control off, clear it, send it the task (or,
       for a clear the owner asked for with no task, `[startup-team:<its name>]` + `WAKE`), and turn
-      its Remote Control on again once that turn has ended. `WAKE` (never triaged, never a piece)
+      its Remote Control on again once that session's next turn has ended, whether or not the clear
+      went through; then check with `get_session` that it is on. `WAKE` (never triaged, never a piece)
       needs only the first-turn step above and no reply.
     - A Remote Control or clear call that is refused because a hook changed its input is repeated
       once with exactly the input the refusal quotes.
@@ -179,6 +184,9 @@ the summary from a template only when it is missing; it never changes it otherwi
 - A session that needs past context reads the summary first, when it exists, and never loads past
   transcripts or whole turn folders. It opens a sub file only when the task needs it, and Greps
   before reading a whole one.
+- On its first turn after a clear or a restart, a session starts its visible reply with a short
+  block `Read from summary:` (at most 5 lines: the last task, its state, anything open), taken from
+  the summary and its checkpoint, then carries on.
 - At each task's close (step 12) the main session rebuilds the sub files, adds one row and updates
   "Where things stand". Keep the summary under about 60 lines.
 
