@@ -103,23 +103,26 @@ These add to the numbered steps above.
   tool takes `self` and acts when the turn ends, so say and write everything first. The host may ask
   the owner to approve a clear outside auto or bypass mode, and drops a `self` clear when the owner
   speaks first.
-  - Clearing is part of every session's own close, never something a main session cascades: before
-    any clear, a session writes its checkpoint and runs `team.py conversations build`, so the task's
-    chat lands in the history files first. Agents and sub-agents keep no history: their record file
-    is their history, and they end when they return.
-  - Sub sessions (Business Analyst, Designer, QA Engineer, DevOps, Security) clear themselves at
-    the end of the turn in which they reported a piece, wrote its record and hold nothing that can
-    come back (a FAIL awaiting a re-test or an open owner question does). The Developer keeps its
-    history through fix rounds and clears itself on `[startup-team:developer]` + `CLOSE: <piece>`,
-    sent after the audit passes (or right after its report when no QA follows), only for the piece
-    it holds and while it holds no other; it does not reply.
-  - Main sessions (Tech Lead, Team Optimization), in order: update the summary and write their
-    checkpoint; send each Developer CLOSE still owed; when the registry has one, send the other main session
-    `[startup-team:<its name>]` + `RESET: task closed in <own name>`; tell the owner the result;
-    clear `self` as the turn's last call.
-  - On `RESET:` (never triaged), a main session that is idle (no piece out with any sub session, no
-    question or approval open) writes its checkpoint and clears itself, sending nothing back but the `WAKE` a `WAKE-ME:` line asks for;
-    mid-task it skips its own clear but still answers a `WAKE-ME:` line.
+  - No session clears itself when a piece or task closes, and nothing is sent at close to clear
+    another. A session is cleared just before another session sends it a new task (a brief, a
+    triage request, a re-test of a new piece). Agents and sub-agents keep no history: their record
+    file is their history, and they end when they return.
+  - Before sending a session a new task:
+    1. Check that it holds nothing pending: `get_session` shows it not running, and it has no piece
+       out, no FAIL awaiting a re-test, no Developer fix round open, and no owner question or
+       approval it holds.
+    2. Something pending: send the task without clearing. Nothing pending: run
+       `team.py conversations build` (so its chat lands in the history files first), clear it, then
+       send the task. A session this one started: clear it with the clear tool (Remote Control
+       below). Any other: send `[startup-team:<its name>]` + `RESET: before new task from <own name>`,
+       wait until its turn has ended (a background command of about a minute, then `get_session`
+       shows it not running; a message that arrives before its turn ends cancels its clear), then
+       send the task.
+  - On `RESET: before new task from <name>` (never triaged, never a piece): write your checkpoint
+    and clear `self` as the turn's last call, replying nothing. Holding something pending, skip the
+    clear and say so in one line.
+  - Limit: a message the owner types into a main session cannot be preceded by a clear, so a main
+    session is cleared only when the other main session sends it a task.
   - Remote Control. Applies only where the project's CLAUDE.md has the line `Remote Control clears:
     allowed` (the owner's standing yes); without it, Remote Control is a refused clear. The host
     refuses to clear a session while Remote Control is on, refuses to turn it on again until the
@@ -127,30 +130,22 @@ These add to the numbered steps above.
     cannot wake itself. Before a clear, read the target's state with `get_session`:
     `remoteControlState` `off`: clear as usual. `connecting` or `unavailable`, or
     `startedViaRemoteControl` true (its switch is locked): a refused clear. `on`:
-    - Clearing `self`: add the line `REMOTE CONTROL: on again` to your checkpoint. A main session
-      then asks a helper to wake it and tells the owner, in its closing line, that it is off Remote
-      Control for about a minute. Then turn Remote Control off for `self` and clear as the turn's
-      last call. The helper is the other main session (a third line `WAKE-ME: <own session id>` under
-      the `RESET:`), or, with no other main session, a sub session the registry names
-      (`[startup-team:<name>]` + `WAKE-ME: <own session id>`); with neither, a refused clear. A sub
-      session asks nobody: its next message wakes it.
+    - Clearing `self` (on `RESET:`): add the line `REMOTE CONTROL: on again` to your checkpoint,
+      turn Remote Control off for `self` and clear as the turn's last call. The task the sender
+      sends next wakes you.
     - On your first turn after a clear, when your checkpoint has `REMOTE CONTROL: on again`, turn
       Remote Control on for `self` before anything else and delete the line.
-    - On `WAKE-ME: <id>` (never triaged, never a piece): start a background command that waits about
-      a minute and end the turn; the host starts a new turn when it finishes. The wait matters: a
-      message that arrives before the sender's turn ends cancels its clear. Then send that session
-      `[startup-team:<its name>]` + `WAKE`, and only then do a clear of your own that is owed (a
-      `RESET:`), adding a third line `WAKE-ME: <own session id>` to that `WAKE` message when your
-      own Remote Control is on. `WAKE` (never triaged, never a piece) needs only the first-turn step
-      above and no reply.
-    - Clearing another session happens only when the owner asks for it, and only for a session you
-      started: turn its Remote Control off, clear it, send it `[startup-team:<its name>]` + `WAKE`,
-      and turn Remote Control on again yourself once that turn has ended.
+    - Clearing a session you started: turn its Remote Control off, clear it, send it the task (or,
+      for a clear the owner asked for with no task, `[startup-team:<its name>]` + `WAKE`), and turn
+      its Remote Control on again once that turn has ended. `WAKE` (never triaged, never a piece)
+      needs only the first-turn step above and no reply.
     - A Remote Control or clear call that is refused because a hook changed its input is repeated
       once with exactly the input the refusal quotes.
   - A refused clear (pinned, queued work, owner declined, a locked or unavailable Remote Control
-    switch, no helper, or Remote Control without the CLAUDE.md line): a sub session says so in its reply and the main session tells the owner once, in one line,
-    which session and why; never change those settings. Without a clear tool, skip it.
+    switch, or Remote Control without the CLAUDE.md line): the target says so in its reply (or the
+    sender sees it in the tool result), the task is sent anyway, and the main session tells the
+    owner once, in one line, which session and why; never change those settings. Without a clear
+    tool, skip it.
 
 ## Checkpoints
 Long histories are re-read on every turn, so sessions stay short and the detail stays in files.
