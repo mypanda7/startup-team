@@ -170,7 +170,7 @@ session or as a sub-agent until your next typed turn. Pass any of `business-anal
 
 ```
 AI Tech Lead (you work here)   triages, plans, audits
-    ├── Business Analyst asks the owner one question at a time
+    ├── Business Analyst analyses requirements, asks its own questions
     ├── Designer         proposes, briefs and reviews UI
     ├── Developer        builds one piece at a time, one local commit each
     ├── QA Engineer      runs the product, PASS or FAIL
@@ -184,8 +184,9 @@ You carry on in the AI Tech Lead: on your turns it is the main session, so it tr
 audits there and messages each sub session directly. An existing Tech Lead session is reused, never
 duplicated. `start-team` records every role's session id and title in `.handoff/team-sessions.json`,
 and every "find a session" rule reads it first, so a renamed session is still found. The owner can
-type to any of them directly. While the Business Analyst has an open question, every other session
-only says "Business Analyst has an open question", in one line. A project whose CLAUDE.md says
+type to any of them directly. Every session asks the owner its own questions in its own session, one
+at a time; while one has an open question, every other session only says "<that session> has an
+open question", in one line. A project whose CLAUDE.md says
 `Setup changes: automatic, straight to main` sends each generic setup change to the team repo's
 `main` after QA and audit, with no per-change 1 (see `team-workflow`, "Setup changes").
 
@@ -193,7 +194,7 @@ only says "Business Analyst has an open question", in one line. A project whose 
 |---|---|---|
 | AI Tech Lead (main session) | Triages, plans backend pieces by the `architect` method and audits each turn by the `auditor` method; starts and leads the sub sessions. Never builds, edits source, commits or pushes. | Each request (a decision block), each plan and each audit. |
 | AI Team Optimization (main session for team work) | Only where the project's CLAUDE.md names `TEAM REPO CLONE:`; started beside the AI Tech Lead, never under it. Triages, plans and audits its own changes to the team (setup, sessions, agents, hooks, skills, token use, gateway, code graph), messages the sub sessions directly with no relay through the Tech Lead, and sends the Tech Lead a `HEADS-UP:` line before it uses the Developer or QA. Never does product work. | Every change to the team: built in the clone, tested, audited, pushed, installed. |
-| Business Analyst | Relays questions to the owner one at a time and sends each answer back verbatim. Never answers or decides. | Question batches. |
+| Business Analyst | Analyses requirements, acceptance points and business rules; asks the owner its own questions one at a time and sends each answer back verbatim. Never answers or decides, never asks for another session. | Requirements analysis. |
 | Designer | Proposes, briefs and reviews UI by the `designer` agent's method. Never builds. | Every design step. |
 | Developer | Builds one piece at a time from a brief by the `executor` agent's method, with one local commit each. Never pushes or deploys. | Every build piece. |
 | QA Engineer | Runs the product and reports PASS or FAIL with steps to reproduce. Never fixes. | Testing, once the pieces are built. |
@@ -211,10 +212,10 @@ Developer session writes source.
 ### Role sessions
 
 The main session briefs each role session, waits for it, and reads the file it leaves in the turn
-folder. Follow-ups for the same piece go back to the session that already has the context. Role
-sessions never ask the owner anything themselves: their questions go to the Business Analyst
-sub session when there is one, and otherwise the main session asks them, one at a time. Approvals come
-to the owner in the main session.
+folder. Follow-ups for the same piece go back to the session that already has the context. Each
+role session asks the owner its own questions in its own session, one at a time, never as a batch
+and never through another session. Approvals for the main session's steps come to the owner in the
+main session.
 
 Role sessions share the project's checkout, so only one session that writes source runs at a time;
 the read-only ones may run side by side.

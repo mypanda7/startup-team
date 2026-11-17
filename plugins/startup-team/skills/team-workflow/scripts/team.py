@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """startup-team tool: turn folders, shared agent memory, the learning loop and the plugin loadout.
 
-All data lives in the project's git-ignored .handoff/ folder:
+All data lives in the project's .handoff/ folder (git-ignored unless the project tracks it):
   .handoff/<stamp>-<slug>/            one folder per task (decision, answers, results, audit)
   .handoff/memory/agent-memory.jsonl  append-only shared memory
   .handoff/learned-proposals.jsonl    rules proposed for the shared team repository
@@ -18,7 +18,7 @@ Usage:
   team.py learn decide <id> 1|0
   team.py learn apply <id> --repo <clone of the team repository>
   team.py loadout inventory [--json] | plan --needs a,b | on|off <plugin> [--approved] [--by W] | selftest
-  team.py records index | find <words...> [--kind K] [--last N] | selftest
+  team.py records index | find <words...> [--kind K] [--last N] | check-commit | selftest
   team.py conversations build | selftest
 """
 import argparse
@@ -54,12 +54,21 @@ def root() -> Path:
     return Path.cwd()
 
 
-def handoff() -> Path:
-    r = root()
+def handoff_tracked(r: Path) -> bool:
+    """True when the project tracks .handoff/ in git (then records must not be hidden)."""
+    try:
+        out = subprocess.run(["git", "-C", str(r), "ls-files", "--", ".handoff"], capture_output=True, text=True)
+    except OSError:
+        return False
+    return out.returncode == 0 and bool(out.stdout.strip())
+
+
+def handoff(r: Path = None) -> Path:
+    r = r or root()
     h = r / ".handoff"
     h.mkdir(exist_ok=True)
     exclude = r / ".git" / "info" / "exclude"
-    if exclude.parent.is_dir():
+    if exclude.parent.is_dir() and not handoff_tracked(r):
         text = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
         if ".handoff/" not in text.split():
             with exclude.open("a", encoding="utf-8") as f:
@@ -651,7 +660,69 @@ def rec_selftest(_a) -> None:
         f.write_text("PIECE: gear fix\n", encoding="utf-8")
         _os.utime(f, (f.stat().st_atime, f.stat().st_mtime + 5))
         assert {r["path"]: r for r in records_index(h)}["20260102-0900-beta/result-P1.md"]["title"] == "PIECE: gear fix"
+    rec_git_selftest()
     print("records selftest ok")
+
+
+BLOCKED_STAGED = re.compile(r"(^|/)(gateway/maps/|\.private(/|$)|\.env(\.|$)|settings\.local\.json$)")
+
+
+def commit_problems(r: Path) -> list:
+    """Problems in the staged change of a records commit: names outside .handoff/, blocked names, secret shapes."""
+    git = ["git", "-C", str(r)]
+    names = subprocess.run(git + ["diff", "--cached", "--name-only"], capture_output=True, text=True).stdout.splitlines()
+    out = []
+    for n in filter(None, names):
+        if not n.startswith(".handoff/"):
+            out.append(f"outside .handoff/: {n}")
+        elif BLOCKED_STAGED.search(n):
+            out.append(f"blocked name: {n}")
+    diff = subprocess.run(git + ["diff", "--cached", "-U0"], capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
+    fname = ""
+    for line in diff.splitlines():
+        if line.startswith("+++ "):
+            fname = line[6:] if line.startswith("+++ b/") else line[4:]
+        elif line.startswith("+") and SECRET.search(line):
+            out.append(f"secret shape in {fname}")  # the value itself is never printed
+    return sorted(set(out))
+
+
+def rec_check_commit(_a) -> None:
+    probs = commit_problems(root())
+    for x in probs:
+        print(x)
+    if probs:
+        print("STOP: do not commit; tell the owner")
+        sys.exit(5)
+    print("staged records ok")
+
+
+def rec_git_selftest() -> None:
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        r = Path(tmp)
+        git = ["git", "-C", tmp, "-c", "user.name=t", "-c", "user.email=t@t"]
+        subprocess.run(git + ["init", "-q"], check=True)
+        handoff(r)
+        ex = r / ".git" / "info" / "exclude"
+        assert ".handoff/" in ex.read_text(encoding="utf-8").split(), "untracked project: exclude added"
+        ex.write_text("", encoding="utf-8")
+        (r / ".handoff" / "a.md").write_text("note\n", encoding="utf-8")
+        subprocess.run(git + ["add", ".handoff/a.md"], check=True)
+        subprocess.run(git + ["commit", "-qm", "x"], check=True)
+        handoff(r)
+        assert ".handoff/" not in ex.read_text(encoding="utf-8").split(), "tracked project: exclude skipped"
+        assert commit_problems(r) == []
+        (r / ".handoff" / "gateway" / "maps").mkdir(parents=True)
+        (r / ".handoff" / "gateway" / "maps" / "m.json").write_text("{}\n", encoding="utf-8")
+        (r / "out.txt").write_text("x\n", encoding="utf-8")
+        (r / ".handoff" / "b.md").write_text("api_key = zqvalsecret123\n", encoding="utf-8")
+        subprocess.run(git + ["add", "-f", ".handoff", "out.txt"], check=True)
+        probs = commit_problems(r)
+        assert "blocked name: .handoff/gateway/maps/m.json" in probs, probs
+        assert "outside .handoff/: out.txt" in probs, probs
+        assert "secret shape in .handoff/b.md" in probs, probs
+        assert not any("zqvalsecret" in x for x in probs)
 
 
 # ---- conversations: per-session, per-day chat files plus a hand-kept SUMMARY.md ----
@@ -888,6 +959,7 @@ def main() -> None:
     rf.add_argument("--kind", choices=RECORD_KINDS + ("checkpoint", "other"))
     rf.add_argument("--last", type=int, help="only the N newest turn folders")
     rf.set_defaults(fn=rec_find)
+    rc.add_parser("check-commit").set_defaults(fn=rec_check_commit)
     rc.add_parser("selftest").set_defaults(fn=rec_selftest)
 
     cv = sub.add_parser("conversations").add_subparsers(dest="cmd", required=True)

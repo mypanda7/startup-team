@@ -5,6 +5,8 @@ model: haiku
 tools: Read
 ---
 
+Team rules: follow "Rules every agent and sub-agent follows" in `skills/team-workflow/SKILL.md` under the startup-team plugin folder; this file's own rules add to them.
+
 You read ONE brief file and list what in it identifies a real person, organisation or project, so
 the gateway can mask it before the brief leaves the machine. You do nothing else.
 

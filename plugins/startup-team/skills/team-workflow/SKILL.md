@@ -33,10 +33,14 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    Then run `activator` START (a sub-agent, see "Loadout") with the decision block, and start
    only the missing sub sessions the pieces need ("Standing sessions", on demand).
 3. **Questions.** Run the answered-check (below), then put each open question to the owner ONE AT A
-   TIME, with numbered options and the recommended one first. If there is a Business Analyst session
-   for this project (see "Standing sessions"), send it the whole batch in one message (each question with an id, its options
-   with the recommended one first, a one-line context and any dependency) and let it ask one by one;
-   each answer is relayed back. Otherwise, or on `NO SESSION`, ask the owner yourself, one at a time. Record each answer
+   TIME, in this session (the question dialog where the session has one, else typed with numbered
+   options, or `1 = yes, 0 = no` for a proposal), the recommended option first, and wait for each
+   answer before the next. Never a batch and never through another session: every session and sub
+   session asks the owner its own questions in its own session the same way, and an agent or
+   sub-agent returns its questions to the session that ran it, which asks them. A main session never asks the owner a sub session's question: one that reaches it in a sub
+   session's report or message (an UNCLEAR, an open question) goes back to that sub session with one
+   line, "ask the owner this in your session", and the sub session asks it, one at a time.
+   Record each answer
    at once: `team.py memory add --kind owner-answer --source main --turn <turn> --evidence <id>
    --text "<id> <question> -> <answer verbatim>"`, and append it to `answers.md`.
 4. **Design.** Any UI change (in the Designer sub session when the project has one, see Sessions): `designer` PROPOSE, its questions to the owner, the proposal, the
@@ -49,7 +53,8 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    project's breakpoints, check the console, and save `browser-pass.md` in the turn folder.
 8. **QA.** `qa` (the QA Engineer sub session when the project has one), once the pieces of the turn are built (or per piece when the decision block says
    so), with the request, the answers, the design brief or plan and the results. It writes
-   `qa-<piece>.md`. BUGS go back to the tech lead as fix tasks; an UNCLEAR goes to the owner.
+   `qa-<piece>.md`. BUGS go back to the tech lead as fix tasks; an UNCLEAR is asked of the owner by the QA session
+   itself (or by the session that ran the `qa` agent).
 9. **Deviation sweep.** Every DEVIATION that touches an owner answer goes to the owner before the audit.
 10. **Audit.** `auditor` (the Tech Lead session when the project has one, see Sessions), with the request, the decision block, the answers, the results and the QA records. FAIL
    items go back to the tech lead. W items go to the owner as one list of 1/0 proposals.
@@ -58,7 +63,8 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
     proposals (learning loop, step 1), and when nothing is running and
     nothing approved is left unbuilt, tell the owner once, in one line. Run `team.py conversations
     build`, add one row to the summary's table and update its "Where things stand" ("Conversation
-    summary"). Then run `activator`
+    summary"). Where the project tracks `.handoff/` in git, make the records commit ("Step 12,
+    records commit"). Then run `activator`
     CLOSE. Replies to the owner stay short: the result first, no
     repeated background.
 
@@ -98,6 +104,16 @@ These add to the numbered steps above.
   step ids it covers. A devops run that changed something is followed by the `auditor`.
 - **Step 12, close.** Apply the tech lead's MEMORY lines: `team.py memory done <id>` for DONE,
   `memory add` for KEEP, and for STALE a new entry whose text names the id it replaces.
+- **Step 12, records commit.** Only where the project tracks `.handoff/` in git (`git ls-files --
+  .handoff` lists files), and only by the main session, after the checkpoint, the summary and
+  `team.py conversations build`: stage `.handoff/` alone (`git add -- .handoff`, never `-f`: the
+  gateway maps stay git-ignored), run `team.py records check-commit`, and on `staged records ok`
+  make ONE local commit `Team records: <task>`. The check stops on a staged name outside
+  `.handoff/`, a gateway map, `.private`, `.env` or local settings file, or a secret shape in the
+  staged diff: then commit nothing, unstage (`git restore --staged -- .handoff`) and tell the owner.
+  Nothing outside `.handoff/` is ever in this commit; push only on the owner's command. It is the
+  one commit a main session makes itself. Where `.handoff/` is not tracked, `team.py` keeps it in
+  `.git/info/exclude` and there is no records commit.
 - **Step 12, clears.** The host re-sends a session's whole history with every message, so every
   history stays near empty and context comes from the summary, checkpoints and records. The clear
   tool takes `self` and acts when the turn ends, so say and write everything first. The host may ask
@@ -254,7 +270,7 @@ finish the setup; it starts no sub session then. Each sub session (Business Anal
 Developer, QA Engineer, DevOps and Security, from the briefs in `sessions/`) starts under it the
 first time a task needs it. It writes `.handoff/team-sessions.json`, each role's
 session id and title, and every rule below that finds a session reads that registry first, so a
-renamed session is still found. When the Business Analyst has an open question for the owner, only say "Business Analyst has an open question", in one line; never repeat the question or its options. Only a turn the owner started may call `start_session` (the app refuses it on
+renamed session is still found. When another session has an open question for the owner, only say "<that session> has an open question", in one line; never repeat the question or its options. Only a turn the owner started may call `start_session` (the app refuses it on
 a turn another session's message started), so the AI Tech Lead is started by the session where the
 owner answered the setup offer, and the sub sessions by the AI Tech Lead on a turn the owner typed
 there, always with `use_worktree: false`, in the project's folder.
@@ -271,7 +287,7 @@ the `start-team` rules (found first by registry, then by title; never a second o
 `use_worktree: false`; the project's folder; registry updated), then sends the work. The AI Tech
 Lead does this with `/startup-team:start-team <names>`. When a role is first needed on a turn
 another session's message started, that run goes to a role session where one can be started, else
-a sub-agent (Business Analyst: the main session asks the owner itself, one at a time), and the
+a sub-agent (Business Analyst: the main session does that analysis itself), and the
 standing session is started on the owner's next typed turn only if the task still needs it. Never
 start a session just in case. A sub session that already exists is used, never duplicated. They work only in the desktop app, where a
 session can start another with `start_session`, list sessions with `list_sessions` and talk to any
@@ -307,9 +323,10 @@ each one yourself. Find a sub session by the same rule as the Tech Lead session,
   second line `AUDIT` and send what the auditor would get; it writes `audit.md`. Its verdict starts
   with a `SAME HANDS` line; a PROPOSAL in it for an independent audit runs the `auditor` agent in a
   role session only on the owner's 1.
-- **Business Analyst** (`business-analyst`): a question batch. Answers come back one at a time,
-  verbatim, as `<id> = <answer>`. `WITHDRAW` and `REPLACES` go the same way. It is only ever a sub
-  session: there is no Business Analyst agent or role session.
+- **Business Analyst** (`business-analyst`): a request to analyse (requirements, acceptance points,
+  business rules). It asks the owner its own questions in its own session, one at a time, and replies
+  with its findings and each answer verbatim as `<id> = <answer>`. It never asks another session's
+  questions. It is only ever a sub session: there is no Business Analyst agent or role session.
 - **Designer** (`designer`): a design step with its mode (PROPOSE, BRIEF or REVIEW). The reply
   names its record files.
 - **Developer** (`developer`): step 6, one HERE piece at a time, with the executor's brief. It
@@ -330,7 +347,7 @@ followed by exactly what you would have sent. The Tech Lead session passes the m
 Say in `sessions.md` that the relay was used and why. A reply of `NO SESSION: <name>` means the sub
 session does not exist (or more than one matches): tell the owner that `/startup-team:start-team`
 starts it, and meanwhile run that role in a role session (below), or as a
-sub-agent in the fallback; for `business-analyst`, ask the owner yourself, one at a time.
+sub-agent in the fallback; for `business-analyst`, do the analysis here.
 Without a Tech Lead session there is no relay: a sub session you can find is still used directly,
 and any other role runs in a role session (below).
 
@@ -376,10 +393,10 @@ follow-up for the same role and piece (an answer to its question, a fix round) g
 that already has the context, not to a new one. Add one line per session to `sessions.md` in the
 turn folder: role, piece, session id, outcome.
 
-**The owner stays in the main session.** Role sessions never put questions to the owner
-themselves. Their questions go out as in step 3: the batch to the Business Analyst sub session when
-there is one for the project, otherwise asked here, one at a time. The 1/0 proposals and every
-approval are put to the owner here, as before. If the owner steers a role session directly, read
+**Each session asks its own questions.** A role session asks the owner its own questions in its
+own session, as in step 3: one at a time, waiting for each answer, never a batch and never through
+another session; it puts each answer verbatim in its reply, and the main session records it. The
+1/0 proposals and every approval for the main session's steps are put to the owner here, as before. If the owner steers a role session directly, read
 its output file again before the next step.
 
 ## Answered-check (before any question goes out)
@@ -387,6 +404,22 @@ For each question, search `.handoff/*/answers.md`, `team.py memory query <topic>
 memory notes, CLAUDE.md and this conversation. Already answered: drop the question and apply the
 answer. Write `ANSWERED-CHECK: <what was searched> -> <result>` above the questions you do send.
 Never ask the owner to confirm something they already said. Never send the same question twice.
+
+## Rules every agent and sub-agent follows
+Every agent in `agents/` and every sub-agent it runs keeps these, beside its own file's rules:
+- Delegation loop (in a project whose CLAUDE.md has a gateway section): `pick --job` -> `launch
+  --job` -> your check -> `review pass|fail`. The anonymizer and the activator never delegate;
+  the messenger follows the gateway section in its own file.
+- A question for the owner goes back to the session that ran you; that session asks it in its own
+  session, one at a time. Never through another session, never a batch. Your questions are yours
+  to ask: never hand them to another session to ask. A main session never asks the owner a sub session's question: one that reaches it in a sub
+  session's report or message (an UNCLEAR, an open question) goes back to that sub session with one
+  line, "ask the owner this in your session", and the sub session asks it, one at a time.
+- Context comes from the paths in your brief and the conversation summary, never pasted history.
+- Scope is the request: nothing beyond it.
+- Never a secret, key or the contents of the private-words file in any output.
+- Nothing about the project goes into the team repo. No push, deploy or install.
+- A session passes the `RULE:` notices it has received into the brief of every agent it runs.
 
 ## Sub-agent requests
 When an agent returns a `SUBAGENT REQUESTS` or `SPECIALIST REQUESTS` block, run each request with
@@ -501,8 +534,8 @@ OpenAI-compatible endpoint works by editing that section; `gateway.py` itself na
 
 ### Delegation first (only in a project whose CLAUDE.md has a gateway section)
 When the project's CLAUDE.md names the gateway's base URL, key variable and commands, this rule
-applies to every session, agent and sub-agent of the team (the Business Analyst relays the owner's
-answers only and sends nothing). Without that section nothing here changes.
+applies to every session, agent and sub-agent of the team (questions to the owner and their
+answers are never sent). Without that section nothing here changes.
 - Your main task, in every main and sub session: DELEGATE and REVIEW. Hand each text-producing
   part of your work to the outside models: drafts of code, copy, plans, test lists, reviews,
   summaries, briefs. Then CHECK each answer against the request and the project's rules, fix or
@@ -555,6 +588,11 @@ the learning loop above, with the owner's 1/0 for each rule.
 Flow, per change:
 1. **Record.** The Tech Lead (or AI Team Optimization, with `--source optimization`) records it: `team.py memory add --kind setup-change --source tech-lead
    --evidence <turn> --text "<owner's words> -> <the generic rule>"`.
+   Then the session that recorded it sends every standing session in `.handoff/team-sessions.json`
+   (except itself) a short notice with `SendMessage`: first line `[startup-team:<name>]`, second
+   line `RULE: <the rule in one line>`, so running sessions follow it before the plugin update
+   reaches them. A `RULE:` notice is never triaged, never a piece and not a new task (no pre-task
+   clear); the receiver follows the rule from then on and replies nothing.
 2. **Build.** The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words
    only, as ONE commit on `main` that also raises the plugin's patch version.
 3. **QA, then audit.** The audit includes the privacy check: `git show <commit>` (diff and message)
