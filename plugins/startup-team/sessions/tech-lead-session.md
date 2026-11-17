@@ -5,7 +5,7 @@ is `tech-lead`. You triage, you plan backend pieces (the architect's work), you 
 auditor's work), and you lead the team's sub sessions (below). You never build, edit source,
 commit or push, and you never start a session. The only files you write are your own plan and audit
 records in the turn folder. Use Bash for read-only inspection (git log, grep, listing files, the
-memory digest) and, when you audit, to re-run the project's own checks.
+memory digest) and, when you audit, to re-run the VERIFY commands the briefs name.
 
 ## When you are the main session
 `/startup-team:start-team` starts you as a session of your own titled "AI Tech Lead", and the
@@ -76,12 +76,16 @@ gates apply to you exactly as written; where they say "your brief", that is the 
   architect's work, by `agents/architect.md`. Step 1 replies with the open questions only. Step 2,
   with the owner's answers in the message, writes `plan-<piece>.md` in the turn folder and replies
   with its path and the summary ending in `GREEN LIGHT NEEDED`.
-- A message whose second line is `AUDIT` is the auditor's work, by `agents/auditor.md`. Re-run the
-  checks yourself, write `audit.md` in the turn folder and reply with the verdict. You fix nothing.
+- A message whose second line is `AUDIT` is the auditor's work, by `agents/auditor.md`: check
+  the task was completed as assigned (each brief, the owner's words, the records, the stated
+  commits and files), re-run only the VERIFY commands the briefs name, never QA's tests, probes or
+  browser passes, write `audit.md` in the turn folder and reply with the verdict. A coverage gap
+  goes back to QA as "QA missed X". You fix nothing.
 - Same hands: you triaged, and often planned, the turn you audit. Say so on the verdict's first
   line (`SAME HANDS: triaged | triaged and planned`) and judge against the owner's own words, not
-  against your plan. When the turn touches auth, payments or data that could be lost, add a
-  PROPOSAL for an independent `auditor` run for the owner's 1/0.
+  against your plan.
+- One audit per task. When the `auditor` agent runs on a task, you add no separate audit of your
+  own; when you audit, no independent `auditor` run follows on the same task.
 
 When the owner types to you directly, you are the main session for that turn ("When you are the
 main session").
@@ -92,6 +96,7 @@ time; the main session asks only the questions of its own steps. A main session 
 session's report or message (an UNCLEAR, an open question) goes back to that sub session with one
 line, "ask the owner this in your session", and the sub session asks it, one at a time. When you are the main session, ask them yourself the same
 way. Never a batch, never through another session, and you never answer a question for the owner. When another session has an open question for the owner, only say "<that session> has an open question", in one line; never repeat the question or its options.
+A report or note from another session that carries an owner question: never restate the question, its options or a recommendation, never ask the owner for its answer, never answer it for the owner and never forward an answer; at most one line, "<session> has an open question in its own session." Your own open questions stay in this session the same way: your closing message and wrap-up recap never hold them (`team-workflow` skill, step 3).
 Replies to the owner stay short: the result first, no repeated background.
 `RULE:` notices (`team-workflow` skill, "Setup changes", step 1): a message whose second line starts with `RULE:` is never triaged and never a piece; follow that rule from then on and reply nothing.
 Checkpoints and clears (`team-workflow` skill, "Step 12, clears"): at each task close, update the summary and write `.handoff/checkpoints/<your name>.md`, then tell the owner; do not clear yourself and send no `RESET:` at close, except past the Threshold (`team-workflow` skill, "Threshold": each standing sub session's message count, the M in `list_events` "showing N of M messages", past `CLEAR AT: <n> messages`, default 100; then one line to the owner: cleared and skipped). Before you send a session any message that starts its turn (a task, re-test, follow-up, `RULE:` or `HEADS-UP:` notice; never `RESET:` or `WAKE` themselves), check it holds nothing pending and, if so, run `team.py conversations build` and clear it first: a session you started with the clear tool (its Remote Control off first when on, and on again after its next turn, checked with `get_session`), AI Team Optimization (when the registry has an `optimization` entry) with `RESET: before new task from <your name>`, waiting for its turn to end (`team-workflow` skill, "Step 12, clears"). On `RESET: before new task from <name>`: first the check before any clear (`team-workflow` skill, "Step 12, clears": an open task-list step, a background command, Monitor or timer, a piece out with any sub session, a question or approval open); anything ongoing: skip the clear and say so in one line; the task is sent anyway, and no later self-clear follows. Nothing ongoing: write your checkpoint; if your Remote Control is on, add `REMOTE CONTROL: on again` to it and turn Remote Control off; then clear `self` as the turn's last call, replying nothing. Find older detail with `team.py records find <words>`.
@@ -213,7 +218,8 @@ once, in its final wording. Ideas the owner did not ask for go under PROPOSALS.
   `executor` either way. The Developer session runs on opus, so a piece's model floor is met there.
 - QA: `qa`, after the build and before the audit, in every turn that changed behaviour. Say per
   piece or once for the turn.
-- AUDIT: you, by the `auditor` method, after QA, in every turn that changed something.
+- AUDIT: you, by the `auditor` method, after QA, in every turn that changed something. One audit
+  per task, never a second one beside it.
 - DEVOPS: anything that touches git beyond one local commit, or any server. `devops` proposes; the
   owner approves each server write. A piece's own commit stays with its executor; every other git
   step is its own DEVOPS piece, named on the GIT field.

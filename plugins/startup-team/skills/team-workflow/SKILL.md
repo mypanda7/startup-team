@@ -40,6 +40,16 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    sub-agent returns its questions to the session that ran it, which asks them. A main session never asks the owner a sub session's question: one that reaches it in a sub
    session's report or message (an UNCLEAR, an open question) goes back to that sub session with one
    line, "ask the owner this in your session", and the sub session asks it, one at a time.
+   No question travels out of the session that owns it. A session with an open owner question asks
+   it in its own session with the question dialog (AskUserQuestion) where it has one, one at a
+   time; its closing message and its wrap-up recap (what the app passes to the session that started
+   it) never hold the question, its options or its recommendation, only "<role> has an open question
+   for the owner in this session.", and the same holds for anything it sends a parent or another
+   session. A main session (Tech Lead, optimization) that receives a report or note carrying a
+   question never restates it, its options or a recommendation, never asks the owner for the
+   answer, never answers it for the owner and never forwards an answer: at most one line, "<session>
+   has an open question in its own session." An agent's question blocks (OPEN QUESTIONS, QUESTIONS,
+   UNCLEAR) are only for the session that ran it, which asks them itself the same way.
    Record each answer
    at once: `team.py memory add --kind owner-answer --source main --turn <turn> --evidence <id>
    --text "<id> <question> -> <answer verbatim>"`, and append it to `answers.md`.
@@ -55,11 +65,21 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    project's breakpoints, check the console, and save `browser-pass.md` in the turn folder.
 8. **QA.** `qa` (the QA Engineer sub session when the project has one), once the pieces of the turn are built (or per piece when the decision block says
    so), with the request, the answers, the design brief or plan and the results. It writes
-   `qa-<piece>.md`. BUGS go back to the tech lead as fix tasks; an UNCLEAR is asked of the owner by the QA session
+   `qa-<piece>.md`. QA makes sure nothing is missed: every acceptance point, edge case, and for auth / data / redirect /
+   upload pieces the abuse cases (security probes), plus the checks the brief names; its record says what it covered
+   and what it could not. BUGS go back to the tech lead as fix tasks; an UNCLEAR is asked of the owner by the QA session
    itself (or by the session that ran the `qa` agent).
 9. **Deviation sweep.** Every DEVIATION that touches an owner answer goes to the owner before the audit.
-10. **Audit.** `auditor` (the Tech Lead session when the project has one, see Sessions), with the request, the decision block, the answers, the results and the QA records. FAIL
-   items go back to the tech lead. W items go to the owner as one list of 1/0 proposals.
+10. **Audit.** `auditor` (the Tech Lead session when the project has one, see Sessions), with the request, the decision block, the answers, the briefs, the results and the QA records. FAIL
+   items go back to the tech lead. W items go to the owner as one list of 1/0 proposals. One audit per task: the
+   auditor checks the task was completed as assigned (each brief's DONE WHEN, VERIFY WITH and DO NOT, the owner's
+   words, the records, and that the stated commits and files exist). It re-runs only the VERIFY commands the briefs
+   name, never QA's tests, probes or browser passes; a coverage gap goes back to QA as "QA missed X". No separate
+   same-hands audit beside it and no second independent auditor run on the same task. Where the project has a
+   gateway, the requirement check (does the output match what the brief assigned) goes to it first (`pick --job
+   audit`, then `launch` with a masked brief: the assignment and the output summary); the auditor reviews the answer
+   against the files, records `review <id> pass|fail` and writes the verdict itself. The verdict, the VERIFY re-runs,
+   file reading and anything secret stay local; with no reachable gateway the auditor checks it itself and says so.
 11. **Ship.** `devops` (the DevOps sub session when the project has one) PROPOSE for any push, merge, deploy or server change. The owner approves each.
 12. **Close.** Record outcomes (below), mark open items done, collect the tech lead's LEARN
     proposals (learning loop, step 1), and when nothing is running and
@@ -94,7 +114,12 @@ These add to the numbered steps above.
   `feature-tests` skill. To prove a branch before its pull request, use `dev-feature-test`.
   A video piece goes to the `video` agent.
 - **Step 8, QA.** QA follows the `testing-rules` skill; for QA of changes already merged, `e2e-qa`;
-  for throwaway accounts on a test environment, `test-accounts`.
+  for throwaway accounts on a test environment, `test-accounts`. Step 8 is piece QA: what the
+  task's pieces touch. Full QA (the whole product, a regression run, a security sweep) is never
+  folded into it: it is a separate task, triaged on its own, that starts with a written
+  `test-plan.md` in its turn folder (scope, areas, cases, environments, what cannot be tested)
+  before any test runs, reusing `e2e-qa`, `testing-rules` and `app-audit` where they fit. Its
+  audit checks the run against that plan.
 - **Step 10, audit.** Also pass `board.md` when anything was delegated (say "nothing delegated"
   otherwise), `browser-pass.md` when a screen changed, and after a devops run its
   `devops-<what>.md` and `devops-log.md`. On `PRE-AUDIT CHECK FAILED`, fix the records it names
@@ -326,8 +351,7 @@ each one yourself. Find a sub session by the same rule as the Tech Lead session,
   architect's work, make the second line `PLAN: <piece> step 1` (or `step 2`, with the answers) and
   send what the architect would get; it writes `plan-<piece>.md`. For the auditor's work, make the
   second line `AUDIT` and send what the auditor would get; it writes `audit.md`. Its verdict starts
-  with a `SAME HANDS` line; a PROPOSAL in it for an independent audit runs the `auditor` agent in a
-  role session only on the owner's 1.
+  with a `SAME HANDS` line. That is the task's one audit: no independent `auditor` run follows it.
 - **Business Analyst** (`business-analyst`): a request to analyse (requirements, acceptance points,
   business rules). It asks the owner its own questions in its own session, one at a time, and replies
   with its findings and each answer verbatim as `<id> = <answer>`. It never asks another session's
@@ -420,6 +444,10 @@ Every agent in `agents/` and every sub-agent it runs keeps these, beside its own
   to ask: never hand them to another session to ask. A main session never asks the owner a sub session's question: one that reaches it in a sub
   session's report or message (an UNCLEAR, an open question) goes back to that sub session with one
   line, "ask the owner this in your session", and the sub session asks it, one at a time.
+- Your question blocks (OPEN QUESTIONS, QUESTIONS, UNCLEAR) go only to the session that ran you,
+  which asks them itself in its own session (question dialog, one at a time). No question, option
+  or recommendation goes into a session's closing message, wrap-up recap or anything passed to a
+  parent or another session, and a main session never restates one (step 3).
 - Context comes from the paths in your brief and the conversation summary, never pasted history.
 - Scope is the request: nothing beyond it.
 - Never a secret, key or the contents of the private-words file in any output.
