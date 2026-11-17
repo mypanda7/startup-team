@@ -114,34 +114,38 @@ These add to the numbered steps above.
     `[startup-team:<its name>]` + `RESET: task closed in <own name>`; tell the owner the result;
     clear `self` as the turn's last call.
   - On `RESET:` (never triaged), a main session that is idle (no piece out with any sub session, no
-    question or approval open) writes its checkpoint and clears itself, sending nothing back;
+    question or approval open) writes its checkpoint and clears itself, sending nothing back but the `WAKE` a `WAKE-ME:` line asks for;
     mid-task it ignores the line.
-  - Remote Control. The host refuses to clear a session while Remote Control is on, refuses to turn
-    it on again until the cleared session has run a turn, and a clear cancels the timers that session
-    set, so a session cannot wake itself. So before any clear, read the target's Remote Control state
-    (`get_session`); when it is on:
-    - Clearing a session you started: turn its Remote Control off, clear it, send it
-      `[startup-team:<its name>]` + `WAKE` (or its next piece, when one is due), and turn Remote
-      Control on again yourself once that turn has ended.
+  - Remote Control. Applies only where the project's CLAUDE.md has the line `Remote Control clears:
+    allowed` (the owner's standing yes); without it, Remote Control is a refused clear. The host
+    refuses to clear a session while Remote Control is on, refuses to turn it on again until the
+    cleared session has run a turn, and a clear cancels the timers that session set, so a session
+    cannot wake itself. Before a clear, read the target's state with `get_session`:
+    `remoteControlState` `off`: clear as usual. `connecting` or `unavailable`, or
+    `startedViaRemoteControl` true (its switch is locked): a refused clear. `on`:
     - Clearing `self`: add the line `REMOTE CONTROL: on again` to your checkpoint, turn Remote
       Control off for `self`, then clear as the turn's last call. A main session first asks a helper
-      to wake it: a third line `WAKE-ME: <own session id>` under the `RESET:` it sends the other main
-      session, or, with no other main session, `[startup-team:<name>]` + `WAKE-ME: <own session id>`
-      to an idle sub session. A sub session asks nobody: its next message wakes it.
+      to wake it and tells the owner, in its closing line, that it is off Remote Control for about a
+      minute. The helper is the other main session (a third line `WAKE-ME: <own session id>` under
+      the `RESET:`), or, with no other main session, a sub session the registry names
+      (`[startup-team:<name>]` + `WAKE-ME: <own session id>`); with neither, a refused clear. A sub
+      session asks nobody: its next message wakes it.
     - On your first turn after a clear, when your checkpoint has `REMOTE CONTROL: on again`, turn
       Remote Control on for `self` before anything else and delete the line.
-    - On `WAKE-ME: <id>` (never triaged): wait about a minute with a background command, because a
-      message that arrives before the sender's turn ends cancels its clear, then send that session
+    - On `WAKE-ME: <id>` (never triaged, never a piece): start a background command that waits about
+      a minute and end the turn; the host starts a new turn when it finishes. The wait matters: a
+      message that arrives before the sender's turn ends cancels its clear. Then send that session
       `[startup-team:<its name>]` + `WAKE`, and only then do a clear of your own that is owed (a
-      `RESET:`), adding `WAKE-ME: <own session id>` to that `WAKE` message when your own Remote
-      Control is on. `WAKE` alone (never triaged) needs only the first-turn step above and no reply.
+      `RESET:`), adding a third line `WAKE-ME: <own session id>` to that `WAKE` message when your
+      own Remote Control is on. `WAKE` (never triaged, never a piece) needs only the first-turn step
+      above and no reply.
+    - Clearing another session happens only when the owner asks for it, and only for a session you
+      started: turn its Remote Control off, clear it, send it `[startup-team:<its name>]` + `WAKE`,
+      and turn Remote Control on again yourself once that turn has ended.
     - A Remote Control or clear call that is refused because a hook changed its input is repeated
-      once with exactly the input the refusal quotes. A session started from Remote Control has a
-      locked switch: skip its clear.
-    This sequence needs the owner's standing yes, recorded in the project; without it, treat
-    Remote Control as a refused clear.
-  - A refused clear (pinned, queued work, owner declined, or Remote Control without that standing
-    yes): a sub session says so in its reply and the main session tells the owner once, in one line,
+      once with exactly the input the refusal quotes.
+  - A refused clear (pinned, queued work, owner declined, a locked or unavailable Remote Control
+    switch, no helper, or Remote Control without the CLAUDE.md line): a sub session says so in its reply and the main session tells the owner once, in one line,
     which session and why; never change those settings. Without a clear tool, skip it.
 
 ## Checkpoints

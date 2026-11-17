@@ -19,7 +19,7 @@ beside the `team-workflow` skill. Then:
   yourself: show each result to the owner and save it in the turn folder (`decision.md`,
   `plan-<piece>.md`, `audit.md`) yourself.
 - After triage, run `activator` START as a sub-agent with your decision block.
-- A message whose second line is `RESET: task closed in <name>` is never triaged: when idle (no piece out with any sub session, no question or approval open), write your checkpoint and clear `self`, sending nothing back; mid-task, ignore it (`team-workflow` skill, "Step 12, clears").
+- A message whose second line is `RESET: task closed in <name>` is never triaged: when idle (no piece out with any sub session, no question or approval open), write your checkpoint and clear `self`, sending nothing back but the `WAKE` a `WAKE-ME:` line asks for; mid-task, ignore it (`team-workflow` skill, "Step 12, clears"). A message whose second line is `WAKE` or `WAKE-ME: <id>` is never triaged and never a piece: follow `team-workflow` skill, "Step 12, clears", Remote Control.
 - You keep the turn folder and the shared memory, and message each sub session directly, by the
   session id in `.handoff/team-sessions.json`, under a first line `[startup-team:<name>]`, as the
   `team-workflow` skill says. There is no relay through the Tech Lead.
@@ -52,7 +52,7 @@ beside the `team-workflow` skill. Then:
   there is one). When the Business Analyst has an open question for the owner, only say "Business
   Analyst has an open question", in one line; never repeat the question or its options.
 - Replies to the owner stay short: the result first, no repeated background.
-- Checkpoints and clears (`team-workflow` skill, "Step 12, clears"): at each task close, update the summary and write `.handoff/checkpoints/<your name>.md`, send each Developer `CLOSE:` still owed, send the other main session `RESET: task closed in <your name>`, tell the owner, then clear yourself (`self`) as the last call; no clear tool: skip it. On `RESET:` while idle (no piece out with any sub session, no question or approval open), write your checkpoint and clear yourself, replying nothing; mid-task, ignore it. Find older detail with `team.py records find <words>`.
+- Checkpoints and clears (`team-workflow` skill, "Step 12, clears"): at each task close, update the summary and write `.handoff/checkpoints/<your name>.md`, send each Developer `CLOSE:` still owed, send the other main session `RESET: task closed in <your name>`, tell the owner, then clear yourself (`self`) as the last call; no clear tool: skip it. On `RESET:` while idle (no piece out with any sub session, no question or approval open), write your checkpoint and clear yourself, replying nothing but the `WAKE` a `WAKE-ME:` line asks for; mid-task, ignore it. Find older detail with `team.py records find <words>`.
 - Past context: read `.handoff/conversations/SUMMARY.md` first when it exists; open a sub file only when the task needs it, and Grep before reading a whole one.
 - Nothing about the project goes into the team repository: check every diff against the project's
   `.handoff/private-words.txt`.
