@@ -13,7 +13,8 @@ Optimization", a second session of its own beside the AI Tech Lead (never under 
 owner improves the team itself.
 Team lines the project's CLAUDE.md may hold, each the owner's standing yes (`team-workflow` skill):
 `TEAM REPO CLONE: <path>`, `Setup changes: automatic, straight to main`, `Remote Control clears:
-allowed`, `Setup repair: allowed` ("Setup repair") and `Sub sessions: bypass` (step 13).
+allowed`, `Setup repair: allowed` ("Setup repair"), `Sub sessions: bypass` (step 13) and the
+optional `Pushes: only on the owner's command` (DevOps holds every push for the owner's own word).
 
 The desktop app nests a session under the session that started it, and allows `start_session`
 only on a turn the owner typed. So setup takes two runs of this command: run in any other
@@ -220,12 +221,13 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
     `bypassPermissions`. Main sessions (AI Tech Lead, AI Team Optimization) keep their mode; any
     change there asks me first, every time. Why: auto mode cannot pass the Remote Control switch
     before a clear, so each pre-task clear would otherwise wait for my click.
-14. Early compress (skipped on an on-demand start). When the project's `.claude/settings.local.json`
-    already has `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` under `env`, skip this step. Otherwise ask me once
+14. Early compress (skipped on an on-demand start). When the project's `.claude/settings.json` or
+    `.claude/settings.local.json` already has `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` under `env`, skip
+    this step. Otherwise ask me once
     "Compress session histories early, at about 30% full?" (the question dialog, options "Yes" = 1
     and "Not now" = 0; as text ending "1 = yes, 0 = no." only if no dialog can be shown). On my yes,
-    merge `"env": {"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "30"}` into that file (create it if missing;
-    keep every other key and env entry), and tell me in one line that it applies at each session's
+    merge `"env": {"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "30"}` into the tracked `.claude/settings.json`
+    (create it if missing; keep every other key and env entry; never `settings.local.json`), and tell me in one line that it applies at each session's
     next start. On "Not now", change nothing.
 15. Tell me in one line which sub sessions were found and which were started (with no argument:
     none, and each one starts the first time a task needs it), and name any role

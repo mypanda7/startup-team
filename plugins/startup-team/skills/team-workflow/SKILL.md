@@ -49,6 +49,8 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    project has one, see Sessions). Its questions go to the owner; its plan is the executor's brief.
 6. **Build.** One piece per `executor` run, with the model the decision block names. One local
    commit per piece. A BLOCKED piece waits for its answer; it is never built on an assumption.
+   With no git identity set, commit as the previous commit's author (`git -c user.name="$(git log
+   -1 --format=%an)" -c user.email="$(git log -1 --format=%ae)" commit ...`); never write git config.
 7. **Check it yourself.** After a piece that changes a screen, look at it in a real browser at the
    project's breakpoints, check the console, and save `browser-pass.md` in the turn folder.
 8. **QA.** `qa` (the QA Engineer sub session when the project has one), once the pieces of the turn are built (or per piece when the decision block says
@@ -64,7 +66,7 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
     nothing approved is left unbuilt, tell the owner once, in one line. Run `team.py conversations
     build`, add one row to the summary's table and update its "Where things stand" ("Conversation
     summary"). Where the project tracks `.handoff/` in git, make the records commit ("Step 12,
-    records commit"). Then run `activator`
+    records commit") and, beside it, the project setup commit ("Setup in git"). Then run `activator`
     CLOSE. Replies to the owner stay short: the result first, no
     repeated background.
 
@@ -111,8 +113,8 @@ These add to the numbered steps above.
   make ONE local commit `Team records: <task>`. The check stops on a staged name outside
   `.handoff/`, a gateway map, `.private`, `.env` or local settings file, or a secret shape in the
   staged diff: then commit nothing, unstage (`git restore --staged -- .handoff`) and tell the owner.
-  Nothing outside `.handoff/` is ever in this commit; push only on the owner's command. It is the
-  one commit a main session makes itself. Where `.handoff/` is not tracked, `team.py` keeps it in
+  Nothing outside `.handoff/` is ever in this commit; push only on the owner's command. It and the
+  project setup commit ("Setup in git") are the only commits a main session makes itself. Where `.handoff/` is not tracked, `team.py` keeps it in
   `.git/info/exclude` and there is no records commit.
 - **Step 12, clears.** The host re-sends a session's whole history with every message, so every
   history stays near empty and context comes from the summary, checkpoints and records. The clear
@@ -176,9 +178,10 @@ These add to the numbered steps above.
     sender sees it in the tool result), the task is sent anyway, and the main session tells the
     owner once, in one line, which session and why; never change those settings. Without a clear
     tool, skip it.
-- **Step 12, early compress.** On the owner's yes only, the project's `.claude/settings.local.json`
-  gets `"env": {"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "30"}`, so every session compresses its history
-  at about 30% full. It applies on each session's next start. Never set it without the owner's yes.
+- **Step 12, early compress.** On the owner's yes only, the project's tracked `.claude/settings.json`
+  gets `"env": {"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "30"}` (created or merged, every other key kept;
+  never `settings.local.json`), so every session compresses its history at about 30% full. The
+  skip check looks in both files. It applies on each session's next start. Never set it without the owner's yes.
   `start-team` asks it once in its step "Early compress" (skipped when the line is already set).
 
 ## Checkpoints
@@ -601,12 +604,21 @@ Flow, per change:
    holds none of the words in the project's `.handoff/private-words.txt` (which must exist) and none
    of what `team.py learn propose` refuses in added lines: a secret, an email, an IP address, a
    local path, the project's name or its web addresses.
-4. **Push.** DevOps runs `git pull --ff-only`, then `git push` to `main`, with no per-change 1 (the
-   CLAUDE.md line is the owner's standing approval). Never a force-push. Then it tells the owner in
-   one line, with the commit link.
+4. **Push.** DevOps runs `git pull --ff-only`, then `git push origin <sha>:refs/heads/main` (the
+   exact commit, never the moving tip), with no per-change 1 (the CLAUDE.md line is the owner's
+   standing approval). Fast-forward only, never a force-push; check with `git ls-remote` after. Then
+   it tells the owner in one line, with the commit link. When the project's CLAUDE.md has the line
+   `Pushes: only on the owner's command`, this standing push is off: DevOps holds every push (any
+   repo) until the owner's own push word, typed to DevOps or quoted verbatim by a main session.
 5. **Rollback.** A bad change is undone with `git revert` on `main`, through the same flow.
 A failed QA, audit or privacy check, or a pull that is not a fast-forward, stops the push and goes
 to the owner.
+
+**Setup in git.** Every setup customization goes to git. Generic ones (sessions, sub sessions,
+agents, sub-agents, skills, commands, hooks, scripts, rules) are defined in the team repo, never
+only on one machine. Project ones (CLAUDE.md lines, `.claude/settings.json`, `.htaccess`,
+`.handoff/` records minus secrets) get a local commit in the project at every task close, beside the
+records commit, holding only the files the task changed (staged by path). Secrets never.
 
 ## Setup repair
 Applies only where the project's CLAUDE.md has the line `Setup repair: allowed` (the owner's

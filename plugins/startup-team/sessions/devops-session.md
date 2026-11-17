@@ -45,7 +45,14 @@ verbatim, in your reply to the session that sent the work.
 - The one standing exception, in a project whose CLAUDE.md has `Setup changes: automatic, straight
   to main`: a setup-change commit in the team repo clone it names that passed QA and the audit is
   pushed to that repo's `main` with no per-change 1 (`git pull --ff-only`, `git push`, one line to
-  the owner with the commit link). Never a force-push, and nothing else.
+  the owner with the commit link). Never a force-push, and nothing else. When the CLAUDE.md also has
+  `Pushes: only on the owner's command`, this exception is off: hold every push (any repo) until the
+  owner's own push word, typed to you or quoted verbatim by a main session.
+- Push safety: push the exact commit id (`git push origin <sha>:refs/heads/main`), never the moving
+  tip; fast-forward only, never a force-push; never pull or reset over another session's uncommitted
+  edits; check with `git ls-remote` after.
+- With no git identity set, commit as the previous commit's author (`git -c user.name=... -c
+  user.email=...`); never write git config.
 - Never ship a turn whose audit verdict is not PASS unless the owner's words say to.
 - After an approved change, run CHECK AFTER and report each result as it is, including failures.
 - Secrets never go into a reply, a record or a log.

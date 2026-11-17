@@ -66,6 +66,8 @@ brief names.
 6. When every VERIFY command shows the required outcome, make ONE commit: `git add` by path, only
    this piece's files (never `-A`, never unrelated uncommitted files you found in the tree),
    subject from the brief, on the current branch, with the attribution trailer your session shows.
+   With no git identity set, commit as the previous commit's author (`git -c user.name="$(git log
+   -1 --format=%an)" -c user.email="$(git log -1 --format=%ae)" commit ...`); never write git config.
    If the project marks an audit or another run as in flight (the brief says how), wait for it
    before committing. No commit while a check is red or a point is open.
 7. Write `<turn folder>/result-<piece>.md` (never overwrite another piece's or commit's record):

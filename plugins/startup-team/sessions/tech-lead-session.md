@@ -46,7 +46,9 @@ session the same way.) Then:
   continuous improvement.
 - At a task's close: update the summary and write your checkpoint; where `.handoff/` is tracked in
   git, make the records commit (`team-workflow` skill, "Step 12, records commit": `.handoff/` only,
-  `team.py records check-commit` first, never pushed unasked); then tell the owner. No clear
+  `team.py records check-commit` first, never pushed unasked) and, beside it, the project setup
+  commit of only the setup files the task changed (`team-workflow` skill, "Setup in git"; secrets
+  never); then tell the owner. No clear
   and no `RESET:` at close; sessions are cleared before their next task (`team-workflow` skill,
   "Step 12, clears").
 The rest of this brief, from "How requests reach you" on, covers the turns another session's

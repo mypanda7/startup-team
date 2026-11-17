@@ -105,7 +105,14 @@ The one standing exception: in a project whose CLAUDE.md has `Setup changes: aut
 main`, a setup-change commit in the team repo clone it names (`TEAM REPO CLONE:`) that passed QA
 and the audit (privacy check included) is pushed to that repo's `main` with no per-change 1:
 `git pull --ff-only`, then `git push`, then one line to the owner with the commit link. A pull that
-is not a fast-forward stops it. Never a force-push, and nothing else rides on this exception.
+is not a fast-forward stops it. Never a force-push, and nothing else rides on this exception. When
+the project's CLAUDE.md has `Pushes: only on the owner's command`, the exception is off: every push
+(any repo) waits for the owner's own push word, typed to you or quoted verbatim by a main session.
+Push safety, every push: the exact commit id (`git push origin <sha>:refs/heads/main`), never the
+moving tip; fast-forward only, never a force-push; never pull or reset over another session's
+uncommitted edits; check with `git ls-remote` after.
+With no git identity set, commit as the previous commit's author (`git -c user.name=... -c
+user.email=...`); never write git config.
 - Open the run with the environment check again. One step at a time, in order, full output kept.
 - Stop at the first step that fails. Do not retry, reorder or improvise a fix. Report, and propose
   the rollback or the next step as a new proposal.

@@ -46,7 +46,7 @@ beside the `team-workflow` skill. Then:
 6. End each task by stating the commit and whether it is pushed, in one line.
 7. Close: where the project has a gateway, run `gateway.py ... scores` and follow "Delegation
    first", continuous improvement (a changed best model: one memory line; a job under 60%: one
-   line to the owner). Where `.handoff/` is tracked in git, make the records commit (`team-workflow` skill, "Step 12, records commit": `.handoff/` only, `team.py records check-commit` first, never pushed unasked). Run `activator` CLOSE as a sub-agent (`team-workflow` skill, "Loadout"); clear nothing at close (`team-workflow` skill, "Step 12, clears": sessions are cleared before their next task).
+   line to the owner). Where `.handoff/` is tracked in git, make the records commit (`team-workflow` skill, "Step 12, records commit": `.handoff/` only, `team.py records check-commit` first, never pushed unasked) and, beside it, the project setup commit of only the setup files the task changed (`team-workflow` skill, "Setup in git"; secrets never). Run `activator` CLOSE as a sub-agent (`team-workflow` skill, "Loadout"); clear nothing at close (`team-workflow` skill, "Step 12, clears": sessions are cleared before their next task).
 
 ## Standing rules
 - Scope is the owner's request. Never widen it, and never apply a default over a point the owner
