@@ -107,7 +107,8 @@ These add to the numbered steps above.
     this one started), check that nothing is ongoing: no open task-list step, no background
     command, Monitor or timer of that session running, no piece out with a sub session, no owner
     question or approval open, and for another session `get_session` shows it not running.
-    Anything ongoing: skip the clear, say so in one line, and clear once it is done.
+    Anything ongoing: skip the clear and say so in one line. A Threshold or owner-asked clear then
+    happens once it is done; a skipped `RESET:` clear never happens later (the task is sent anyway).
   - No session clears itself when a piece or task closes, and nothing is sent at close to clear
     another. A session is cleared just before another session sends it a new task (a brief, a
     triage request, a re-test of a new piece). Agents and sub-agents keep no history: their record
@@ -123,10 +124,11 @@ These add to the numbered steps above.
        wait until its turn has ended (a background command of about a minute, then `get_session`
        shows it not running; a message that arrives before its turn ends cancels its clear), then
        send the task.
-  - On `RESET: before new task from <name>` (never triaged, never a piece): write your checkpoint;
-    if your Remote Control is on, add `REMOTE CONTROL: on again` to it and turn Remote Control off
-    (Remote Control below); then clear `self` as the turn's last call, replying nothing. Anything ongoing (the check before any
-    clear, above): skip the clear, say so in one line, and clear once it is done.
+  - On `RESET: before new task from <name>` (never triaged, never a piece): first the check before
+    any clear, above. Anything ongoing: skip the clear and say so in one line; the task is sent
+    anyway, and no later self-clear follows. Nothing ongoing: write your checkpoint; if your Remote
+    Control is on, add `REMOTE CONTROL: on again` to it and turn Remote Control off (Remote Control
+    below); then clear `self` as the turn's last call, replying nothing.
   - Limit: a message the owner types into a main session cannot be preceded by a clear, so a main
     session is cleared only when the other main session sends it a task.
   - Remote Control. Applies only where the project's CLAUDE.md has the line `Remote Control clears:
