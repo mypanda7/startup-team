@@ -115,7 +115,7 @@ These add to the numbered steps above.
     clear `self` as the turn's last call.
   - On `RESET:` (never triaged), a main session that is idle (no piece out with any sub session, no
     question or approval open) writes its checkpoint and clears itself, sending nothing back but the `WAKE` a `WAKE-ME:` line asks for;
-    mid-task it ignores the line.
+    mid-task it skips its own clear but still answers a `WAKE-ME:` line.
   - Remote Control. Applies only where the project's CLAUDE.md has the line `Remote Control clears:
     allowed` (the owner's standing yes); without it, Remote Control is a refused clear. The host
     refuses to clear a session while Remote Control is on, refuses to turn it on again until the
@@ -123,10 +123,10 @@ These add to the numbered steps above.
     cannot wake itself. Before a clear, read the target's state with `get_session`:
     `remoteControlState` `off`: clear as usual. `connecting` or `unavailable`, or
     `startedViaRemoteControl` true (its switch is locked): a refused clear. `on`:
-    - Clearing `self`: add the line `REMOTE CONTROL: on again` to your checkpoint, turn Remote
-      Control off for `self`, then clear as the turn's last call. A main session first asks a helper
-      to wake it and tells the owner, in its closing line, that it is off Remote Control for about a
-      minute. The helper is the other main session (a third line `WAKE-ME: <own session id>` under
+    - Clearing `self`: add the line `REMOTE CONTROL: on again` to your checkpoint. A main session
+      then asks a helper to wake it and tells the owner, in its closing line, that it is off Remote
+      Control for about a minute. Then turn Remote Control off for `self` and clear as the turn's
+      last call. The helper is the other main session (a third line `WAKE-ME: <own session id>` under
       the `RESET:`), or, with no other main session, a sub session the registry names
       (`[startup-team:<name>]` + `WAKE-ME: <own session id>`); with neither, a refused clear. A sub
       session asks nobody: its next message wakes it.
