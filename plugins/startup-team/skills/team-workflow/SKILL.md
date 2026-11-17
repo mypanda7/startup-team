@@ -126,10 +126,12 @@ These add to the numbered steps above.
     Anything ongoing: skip the clear and say so in one line. A Threshold or owner-asked clear then
     happens once it is done; a skipped `RESET:` clear never happens later (the task is sent anyway).
   - No session clears itself when a piece or task closes, and nothing is sent at close to clear
-    another. A session is cleared just before another session sends it a new task (a brief, a
-    triage request, a re-test of a new piece). Agents and sub-agents keep no history: their record
-    file is their history, and they end when they return.
-  - Before sending a session a new task:
+    another (except past the Threshold). A session is cleared just before another session sends
+    it any message that starts its turn: a task (a brief, a triage request), a re-test, a
+    follow-up, a `RULE:` or `HEADS-UP:` notice. `RESET:` and `WAKE` themselves never trigger it.
+    Agents and sub-agents keep no history: their record file is their history, and they end when
+    they return.
+  - Before sending a session any message that starts its turn (called the task below):
     1. Check that it holds nothing pending (the check before any clear, above), and also: no piece
        out, no FAIL awaiting a re-test, no Developer fix round open, and no owner question or
        approval it holds.
@@ -184,12 +186,12 @@ Long histories are re-read on every turn, so sessions stay short and the detail 
 - **Checkpoint file.** `.handoff/checkpoints/<session name>.md`, written by the session itself, at
   most 30 lines. Its first line names the role and the brief path; then the task and piece in hand, what is done (with commits), what is next,
   open questions, and the paths of the records that hold the detail.
-- **Threshold.** Where the host reports a session's context size, check each standing sub session
-  between pieces. Past the project's `CHECKPOINT AT: <n>k` CLAUDE.md line (default 150k tokens),
-  ask it to write its checkpoint and clear itself, after the check before any clear ("Step 12,
-  clears"). Never while it is
-  building, testing, in a fix round or holding live work. Without a size report, do it after every
-  third piece a session finished in one task.
+- **Threshold.** At each task close the main session checks every standing sub session's message
+  count: `list_events` prints "showing N of M messages", and M is the count. Past the project's
+  `CLEAR AT: <n> messages` CLAUDE.md line (default 100), clear that session as soon as the check
+  before any clear ("Step 12, clears") passes: a session you started with the clear tool, any
+  other with `RESET:`. Never while it is building, testing, in a fix round or holding live work.
+  Then tell the owner in one line which sessions were cleared and which were skipped (pending).
 - **Pointer brief.** The message that starts a piece is the brief, under `[startup-team:<name>]`:
   the role, the brief path, the agent file path, the checkpoint path,
   `.handoff/conversations/SUMMARY.md`, the record paths, "find more with `team.py records find
@@ -591,8 +593,8 @@ Flow, per change:
    Then the session that recorded it sends every standing session in `.handoff/team-sessions.json`
    (except itself) a short notice with `SendMessage`: first line `[startup-team:<name>]`, second
    line `RULE: <the rule in one line>`, so running sessions follow it before the plugin update
-   reaches them. A `RULE:` notice is never triaged, never a piece and not a new task (no pre-task
-   clear); the receiver follows the rule from then on and replies nothing.
+   reaches them, each after the pre-send check ("Step 12, clears"). A `RULE:` notice is never
+   triaged and never a piece; the receiver follows the rule from then on and replies nothing.
 2. **Build.** The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words
    only, as ONE commit on `main` that also raises the plugin's patch version.
 3. **QA, then audit.** The audit includes the privacy check: `git show <commit>` (diff and message)
