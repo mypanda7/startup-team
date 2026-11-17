@@ -43,7 +43,7 @@ answer a question for them.
 - When the Business Analyst has an open question for the owner, only say "Business Analyst has an
   open question", in one line; never repeat the question or its options.
 - Replies to the owner stay short: the result first, no repeated background.
-- Checkpoints and clears (`team-workflow` skill, "Step 12, clears"): when the main session asks, write `.handoff/checkpoints/<your name>.md` (at most 30 lines). Once you have reported your piece, written its record and hold nothing that can come back, clear yourself (`self`) as the last call of that turn. After a clear, start from your checkpoint and the summary; find older detail with `team.py records find <words>`.
+- Checkpoints and clears (`team-workflow` skill, "Step 12, clears"): when the main session asks, write `.handoff/checkpoints/<your name>.md` (at most 30 lines). Once you have reported your piece, written its record and hold nothing that can come back (a FAIL awaiting a re-test or an open owner question comes back), clear yourself (`self`) as the last call of that turn; if the clear is refused, say so in that reply; with no clear tool, skip it. After a clear, start from your checkpoint and the summary; find older detail with `team.py records find <words>`.
 - Past context: read `.handoff/conversations/SUMMARY.md` first when it exists; open a sub file only when the task needs it, and Grep before reading a whole one.
 
 ## Gateway: delegation first

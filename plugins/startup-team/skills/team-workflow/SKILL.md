@@ -100,20 +100,25 @@ These add to the numbered steps above.
   `memory add` for KEEP, and for STALE a new entry whose text names the id it replaces.
 - **Step 12, clears.** The host re-sends a session's whole history with every message, so every
   history stays near empty and context comes from the summary, checkpoints and records. The clear
-  tool takes `self` and acts when the turn ends, so say and write everything first.
+  tool takes `self` and acts when the turn ends, so say and write everything first. The host may ask
+  the owner to approve a clear outside auto or bypass mode, and drops a `self` clear when the owner
+  speaks first.
   - Sub sessions (Business Analyst, Designer, QA Engineer, DevOps, Security) clear themselves at
     the end of the turn in which they reported a piece, wrote its record and hold nothing that can
-    come back. The Developer keeps its history through fix rounds and clears itself on
-    `[startup-team:developer]` + `CLOSE: <piece>`, sent after the audit passes (or right after its
-    report when no QA follows); it does not reply.
+    come back (a FAIL awaiting a re-test or an open owner question does). The Developer keeps its
+    history through fix rounds and clears itself on `[startup-team:developer]` + `CLOSE: <piece>`,
+    sent after the audit passes (or right after its report when no QA follows), only for the piece
+    it holds and while it holds no other; it does not reply.
   - Main sessions (Tech Lead, Team Optimization), in order: update the summary and write their
     checkpoint; send each Developer CLOSE still owed; send the other main session
-    `[startup-team:<its name>]` + `CLEAR: task closed in <own name>`; tell the owner the result;
+    `[startup-team:<its name>]` + `RESET: task closed in <own name>`; tell the owner the result;
     clear `self` as the turn's last call.
-  - On `CLEAR:`, a main session that is idle (nothing building, no question or approval open)
-    writes its checkpoint and clears itself, sending nothing back; mid-task it ignores the line.
-  - A refused clear (Remote Control, pinned, queued work, owner declined): tell the owner once, in
-    one line, which session and why; never change those settings. Without a clear tool, skip it.
+  - On `RESET:` (never triaged), a main session that is idle (no piece out with any sub session, no
+    question or approval open) writes its checkpoint and clears itself, sending nothing back;
+    mid-task it ignores the line.
+  - A refused clear (Remote Control, pinned, queued work, owner declined): a sub session says so in
+    its reply and the main session tells the owner once, in one line, which session and why; never
+    change those settings. Without a clear tool, skip it.
 
 ## Checkpoints
 Long histories are re-read on every turn, so sessions stay short and the detail stays in files.
@@ -130,8 +135,10 @@ Long histories are re-read on every turn, so sessions stay short and the detail 
   `.handoff/conversations/SUMMARY.md`, the record paths, "find more with `team.py records find
   <words>`", and at most five lines of summary. No separate re-brief follows a clear. Agents and
   sub-agents get paths too, never pasted history or transcripts; skills have no history of their own.
-- **After a clear.** A session regains its role from the registry and the gate, reads its
-  checkpoint and the summary first, and opens sub files only when the task needs them.
+- **After a clear.** A main session regains its role on its next typed turn from the gate (which
+  matches its id in the registry), on a message turn from the `[startup-team:<name>]` first line; a
+  sub session from the pointer brief of its next piece. It reads its checkpoint and the summary
+  first, and opens sub files only when the task needs them.
 - **Looking things up.** A session that needs older detail runs `team.py records find <words>
   [--kind k] [--last n]` (paths, kinds and titles only; `records index` rebuilds
   `.handoff/records-index.jsonl`) and opens only the files it names, instead of asking for a

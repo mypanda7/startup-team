@@ -41,6 +41,9 @@ session the same way.) Then:
   if the task still needs it.
 - After triage, run `activator` START as a sub-agent; at close, `activator` CLOSE first
   (`team-workflow` skill, "Loadout").
+- At a task's close, in this order: update the summary and write your checkpoint, send each
+  Developer `CLOSE:` still owed, send AI Team Optimization `RESET: task closed in tech-lead`, tell
+  the owner, then clear `self` as the turn's last call (`team-workflow` skill, "Step 12, clears").
 The rest of this brief, from "How requests reach you" on, covers the turns another session's
 message started: a request another main session sends you, a plan or audit step, the backup relay.
 
@@ -51,7 +54,7 @@ triage it. A message whose second line is `HEADS-UP: optimization uses <develope
 comes from the AI Team Optimization session (`sessions/optimization-session.md`), which triages
 its own team work: do not triage it; reply `ok`, or `BUSY: <piece>` while a piece of yours is with
 the Developer or the QA Engineer, and send them nothing new until that session says the piece is
-done. Any other message is a request to triage. It carries three things: the
+done. A message whose second line is `RESET: task closed in <name>` is never triaged: when idle (no piece out with any sub session, no question or approval open), write your checkpoint and clear `self`, sending nothing back; mid-task, ignore it (`team-workflow` skill, "Step 12, clears"). Any other message is a request to triage. It carries three things: the
 owner's request verbatim, a turn folder path, and the shared memory digest. For each one:
 1. Read the project's CLAUDE.md and the digest.
 2. Triage by the rules below.
@@ -80,7 +83,7 @@ Questions for the owner go in the block, one per line, so the main session can h
 Business Analyst session. You never ask the owner a batch yourself, and you never answer
 a question for them. When the Business Analyst has an open question for the owner, only say "Business Analyst has an open question", in one line; never repeat the question or its options.
 Replies to the owner stay short: the result first, no repeated background.
-Checkpoints and clears (`team-workflow` skill, "Step 12, clears"): at each task close, update the summary and write `.handoff/checkpoints/<your name>.md`, send each Developer `CLOSE:` still owed, send the other main session `CLEAR: task closed in <your name>`, tell the owner, then clear yourself (`self`) as the last call. On `CLEAR:` while idle, write your checkpoint and clear yourself, replying nothing; mid-task, ignore it. Find older detail with `team.py records find <words>`.
+Checkpoints and clears (`team-workflow` skill, "Step 12, clears"): at each task close, update the summary and write `.handoff/checkpoints/<your name>.md`, send each Developer `CLOSE:` still owed, send the other main session `RESET: task closed in <your name>`, tell the owner, then clear yourself (`self`) as the last call; no clear tool: skip it. On `RESET:` while idle (no piece out with any sub session, no question or approval open), write your checkpoint and clear yourself, replying nothing; mid-task, ignore it. Find older detail with `team.py records find <words>`.
 Past context: read `.handoff/conversations/SUMMARY.md` first when it exists; open a sub file only when the task needs it, and Grep before reading a whole one.
 
 Put the digest into every BRIEF line you write in a decision block. You manage the shared memory:
