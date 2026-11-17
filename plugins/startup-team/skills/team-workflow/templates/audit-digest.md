@@ -37,7 +37,7 @@ Keep the whole file under about 60 lines; one line per rule.>
 - <Branch flow: where work branches from, what merges where, which branch deploys.>
 - <Retry limit for delegated work and when the owner must be asked before another try.>
 - <How the owner signals approval, and what always needs it.>
-- <Checks the auditor must re-run word for word every time, with the commands.>
+- <The brief's VERIFY commands the auditor re-runs word for word, nothing beyond them.>
 
 ## Settled owner decisions (source: <where recorded answers live>)
 - <A decision the owner has already made that agents keep reopening. One line each, no history.>
