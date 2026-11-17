@@ -103,12 +103,17 @@ These add to the numbered steps above.
   tool takes `self` and acts when the turn ends, so say and write everything first. The host may ask
   the owner to approve a clear outside auto or bypass mode, and drops a `self` clear when the owner
   speaks first.
+  - Before any clear (`self`, on `RESET:`, past the Threshold, one the owner asks for, or a session
+    this one started), check that nothing is ongoing: no open task-list step, no background
+    command, Monitor or timer of that session running, no piece out with a sub session, no owner
+    question or approval open, and for another session `get_session` shows it not running.
+    Anything ongoing: skip the clear, say so in one line, and clear once it is done.
   - No session clears itself when a piece or task closes, and nothing is sent at close to clear
     another. A session is cleared just before another session sends it a new task (a brief, a
     triage request, a re-test of a new piece). Agents and sub-agents keep no history: their record
     file is their history, and they end when they return.
   - Before sending a session a new task:
-    1. Check that it holds nothing pending: `get_session` shows it not running, and it has no piece
+    1. Check that it holds nothing pending (the check before any clear, above), and also: no piece
        out, no FAIL awaiting a re-test, no Developer fix round open, and no owner question or
        approval it holds.
     2. Something pending: send the task without clearing. Nothing pending: run
@@ -120,8 +125,8 @@ These add to the numbered steps above.
        send the task.
   - On `RESET: before new task from <name>` (never triaged, never a piece): write your checkpoint;
     if your Remote Control is on, add `REMOTE CONTROL: on again` to it and turn Remote Control off
-    (Remote Control below); then clear `self` as the turn's last call, replying nothing. Holding something pending, skip the
-    clear and say so in one line.
+    (Remote Control below); then clear `self` as the turn's last call, replying nothing. Anything ongoing (the check before any
+    clear, above): skip the clear, say so in one line, and clear once it is done.
   - Limit: a message the owner types into a main session cannot be preceded by a clear, so a main
     session is cleared only when the other main session sends it a task.
   - Remote Control. Applies only where the project's CLAUDE.md has the line `Remote Control clears:
@@ -151,6 +156,9 @@ These add to the numbered steps above.
     sender sees it in the tool result), the task is sent anyway, and the main session tells the
     owner once, in one line, which session and why; never change those settings. Without a clear
     tool, skip it.
+- **Step 12, early compress.** On the owner's yes only, the project's `.claude/settings.local.json`
+  gets `"env": {"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "30"}`, so every session compresses its history
+  at about 30% full. It applies on each session's next start. Never set it without the owner's yes.
 
 ## Checkpoints
 Long histories are re-read on every turn, so sessions stay short and the detail stays in files.
@@ -159,7 +167,8 @@ Long histories are re-read on every turn, so sessions stay short and the detail 
   open questions, and the paths of the records that hold the detail.
 - **Threshold.** Where the host reports a session's context size, check each standing sub session
   between pieces. Past the project's `CHECKPOINT AT: <n>k` CLAUDE.md line (default 150k tokens),
-  ask it to write its checkpoint and clear itself. Never while it is
+  ask it to write its checkpoint and clear itself, after the check before any clear ("Step 12,
+  clears"). Never while it is
   building, testing, in a fix round or holding live work. Without a size report, do it after every
   third piece a session finished in one task.
 - **Pointer brief.** The message that starts a piece is the brief, under `[startup-team:<name>]`:

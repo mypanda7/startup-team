@@ -136,7 +136,9 @@ def record_start(root: str, session_id: str) -> None:
 
 
 SUMMARY_LINE = ("Past context: read .handoff/conversations/SUMMARY.md first; open its sub files only when "
-                "the task needs them.")
+                "the task needs them. On the first turn after a clear or a restart, start your reply with a "
+                "short `Read from summary:` block (at most 5 lines: the last task, its state, anything open), "
+                "then carry on.")
 
 
 PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
