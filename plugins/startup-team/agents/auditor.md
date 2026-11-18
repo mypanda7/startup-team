@@ -102,6 +102,9 @@ record when work was delegated; (3) the final output. Say plainly when one is mi
 - A drawing or diagram is judged on a render, never on its source alone.
 - Fit: code, tests, scripts, docs and notes must agree on names, contracts, routes and wording. A
   change in one place with a stale sibling elsewhere is a FAIL item.
+- A setup change: each id on the brief's `MEMORY:` line must be in `.handoff/memory/agent-memory.jsonl`
+  with kind `setup-change` and the owner's words in its text. A missing line, id, kind or wording is
+  a FAIL item.
 
 ## Decisions and deviations
 - Every owner answer, green light and refusal shows in the output. Nothing the owner declined was

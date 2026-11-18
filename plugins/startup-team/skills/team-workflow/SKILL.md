@@ -151,7 +151,7 @@ These add to the numbered steps above.
     command, Monitor or timer of that session running, no piece out with a sub session, no owner
     question or approval open, and for another session `get_session` shows it not running.
     Anything ongoing: skip the clear and say so in one line. A Threshold or owner-asked clear then
-    happens once it is done; a skipped `RESET:` clear never happens later (the task is sent anyway).
+    happens once it is done; a skipped before-new-task `RESET:` clear never happens later (the task is sent anyway).
   - No session clears itself when a piece or task closes, and nothing is sent at close to clear
     another (except past the Threshold). A session is cleared just before another session sends
     it any message that starts its turn: a task (a brief, a triage request), a re-test, a
@@ -169,13 +169,16 @@ These add to the numbered steps above.
        wait until its turn has ended (a background command of about a minute, then `get_session`
        shows it not running; a message that arrives before its turn ends cancels its clear), then
        send the task.
-  - On `RESET: before new task from <name>` (never triaged, never a piece): first the check before
-    any clear, above. Anything ongoing: skip the clear and say so in one line; the task is sent
-    anyway, and no later self-clear follows. Nothing ongoing: write your checkpoint; if your Remote
+  - On `RESET: before new task from <name>` or `RESET: threshold from <name>` (never triaged, never
+    a piece): first the check before any clear, above. Anything ongoing: skip the clear and say so
+    in one line; the task is sent anyway (none follows a threshold `RESET:`), and no later
+    self-clear follows. Nothing ongoing: write your checkpoint; if your Remote
     Control is on, add `REMOTE CONTROL: on again` to it and turn Remote Control off (Remote Control
     below); then clear `self` as the turn's last call, replying nothing.
   - Limit: a message the owner types into a main session cannot be preceded by a clear, so a main
-    session is cleared only when the other main session sends it a task.
+    session is cleared only by the other main session: before it sends it a task, or past the
+    Threshold with `RESET: threshold from <own name>`. Never while it is building, testing, in a
+    fix round or holding live work.
   - Remote Control. Applies only where the project's CLAUDE.md has the line `Remote Control clears:
     allowed` (the owner's standing yes); without it, Remote Control is a refused clear. The host
     refuses to clear a session while Remote Control is on, refuses to turn it on again until the
@@ -220,6 +223,12 @@ Long histories are re-read on every turn, so sessions stay short and the detail 
   before any clear ("Step 12, clears") passes: a session you started with the clear tool, any
   other with `RESET:`. Never while it is building, testing, in a fix round or holding live work.
   Then tell the owner in one line which sessions were cleared and which were skipped (pending).
+  A main session also reads the OTHER main session's count (its id in `.handoff/team-sessions.json`;
+  `list_events` cannot read the calling session itself). Past `CLEAR AT`, with `get_session`
+  showing it not running and its checkpoint showing no open piece, question or approval, send it
+  `[startup-team:<its name>]` + `RESET: threshold from <own name>`; it runs the `RESET:` flow
+  ("Step 12, clears", Remote Control included) and the next message wakes it. Pending: skip it, say
+  so in one line, and try again at the next task close.
 - **Pointer brief.** The message that starts a piece is the brief, under `[startup-team:<name>]`:
   the role, the brief path, the agent file path, the checkpoint path,
   `.handoff/conversations/SUMMARY.md`, the record paths, "find more with `team.py records find
@@ -627,7 +636,9 @@ Flow, per change:
    reaches them, each after the pre-send check ("Step 12, clears"). A `RULE:` notice is never
    triaged and never a piece; the receiver follows the rule from then on and replies nothing.
 2. **Build.** The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words
-   only, as ONE commit on `main` that also raises the plugin's patch version.
+   only, as ONE commit on `main` that also raises the plugin's patch version. The build brief
+   carries the line `MEMORY: M####` naming the step-1 setup-change record (more than one allowed,
+   comma separated).
 3. **QA, then audit.** The audit includes the privacy check: `git show <commit>` (diff and message)
    holds none of the words in the project's `.handoff/private-words.txt` (which must exist) and none
    of what `team.py learn propose` refuses in added lines: a secret, an email, an IP address, a

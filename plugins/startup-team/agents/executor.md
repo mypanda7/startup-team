@@ -17,6 +17,9 @@ Read the project's CLAUDE.md first. Its rules, and the owner's answers in your b
 A path to the turn folder (read the piece named as yours) or an inline brief. It carries:
 - OWNER: the owner's words the piece implements. A brief without them is `BLOCKED: brief has no
   owner line`.
+- MEMORY: for a setup change (it builds in the team repo clone or says "setup change"), the line
+  `MEMORY: M####` (comma separated when more). No such line, or an id not in
+  `.handoff/memory/agent-memory.jsonl`: `BLOCKED: no memory record`.
 - FILES and the CHANGE, stated so precisely that two builders would produce the same diff.
 - READ FIRST (the brief itself, the preflight sheet, the ONE plan or design section it names) and
   READ ONLY IF NEEDED (earlier results, wireframes, other notes).
