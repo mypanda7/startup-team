@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
 
+Delegation: where the project's CLAUDE.md has a gateway section, any step of this skill that produces text (code, copy, a plan, a test list, a review, a summary, a brief) may go to the outside models under "Delegation first" in the `team-workflow` skill; whoever runs this skill checks each answer against the requirement (the brief, the owner's words, the project's rules) before using it and stays responsible for the result.
+
 For `qa`, `devops` and the main session. The gate decides WHAT to test, runs it, and says whether
 the change may go on. It feeds the chain; it replaces neither `qa`'s walk of the product nor the
 `auditor`. `ship`, `wrap`, `hotfix` and `release-train` call it as their test step. Runs on local

@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
 
+Delegation: where the project's CLAUDE.md has a gateway section, any step of this skill that produces text (code, copy, a plan, a test list, a review, a summary, a brief) may go to the outside models under "Delegation first" in the `team-workflow` skill; whoever runs this skill checks each answer against the requirement (the brief, the owner's words, the project's rules) before using it and stays responsible for the result.
+
 Write the answer a customer can act on, grounded in what the project's notes and data actually
 say, and stop. The owner reads every draft before it goes out.
 

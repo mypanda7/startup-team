@@ -586,8 +586,10 @@ OpenAI-compatible endpoint works by editing that section; `gateway.py` itself na
 
 ### Delegation first (only in a project whose CLAUDE.md has a gateway section)
 When the project's CLAUDE.md names the gateway's base URL, key variable and commands, this rule
-applies to every session, agent and sub-agent of the team (questions to the owner and their
-answers are never sent). Without that section nothing here changes.
+applies to every main session, sub session, role session, agent, sub-agent, skill and command of
+the team: each of them may delegate, and each checks what comes back against the requirement (the
+brief, the owner's words, the project's rules) before using it. Questions to the owner and their
+answers are never sent. Without that section nothing here changes.
 - Your main task, in every main and sub session: DELEGATE and REVIEW. Hand each text-producing
   part of your work to the outside models: drafts of code, copy, plans, test lists, reviews,
   summaries, briefs. Then CHECK each answer against the request and the project's rules, fix or

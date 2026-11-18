@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Test accounts
 
+Delegation: where the project's CLAUDE.md has a gateway section, any step of this skill that produces text (code, copy, a plan, a test list, a review, a summary, a brief) may go to the outside models under "Delegation first" in the `team-workflow` skill; whoever runs this skill checks each answer against the requirement (the brief, the owner's words, the project's rules) before using it and stays responsible for the result.
+
 Fresh accounts on demand, in the exact state a test needs, and gone again afterwards.
 
 ## The project must say (in its CLAUDE.md)

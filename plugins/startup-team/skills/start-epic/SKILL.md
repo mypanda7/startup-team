@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
 
+Delegation: where the project's CLAUDE.md has a gateway section, any step of this skill that produces text (code, copy, a plan, a test list, a review, a summary, a brief) may go to the outside models under "Delegation first" in the `team-workflow` skill; whoever runs this skill checks each answer against the requirement (the brief, the owner's words, the project's rules) before using it and stays responsible for the result.
+
 You drive ONE epic from backlog to open pull requests, card by card. You are a thin
 orchestrator: the team chain in `team-workflow` builds each card; this skill adds the order, the
 single source of truth and the acceptance loop.

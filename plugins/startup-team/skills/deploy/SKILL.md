@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
 
+Delegation: where the project's CLAUDE.md has a gateway section, any step of this skill that produces text (code, copy, a plan, a test list, a review, a summary, a brief) may go to the outside models under "Delegation first" in the `team-workflow` skill; whoever runs this skill checks each answer against the requirement (the brief, the owner's words, the project's rules) before using it and stays responsible for the result.
+
 For `devops`. Checking is ANALYSE and needs no approval. Everything that changes a host (the
 deploy itself, a migration, a restart, a cache clear, pausing or resuming the automatic deploy,
 editing its markers) is `devops` PROPOSE and the owner's 1, with the full proposal block. What is

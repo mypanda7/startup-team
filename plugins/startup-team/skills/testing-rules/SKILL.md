@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
 
+Delegation: where the project's CLAUDE.md has a gateway section, any step of this skill that produces text (code, copy, a plan, a test list, a review, a summary, a brief) may go to the outside models under "Delegation first" in the `team-workflow` skill; whoever runs this skill checks each answer against the requirement (the brief, the owner's words, the project's rules) before using it and stays responsible for the result.
+
 The commands belong to the project. The discipline is the same everywhere. Which tests a piece
 needs is `feature-tests`; the gate before a merge is `test-gate`; the local fix loop is
 `dev-feature-test`; QA of merged changes is `e2e-qa`.

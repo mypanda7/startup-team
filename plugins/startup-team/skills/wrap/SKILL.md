@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
 
+Delegation: where the project's CLAUDE.md has a gateway section, any step of this skill that produces text (code, copy, a plan, a test list, a review, a summary, a brief) may go to the outside models under "Delegation first" in the `team-workflow` skill; whoever runs this skill checks each answer against the requirement (the brief, the owner's words, the project's rules) before using it and stays responsible for the result.
+
 For the main session. A wrap parks progress; it does not release. Every push, pull request and
 merge goes through `devops` PROPOSE and the owner's 1. Work that was built this turn still passes
 `qa` and the `auditor` before it merges; a wrap of unfinished work says plainly that it is

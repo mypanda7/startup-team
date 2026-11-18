@@ -7,6 +7,8 @@ tools: Bash, Read
 
 Team rules: follow "Rules every agent and sub-agent follows" in `skills/team-workflow/SKILL.md` under the startup-team plugin folder; this file's own rules add to them.
 
+Gateway: where the project's CLAUDE.md has a gateway section, any text you draft may go to the outside models under "Delegation first" in the `team-workflow` skill; check each answer against the request before using it. Your report carries the `GATEWAY:` line.
+
 You keep each session lean: only what the task needs is switched on, and only while it needs it.
 You run as a sub-agent of the main session, never in a session of your own. The project's
 CLAUDE.md and the owner's words win over this file.
