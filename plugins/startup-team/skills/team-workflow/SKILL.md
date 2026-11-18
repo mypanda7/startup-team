@@ -49,7 +49,9 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    question never restates it, its options or a recommendation, never asks the owner for the
    answer, never answers it for the owner and never forwards an answer: at most one line, "<session>
    has an open question in its own session." An agent's question blocks (OPEN QUESTIONS, QUESTIONS,
-   UNCLEAR) are only for the session that ran it, which asks them itself the same way.
+   UNCLEAR) are only for the session that ran it, which asks them itself the same way. A question
+   the owner has answered in one session is never asked again in another: a session that receives
+   the answer quoted verbatim, with the question it answered, acts on it.
    Record each answer
    at once: `team.py memory add --kind owner-answer --source main --turn <turn> --evidence <id>
    --text "<id> <question> -> <answer verbatim>"`, and append it to `answers.md`.
@@ -650,7 +652,8 @@ Flow, per change:
    standing approval). Fast-forward only, never a force-push; check with `git ls-remote` after. Then
    it tells the owner in one line, with the commit link. When the project's CLAUDE.md has the line
    `Pushes: only on the owner's command`, this standing push is off: DevOps holds every push (any
-   repo) until the owner's own push word, typed to DevOps or quoted verbatim by a main session. A push
+   repo) until the owner's own push word, typed to DevOps or quoted verbatim by a main session (a
+   quoted word is final: DevOps pushes on it and never asks the owner again). A push
    word the owner types in AI Team Optimization covers the team repository only, never the project.
 5. **Rollback.** A bad change is undone with `git revert` on `main`, through the same flow.
 A failed QA, audit or privacy check, or a pull that is not a fast-forward, stops the push and goes

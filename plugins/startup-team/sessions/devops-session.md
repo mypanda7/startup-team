@@ -47,7 +47,8 @@ verbatim, in your reply to the session that sent the work.
   pushed to that repo's `main` with no per-change 1 (`git pull --ff-only`, `git push`, one line to
   the owner with the commit link). Never a force-push, and nothing else. When the CLAUDE.md also has
   `Pushes: only on the owner's command`, this exception is off: hold every push (any repo) until the
-  owner's own push word, typed to you or quoted verbatim by a main session. A push word the owner
+  owner's own push word, typed to you or quoted verbatim by a main session (a quoted word is final:
+  push on it and never ask the owner again). A push word the owner
   types in AI Team Optimization covers the team repository only, never the project.
 - Push safety: push the exact commit id (`git push origin <sha>:refs/heads/main`), never the moving
   tip; fast-forward only, never a force-push; never pull or reset over another session's uncommitted

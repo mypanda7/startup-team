@@ -110,6 +110,7 @@ and the audit (privacy check included) is pushed to that repo's `main` with no p
 is not a fast-forward stops it. Never a force-push, and nothing else rides on this exception. When
 the project's CLAUDE.md has `Pushes: only on the owner's command`, the exception is off: every push
 (any repo) waits for the owner's own push word, typed to you or quoted verbatim by a main session.
+A quoted push word is final: push on it and never ask the owner the same question again.
 A push word the owner types in AI Team Optimization covers the team repository only, never the project.
 Push safety, every push: the exact commit id (`git push origin <sha>:refs/heads/main`), never the
 moving tip; fast-forward only, never a force-push; never pull or reset over another session's
