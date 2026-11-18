@@ -2,7 +2,8 @@
 
   session-start  (SessionStart)      point at the notes index; print its "router" section if it has one
   first-prompt   (UserPromptSubmit)  once per session: remind to read the relevant note first; does the
-                                     session-start job itself when that hook did not fire; also passes
+                                     session-start job itself when that hook did not fire (the role
+                                     and summary lines even for another session's message); also passes
                                      on a pending "update the notes" reminder left by the stop mode
   stop           (Stop)              once per session: if files changed since the session began and no
                                      note did, tell the owner and leave a reminder for the next prompt
@@ -13,13 +14,16 @@ nothing. STARTUP_TEAM_NOTES_OFF=1 turns it off.
 
 Python 3.9+, standard library only. Never blocks: always exits 0 and swallows every error.
 """
+import contextlib
 import hashlib
+import io
 import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import uuid
 
 DEFAULT_FILE = ".claude/operating-rules.md"
 ROUTER_MAX_CHARS = 1500
@@ -159,17 +163,50 @@ def role_line(base: str, host_id: str) -> str:
     return ""
 
 
-def session_start(payload: dict, session_id: str) -> None:
+def team_lines(payload: dict, session_id: str) -> list:
+    """The role line and the summary line for this session."""
     for base in (os.environ.get("CLAUDE_PROJECT_DIR"), payload.get("cwd")):
         if not isinstance(base, str) or not os.path.isdir(os.path.join(base, ".handoff")):
             continue
         # the desktop app's own session id is the one the registry records
         role = role_line(base, os.environ.get("CLAUDE_CODE_HOST_SESSION_ID") or session_id)
-        if role:
-            print(role)
-        if os.path.isfile(os.path.join(base, ".handoff", "conversations", "SUMMARY.md")):
-            print(SUMMARY_LINE)
-        break
+        summary = os.path.isfile(os.path.join(base, ".handoff", "conversations", "SUMMARY.md"))
+        return [line for line in (role, SUMMARY_LINE if summary else "") if line]
+    return []
+
+
+def fresh(transcript: str) -> bool:
+    """True when the conversation has no assistant turn yet: a new, emptied or missing transcript."""
+    try:
+        with open(transcript, encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    entry = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(entry, dict) and entry.get("type") == "assistant":
+                    return False
+    except OSError:
+        pass
+    return True
+
+
+def given_marker(payload: dict, session_id: str) -> str:
+    """Marker that the role lines were given: per transcript when the host names one, else per id."""
+    key = str(payload.get("transcript_path", "") or "") or session_id
+    return marker("given", key) if key else ""
+
+
+def session_start(payload: dict, session_id: str) -> None:
+    for line in team_lines(payload, session_id):
+        print(line)
+    given = given_marker(payload, session_id)
+    if given:
+        try:
+            with open(given, "w"):
+                pass
+        except OSError:
+            pass
     found = find_notes(payload)
     if not found:
         return
@@ -182,6 +219,27 @@ def session_start(payload: dict, session_id: str) -> None:
 
 def first_prompt(payload: dict, session_id: str) -> None:
     head = str(payload.get("prompt", "") or "").lstrip()
+    # After a clear SessionStart may not fire: give the role and summary lines on the first prompt of
+    # a fresh conversation, also when another session sent it, so a cleared session reads its brief.
+    transcript = str(payload.get("transcript_path", "") or "")
+    given = given_marker(payload, session_id)
+    show = False
+    if transcript:
+        if os.path.exists(given):
+            # SessionStart gave them for this conversation; a later clear shows them again
+            with contextlib.suppress(OSError):
+                os.remove(given)
+        else:
+            show = fresh(transcript)
+    elif given and not os.path.exists(given):
+        # shortcut: no transcript path means once per session id; a reused id gets nothing after a clear
+        show = True
+        with contextlib.suppress(OSError), open(given, "w"):
+            pass
+    if show:
+        lines = team_lines(payload, session_id)
+        if lines:
+            print("\n".join(lines))
     if head.startswith(NOT_THE_OWNER) or "<agent-message from=" in head[:400]:
         return
     found = find_notes(payload)
@@ -266,6 +324,52 @@ def selftest() -> None:
         line = role_line(tmp, "local_a")
         assert "qa session" in line and "qa-session.md" in line and ".handoff/checkpoints/qa.md" in line, line
         assert role_line(tmp, "local_b") == "" and role_line(tmp, "") == "", "unknown id"
+        # After a clear SessionStart may not fire: the first prompt of a fresh transcript, even from
+        # another session, gives the role line, after every clear, also with the same session id.
+        os.environ.pop("CLAUDE_PROJECT_DIR", None)
+        os.environ["CLAUDE_CODE_HOST_SESSION_ID"] = "local_a"
+        sid = "selftest-" + uuid.uuid4().hex
+        other = "Another Claude session sent a message: RESET: before new task"
+        user = json.dumps({"type": "user"}) + "\n"
+        reply = json.dumps({"type": "assistant"}) + "\n"
+        paths = [os.path.join(tmp, name + ".jsonl") for name in ("one", "two", "three", "four")]
+        made = []
+
+        def write(path, text):
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(text)
+
+        def run(mode, session_id, transcript, prompt=other):
+            payload = {"cwd": tmp, "prompt": prompt, "transcript_path": transcript}
+            made.append(given_marker(payload, session_id))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                (first_prompt if mode == "first" else session_start)(payload, session_id)
+            return out.getvalue()
+        try:
+            role = "Team role: this is the qa session"
+            assert role in run("first", sid, paths[0]), "no role line for a missing transcript"
+            write(paths[0], user + reply)
+            assert run("first", sid, paths[0]) == "", "role line in a conversation that has replies"
+            write(paths[1], "not json\n" + user)
+            assert role in run("first", sid, paths[1]), "no role line after clear 1 (new transcript)"
+            write(paths[1], user + reply)
+            assert run("first", sid, paths[1]) == ""
+            write(paths[1], "")
+            assert role in run("first", sid, paths[1], "hello"), "no role line after clear 2 (emptied)"
+            write(paths[2], user)
+            assert role in run("start", sid, paths[2])
+            assert run("first", sid, paths[2]) == "", "role line twice after SessionStart"
+            write(paths[2], "")
+            assert role in run("first", sid, paths[2]), "no role line after a clear that follows a start"
+            write(paths[3], user)
+            assert role in run("first", "", paths[3]), "no role line without a payload session id"
+            assert role in run("first", sid, ""), "no role line without a transcript path"
+            assert run("first", sid, "") == "", "id fallback gives the role line twice"
+        finally:
+            for path in made:
+                if path and os.path.exists(path):
+                    os.remove(path)
     print("notes selftest ok")
 
 

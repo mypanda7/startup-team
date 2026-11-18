@@ -235,8 +235,10 @@ Long histories are re-read on every turn, so sessions stay short and the detail 
   <words>`", and at most five lines of summary. No separate re-brief follows a clear. Agents and
   sub-agents get paths too, never pasted history or transcripts; skills have no history of their own.
 - **After a clear.** When the session's id is a role in `.handoff/team-sessions.json`, the
-  session-start output names the role: the session reads that role's brief under the plugin folder,
-  then its checkpoint. The checkpoint's first line names the role and brief path as the backstop.
+  session-start output names the role (when the host skips SessionStart, the first prompt's hook
+  output does, also for a message from another session): the session reads that role's brief under
+  the plugin folder, then its checkpoint. The checkpoint's first line names the role and brief
+  path as the backstop.
 - **Looking things up.** A session that needs older detail runs `team.py records find <words>
   [--kind k] [--last n]` (paths, kinds and titles only; `records index` rebuilds
   `.handoff/records-index.jsonl`) and opens only the files it names, instead of asking for a
