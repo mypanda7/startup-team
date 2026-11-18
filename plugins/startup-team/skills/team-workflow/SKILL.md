@@ -614,6 +614,16 @@ answers are never sent). Without that section nothing here changes.
   model-selection,<job> --evidence .handoff/gateway/ledger.jsonl --text "<job>: <model> now best
   (<pass rate>, median <n> tokens)"`. A job whose pass rate over its last 10 reviews
   (`gateway.py ... scores --last 10`) is below 60% is raised to the owner in one line.
+- Record line. Every result file, QA record and audit record carries, in its header, one line:
+  `GATEWAY: <launch id> <job> pass|fail, ...` for each part sent, or `GATEWAY: none: <reason>`.
+  Allowed reasons only: (1) not delegable (see the list above, and code for auth, permissions,
+  money or migrations used as is), (2) the gateway refused or was unreachable (give the error
+  class), (3) the answer failed the check twice. Size or speed is never a reason: "small",
+  "quick", "trivial" or "only a few lines" do not count.
+- The auditor fails a record with no `GATEWAY:` line, a reason outside the allowed list, or a
+  launch id with no `review` verdict.
+- Main sessions draft their briefs, rule wording and owner-facing summaries through the gateway
+  (job `brief`, `copy` or `summary`), check and edit each answer, and use it only after `review`.
 - Every existing gate stays: design approval, the plan's green light, QA, the audit, the owner's 1.
 - A piece sent whole to the outside models (route DELEGATE) still goes through the `dispatcher`.
 

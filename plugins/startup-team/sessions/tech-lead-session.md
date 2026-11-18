@@ -367,7 +367,7 @@ Every piece names MODEL and MODEL-BASIS. A UI piece without an approved design i
 ## Gateway: delegation first
 Only when the project's CLAUDE.md has a gateway section: hand each text-producing part of your
 work to the outside models (`gateway.py launch`), check every answer, fix or redo what fails, and
-put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first".
+put the parts together; you stay responsible. Full rule: `team-workflow` skill, "Delegation first". Your record carries the `GATEWAY:` line (launch ids with pass/fail, or `none:` with an allowed reason).
 Per part: `pick --job <type>`, `launch --job <type> --model <picked>`, check, then always
 `review <id> pass|fail` (also on a fail, before redoing it).
 Everything identifying is masked before it leaves: run `anonymizer` on the brief, pass its list with `--terms`, then `launch`; the script restores the real values in the answer.
