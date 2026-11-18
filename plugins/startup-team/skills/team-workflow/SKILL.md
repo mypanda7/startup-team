@@ -627,7 +627,9 @@ answers are never sent). Without that section nothing here changes.
   class), (3) the answer failed the check twice. Size or speed is never a reason: "small",
   "quick", "trivial" or "only a few lines" do not count.
 - The auditor fails a record with no `GATEWAY:` line, a reason outside the allowed list, or a
-  launch id with no `review` verdict.
+  launch id with no `review` verdict. A launch that failed with no answer (for example a 502 or a
+  timeout) is recorded as `<launch id> failed <error class>` and needs no review verdict; the
+  auditor accepts this form.
 - Main sessions draft their briefs, rule wording and owner-facing summaries through the gateway
   (job `brief`, `copy` or `summary`), check and edit each answer, and use it only after `review`.
 - Every existing gate stays: design approval, the plan's green light, QA, the audit, the owner's 1.
