@@ -51,7 +51,13 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    has an open question in its own session." An agent's question blocks (OPEN QUESTIONS, QUESTIONS,
    UNCLEAR) are only for the session that ran it, which asks them itself the same way. A question
    the owner has answered in one session is never asked again in another: a session that receives
-   the answer quoted verbatim, with the question it answered, acts on it.
+   the answer quoted verbatim, with the question it answered, acts on it. A role agent with a
+   standing session in `.handoff/team-sessions.json` (designer, qa, security, devops) runs only in
+   that session. Another session that gets work for that role (a request the owner typed, a slash
+   command, a piece) does not run the agent: it sends that session the owner's words verbatim, the
+   file paths and any answers already given (verbatim, with their questions), then says only
+   "<Role> has the request." That role session asks the questions. No registry entry for the
+   role: the current session runs the agent as before.
    Record each answer
    at once: `team.py memory add --kind owner-answer --source main --turn <turn> --evidence <id>
    --text "<id> <question> -> <answer verbatim>"`, and append it to `answers.md`.

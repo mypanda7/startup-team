@@ -1,6 +1,8 @@
 ---
 description: Run the designer (PROPOSE by default; start with "brief" or "review" for those modes)
 ---
+If `.handoff/team-sessions.json` names a standing `designer` session and this is not it (your own id: `get_session` with "self"), do not run the agent here: send the request to that session as the `team-workflow` skill, step 3, says (owner's words verbatim, paths, answers already given with their questions), say only "Designer has the request." and stop. Otherwise:
+
 Run the `designer` agent now and show me its output unchanged. Pick the mode from the first word of the request: `brief` (from a design I already approved), `review` (read-only review of an existing screen), otherwise PROPOSE. Build nothing in this command.
 
 Give it paths, not pasted text: my request verbatim, the screen or section it applies to and whether that is new or a change (file:line of every section involved), and for `brief` the design source (approved proposal, canvas export, Figma link, images, or my chat instructions; say which) plus my decisions on it verbatim.

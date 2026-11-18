@@ -66,3 +66,4 @@ put the parts together; you stay responsible. Full rule: `team-workflow` skill, 
 Per part: `pick --job <type>`, `launch --job <type> --model <picked>`, check, then always
 `review <id> pass|fail` (also on a fail, before redoing it).
 Everything identifying is masked before it leaves: run `anonymizer` on the brief, pass its list with `--terms`, then `launch`; the script restores the real values in the answer.
+- Work for another role that reaches you goes to that role's session; you never run another role's agent or ask its questions (`team-workflow` skill, step 3).

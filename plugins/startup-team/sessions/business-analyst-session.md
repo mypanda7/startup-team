@@ -44,3 +44,4 @@ The project's CLAUDE.md wins over this brief. Read it before the first request.
 ## Gateway
 When the project has a gateway to outside models, a draft of your analysis may go to it as the
 `team-workflow` skill says; questions to the owner and their answers are never sent.
+- Work for another role that reaches you goes to that role's session; you never run another role's agent or ask its questions (`team-workflow` skill, step 3).
