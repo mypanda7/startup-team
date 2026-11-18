@@ -40,7 +40,8 @@ beside the `team-workflow` skill. Then:
 2. The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words only, as ONE
    commit on `main` that raises the plugin's patch version.
 3. The QA Engineer tests it; you audit it, with the privacy check of "Setup changes", step 3.
-4. DevOps pushes it as "Setup changes", step 4, says.
+4. DevOps pushes it as "Setup changes", step 4, says. A push word the owner types here ("push to git",
+   "update git") covers the team repository only: quote it verbatim to DevOps for that repo, never the project.
 5. Install it for this project: `claude plugin marketplace update startup-team`, then
    `claude plugin update startup-team@startup-team` with the project's scope.
 6. End each task by stating the commit and whether it is pushed, in one line.

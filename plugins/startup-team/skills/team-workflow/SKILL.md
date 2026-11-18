@@ -648,7 +648,8 @@ Flow, per change:
    standing approval). Fast-forward only, never a force-push; check with `git ls-remote` after. Then
    it tells the owner in one line, with the commit link. When the project's CLAUDE.md has the line
    `Pushes: only on the owner's command`, this standing push is off: DevOps holds every push (any
-   repo) until the owner's own push word, typed to DevOps or quoted verbatim by a main session.
+   repo) until the owner's own push word, typed to DevOps or quoted verbatim by a main session. A push
+   word the owner types in AI Team Optimization covers the team repository only, never the project.
 5. **Rollback.** A bad change is undone with `git revert` on `main`, through the same flow.
 A failed QA, audit or privacy check, or a pull that is not a fast-forward, stops the push and goes
 to the owner.
