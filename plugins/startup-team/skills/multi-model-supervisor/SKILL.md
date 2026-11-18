@@ -14,8 +14,9 @@ working tree or a commit without a review verdict.
 ## When this applies
 - The project's CLAUDE.md names a gateway and says how a multi-model session is started, and the
   worker roles exist in this session. If either is missing, say so in one line and work normally.
-- A trivial ask (a one-line fix, a question one search answers) is done directly. Delegate when
-  the task has at least two independent pieces, or one piece that is mostly mechanical.
+- A trivial ask (a one-line fix, a question one search answers) is not split into worker sessions,
+  but its text parts still go to the gateway (`team-workflow` skill, "Delegation first"). Split into
+  workers when the task has at least two independent pieces, or one piece that is mostly mechanical.
 - A piece that carries personal data or secrets is never sent to an outside model. Neither is a
   piece on auth, permissions, payments or the data model: those stay with the team's own agents.
 - Inside the team's chain, the tech lead decides what is delegated (route DELEGATE) and the

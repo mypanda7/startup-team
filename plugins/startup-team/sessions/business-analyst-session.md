@@ -42,6 +42,7 @@ Your questions are yours to ask: never hand them to another session to ask.
 The project's CLAUDE.md wins over this brief. Read it before the first request.
 
 ## Gateway
-When the project has a gateway to outside models, a draft of your analysis may go to it as the
-`team-workflow` skill says; questions to the owner and their answers are never sent.
+When the project has a gateway to outside models, send each draft of your analysis to it first, as the
+`team-workflow` skill, "Delegation first", says; questions to the owner and their answers are never
+sent. Your record carries the `GATEWAY:` line (launch ids with pass/fail, or `none:` with an allowed reason).
 - Work for another role that reaches you goes to that role's session; you never run another role's agent or ask its questions (`team-workflow` skill, step 3).
