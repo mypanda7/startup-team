@@ -177,6 +177,10 @@ These add to the numbered steps above.
        wait until its turn has ended (a background command of about a minute, then `get_session`
        shows it not running; a message that arrives before its turn ends cancels its clear), then
        send the task.
+  - The clear gate (`hooks/clear-gate.py`) enforces this: a message to a session in the registry is
+    refused unless, since your last task message to it, you cleared it or sent it `RESET:`, or the
+    message has a line `CLEAR: skipped <what is pending>`. On a refusal, clear it or state the reason,
+    then resend. `RESET:` and `WAKE` always pass. Off switch: `STARTUP_TEAM_CLEAR_GATE_OFF=1`.
   - On `RESET: before new task from <name>` or `RESET: threshold from <name>` (never triaged, never
     a piece): first the check before any clear, above. Anything ongoing: skip the clear and say so
     in one line; the task is sent anyway (none follows a threshold `RESET:`), and no later
