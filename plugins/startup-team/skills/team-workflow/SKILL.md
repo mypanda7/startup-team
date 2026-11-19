@@ -180,7 +180,9 @@ These add to the numbered steps above.
   - The clear gate (`hooks/clear-gate.py`) enforces this: a message to a session in the registry is
     refused unless, since your last task message to it, you cleared it or sent it `RESET:`, or the
     message has a line `CLEAR: skipped <what is pending>`. On a refusal, clear it or state the reason,
-    then resend. `RESET:` and `WAKE` always pass. Off switch: `STARTUP_TEAM_CLEAR_GATE_OFF=1`.
+    then resend. Only the exact one-line `RESET: before new task|threshold from <name>` and `WAKE`
+    pass on their own; messages to the main sessions (reports going up) are not gated. Off switch:
+    `STARTUP_TEAM_CLEAR_GATE_OFF=1`.
   - On `RESET: before new task from <name>` or `RESET: threshold from <name>` (never triaged, never
     a piece): first the check before any clear, above. Anything ongoing: skip the clear and say so
     in one line; the task is sent anyway (none follows a threshold `RESET:`), and no later

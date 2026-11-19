@@ -5,7 +5,8 @@ PreToolUse on SendMessage / send_message / clear_session, PostToolUse on clear_s
   task message to it, the sender cleared it (clear_session) or sent it `RESET:`; or when the
   message has a line `CLEAR: skipped <reason>` (something is pending there). Otherwise it is
   denied once with the steps, and the sender clears or states the reason and resends.
-- `RESET:` and `WAKE` messages always pass. Targets outside the registry always pass.
+- The exact one-line `RESET: before new task|threshold from <name>` and `WAKE` always pass.
+  Targets outside the registry, and the main sessions (tech-lead, optimization), always pass.
 - STARTUP_TEAM_CLEAR_GATE_OFF=1 turns it off. Any error lets the call through.
 Python 3.9+, standard library only.
 """
@@ -20,6 +21,11 @@ SEND_TOOLS = ("SendMessage", "mcp__ccd_session_mgmt__send_message")
 CLEAR_TOOL = "mcp__ccd_session_mgmt__clear_session"
 PREFIX = re.compile(r"^\s*\[startup-team:[^\]]*\]\s*")
 SKIPPED = re.compile(r"(?m)^\s*CLEAR: skipped[ \t]+\S")
+# Only the exact one-line forms pass, so no task rides in on them.
+RESET = re.compile(r"RESET: (before new task|threshold) from [^\n]{1,80}\s*$")
+WAKE = re.compile(r"WAKE\s*$")
+# Reports go up to these; they are cleared only by each other, by the written Threshold rule.
+MAIN = ("tech-lead", "optimization")
 
 
 def registry_base(payload: dict):
@@ -38,8 +44,10 @@ def registry_base(payload: dict):
 def team_target(target: str, registry: dict):
     """(name, id) of the registry session the target names, or None."""
     want = (target or "").split(" [")[0].strip().lower()
+    if not want:
+        return None
     for name, entry in registry.items() if isinstance(registry, dict) else ():
-        if not isinstance(entry, dict) or not entry.get("id"):
+        if not isinstance(entry, dict) or not entry.get("id") or name in MAIN:
             continue
         if want in (entry["id"].lower(), name.lower(), str(entry.get("title", "")).lower()):
             return name, entry["id"]
@@ -90,11 +98,11 @@ def decide(payload: dict):
     if tool not in SEND_TOOLS:
         return None
     text = PREFIX.sub("", str(args.get("message") or ""))
-    if text.startswith("RESET:"):
+    if RESET.match(text):
         state[sid] = "ready"
         save(path, state)
         return None
-    if text.startswith("WAKE"):
+    if WAKE.match(text):
         return None
     if state.get(sid) == "ready" or SKIPPED.search(text):
         state[sid] = "used"
@@ -113,7 +121,8 @@ def selftest() -> None:
     try:
         os.makedirs(os.path.join(root, ".handoff"))
         with open(os.path.join(root, ".handoff", "team-sessions.json"), "w", encoding="utf-8") as handle:
-            json.dump({"designer": {"id": "local_abc", "title": "Designer"}}, handle)
+            json.dump({"designer": {"id": "local_abc", "title": "Designer"}, "tech-lead": {"id": "local_tl"},
+                       "qa": {"id": "local_qa"}}, handle)
         sender = "selftest-" + os.urandom(6).hex()
         def call(tool, event="PreToolUse", **args):
             return decide({"tool_name": tool, "hook_event_name": event, "tool_input": args,
@@ -125,6 +134,10 @@ def selftest() -> None:
         assert call("SendMessage", to="local_abc", message="[startup-team:designer] WAKE") is None, "WAKE passes"
         assert call("SendMessage", to="local_abc", message="[startup-team:designer] RESET: before new task from x") is None
         assert call("SendMessage", to="local_abc", message="task after reset") is None, "after RESET passes"
+        assert call("SendMessage", to="local_tl", message="[startup-team:tech-lead] QA done") is None, "reports up pass"
+        assert call("SendMessage", to="", message="x") is None, "empty target passes"
+        assert call("SendMessage", to="local_qa", message="RESET: now build Y\nmore") is not None, "smuggled RESET"
+        assert call("SendMessage", to="local_qa", message="WAKEUP do Z") is not None, "smuggled WAKE"
         assert call("SendMessage", to="local_abc", message="second task") is not None, "used up"
         assert call("SendMessage", to="local_abc", message="CLEAR: skipped piece P3 out\ntask") is None, "stated skip passes"
         assert call("SendMessage", to="local_abc", message="CLEAR: skipped\ntask") is not None, "empty reason denied"
