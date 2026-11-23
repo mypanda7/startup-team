@@ -1284,7 +1284,7 @@ def main() -> None:
     gc.add_argument("files", nargs="+")
     gc.add_argument("--repo", required=True)
     gc.add_argument("--message", "-m", required=True)
-    gc.add_argument("--words", required=True, help="the project's private-words file")
+    gc.add_argument("--words", help="the project's private-words file (always for the team repo)")
     gc.add_argument("--bump", action="store_true", help="raise the plugin's patch version and add it")
     gc.add_argument("--trailer", default="Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>")
     gc.set_defaults(fn=git_commit_team)

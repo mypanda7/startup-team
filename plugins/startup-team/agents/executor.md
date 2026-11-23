@@ -68,7 +68,9 @@ brief names.
    stop and return BLOCKED with the output. Do not fix what the piece did not touch: report it.
 5. For a bug fix, prove the test: run it with the fix reverted (then restore the fix) and record
    that it failed. A test that passes without the fix proves nothing.
-6. When every VERIFY command shows the required outcome, make ONE commit: `git add` by path, only
+6. When every VERIFY command shows the required outcome, make ONE commit, with the script where it
+   exists: `team.py git commit-team <files> --repo . [--words .handoff/private-words.txt] -m "<subject>"`
+   (it does all of the following in one call). By hand only where no script fits: `git add` by path, only
    this piece's files (never `-A`, never unrelated uncommitted files you found in the tree),
    subject from the brief, on the current branch, with the attribution trailer your session shows.
    With no git identity set, commit as the previous commit's author (`git -c user.name="$(git log

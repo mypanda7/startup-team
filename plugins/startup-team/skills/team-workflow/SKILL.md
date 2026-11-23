@@ -153,8 +153,8 @@ These add to the numbered steps above.
   owner's push word (fast-forward, private words, ls-remote, plugin update). `team.py chain
   setup-change --text ... --evidence ...` does the memory entry, the exclude fix and every selftest.
   The session still decides when each runs and reads its one-line result.
-  All other git work runs as scripts too (owner): `team.py git commit-team <files> --repo <team repo>
-  --words <file> -m <msg> [--bump]` (one local team-repo commit: given files only, patch bump,
+  All other git work runs as scripts too (owner): `team.py git commit-team <files> --repo <repo>
+  [--words <file>] -m <msg> [--bump]` (one local commit in any repo, the team repo or the project: given files only, patch bump,
   private words and secret shapes checked); `team.py git push-project [sha] [--branch b] [--words
   <file>] [--dry-run]` (only after the owner's push word for that project); `team.py git status
   [--repo]` (one line: branch, ahead/behind, changed); `team.py git sync [--repo]` (fast-forward
@@ -689,7 +689,7 @@ Flow, per change:
    holds none of the words in the project's `.handoff/private-words.txt` (which must exist) and none
    of what `team.py learn propose` refuses in added lines: a secret, an email, an IP address, a
    local path, the project's name or its web addresses.
-4. **Push.** DevOps runs `git pull --ff-only`, then `git push origin <sha>:refs/heads/main` (the
+4. **Push.** DevOps runs `team.py git push-team <sha> --repo <clone> --words <private-words file> --project <project>` (the
    exact commit, never the moving tip), with no per-change 1 (the CLAUDE.md line is the owner's
    standing approval). Fast-forward only, never a force-push; check with `git ls-remote` after. Then
    it tells the owner in one line, with the commit link. When the project's CLAUDE.md has the line
