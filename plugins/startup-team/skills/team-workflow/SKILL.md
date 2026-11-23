@@ -634,6 +634,8 @@ answers are never sent. Without that section nothing here changes.
   money or migrations used as is), (2) the gateway refused or was unreachable (give the error
   class), (3) the answer failed the check twice. Size or speed is never a reason: "small",
   "quick", "trivial" or "only a few lines" do not count.
+  `team.py records check-commit` stops a records commit whose added `GATEWAY: none:` line names none
+  of these (it must start with "not delegable", "gateway refused", "gateway unreachable" or "failed twice").
 - The auditor fails a record with no `GATEWAY:` line, a reason outside the allowed list, or a
   launch id with no `review` verdict. A launch that failed with no answer (for example a 502 or a
   timeout) is recorded as `<launch id> failed <error class>` and needs no review verdict; the

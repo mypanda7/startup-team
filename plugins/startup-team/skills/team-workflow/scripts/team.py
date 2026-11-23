@@ -684,7 +684,16 @@ def commit_problems(r: Path) -> list:
             fname = line[6:] if line.startswith("+++ b/") else line[4:]
         elif line.startswith("+") and SECRET.search(line):
             out.append(f"secret shape in {fname}")  # the value itself is never printed
+        elif line.startswith("+"):
+            m = GATEWAY_NONE.match(line[1:])
+            if m and not m.group(1).lower().startswith(GATEWAY_REASONS):
+                out.append(f"GATEWAY reason not allowed in {fname}: {m.group(1)[:60] or '(none)'}")
     return sorted(set(out))
+
+
+# The allowed reasons for skipping the gateway (SKILL.md "Delegation first", Record line).
+GATEWAY_NONE = re.compile(r"\s*GATEWAY:\s*none\b:?\s*(.*)$", re.I)
+GATEWAY_REASONS = ("not delegable", "gateway refused", "gateway unreachable", "failed twice")
 
 
 def rec_check_commit(_a) -> None:
@@ -723,6 +732,16 @@ def rec_git_selftest() -> None:
         assert "outside .handoff/: out.txt" in probs, probs
         assert "secret shape in .handoff/b.md" in probs, probs
         assert not any("zqvalsecret" in x for x in probs)
+        (r / ".handoff" / "c.md").write_text(
+            "GATEWAY: none: not delegable (running tests)\nGATEWAY: none: failed twice\n"
+            "GATEWAY: none: gateway unreachable (worker)\nGATEWAY: 2026-ab12 copy pass\n", encoding="utf-8")
+        (r / ".handoff" / "d.md").write_text("GATEWAY: none: small change, nothing to draft\n", encoding="utf-8")
+        (r / ".handoff" / "e.md").write_text("GATEWAY: none\n", encoding="utf-8")
+        subprocess.run(git + ["add", "-f", ".handoff"], check=True)
+        probs = commit_problems(r)
+        assert not any("c.md" in x for x in probs), probs
+        assert "GATEWAY reason not allowed in .handoff/d.md: small change, nothing to draft" in probs, probs
+        assert "GATEWAY reason not allowed in .handoff/e.md: (none)" in probs, probs
 
 
 # ---- conversations: per-session, per-day chat files plus a hand-kept SUMMARY.md ----
