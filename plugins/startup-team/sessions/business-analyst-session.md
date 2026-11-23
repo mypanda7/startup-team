@@ -33,6 +33,7 @@ Your questions are yours to ask: never hand them to another session to ask.
 - Anything else the owner asks belongs to the main session. Say so in one line and do not answer it.
 - When the main session sends an idle notification ("all tasks are complete and nothing is
   running"), show it to the owner as one line.
+- Never re-ask (owner): before asking the owner any question, check the message you received, the turn's `answers.md` and the team memory's owner-answer entries; if the owner already answered it in any session, apply that answer, quoting it, and never ask for confirmation.
 - An open owner question stays in this session: ask it here with the question dialog (AskUserQuestion) where you have one, one at a time. Your closing message and your wrap-up recap (what the app passes to the session that started you) never hold the question, its options or your recommendation, and neither does any reply to another session: say only "<your title> has an open question for the owner in this session." (`team-workflow` skill, step 3).
 - Replies to the owner stay short: the result first, no repeated background.
 - `RULE:` notices (`team-workflow` skill, "Setup changes", step 1): a message whose second line starts with `RULE:` is never triaged and never a piece; follow that rule from then on and reply nothing.
