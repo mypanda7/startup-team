@@ -921,6 +921,133 @@ def conv_selftest(_a) -> None:
     print("conversations selftest ok")
 
 
+# --- git: the repeated git steps as one command each (owner, 2026-11-23: scripts save tokens) ---
+FIXTURE = "<redacted-fixture>"
+
+
+def run_git(repo, *args, check=True) -> str:
+    out = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if check and out.returncode:
+        raise SystemExit(f"git {args[0]} failed: {out.stderr.strip()[:200]}")
+    return out.stdout
+
+
+def redact_fixtures(path: Path) -> int:
+    """Replace secret shapes in one record file with a placeholder; returns the count (values never printed).
+    A full git commit id on a line that talks about git stays, as in commit_problems."""
+    count = 0
+    def swap(m, git_line):
+        nonlocal count
+        if git_line and GIT_SHA.fullmatch(m.group(0)):
+            return m.group(0)
+        count += 1
+        return FIXTURE
+    text = path.read_text(encoding="utf-8")
+    new = "".join(SECRET.sub(lambda m, g=bool(GIT_WORD.search(l)): swap(m, g), l) for l in text.splitlines(True))
+    if count:
+        path.write_text(new, encoding="utf-8")
+    return count
+
+
+def git_records_commit(a) -> None:
+    r = root()
+    files = [f for f in a.files if f]
+    if not files:
+        raise SystemExit("no files given")
+    run_git(r, "add", "--", *files)
+    if commit_problems(r):
+        # Records quote test values; a placeholder keeps the record and keeps any real value out of git.
+        for n in filter(None, run_git(r, "diff", "--cached", "--name-only").splitlines()):
+            f = r / n
+            if n.startswith(".handoff/") and f.is_file():
+                c = redact_fixtures(f)
+                if c:
+                    print(f"redacted {c} secret shape(s) in {n}")
+                    run_git(r, "add", "--", n)
+    probs = commit_problems(r)
+    if probs:
+        for x in probs:
+            print(x)
+        print("STOP: do not commit; tell the owner")
+        sys.exit(5)
+    name = run_git(r, "log", "-1", "--format=%an").strip()
+    mail = run_git(r, "log", "-1", "--format=%ae").strip()
+    msg = a.message + ("\n\n" + a.trailer if a.trailer else "")
+    run_git(r, "-c", f"user.name={name}", "-c", f"user.email={mail}", "commit", "-q", "-m", msg)
+    print("committed " + run_git(r, "rev-parse", "--short", "HEAD").strip() + " (local, not pushed)")
+
+
+def git_push_team(a) -> None:
+    """Push one exact commit of the team repo to main: fast-forward, private-word check, ls-remote, plugin update."""
+    repo = Path(a.repo)
+    sha = run_git(repo, "rev-parse", "--verify", a.sha + "^{commit}").strip()
+    run_git(repo, "fetch", "-q", "origin", "main")
+    if subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", "origin/main", sha]).returncode:
+        raise SystemExit("STOP: not a fast-forward of origin/main")
+    words = [w.strip().lower() for w in Path(a.words).read_text(encoding="utf-8").splitlines() if w.strip()]
+    added = "\n".join(l[1:] for l in run_git(repo, "diff", "origin/main", sha).splitlines()
+                      if l.startswith("+") and not l.startswith("+++")).lower()
+    added += "\n" + run_git(repo, "log", "--format=%B", "origin/main.." + sha).lower()
+    hits = sum(added.count(w) for w in words)
+    if hits:
+        raise SystemExit(f"STOP: {hits} private-word hit(s); nothing pushed")
+    if a.dry_run:
+        print(f"ready: {sha[:7]} fast-forward, 0 private-word hits (dry run, nothing pushed)")
+        return
+    run_git(repo, "push", "-q", "origin", f"{sha}:refs/heads/main")
+    remote = run_git(repo, "ls-remote", "origin", "refs/heads/main").split()[:1]
+    if remote != [sha]:
+        raise SystemExit("STOP: ls-remote main does not show the pushed commit")
+    print(f"pushed {sha[:7]} to main; ls-remote {sha}")
+    if a.project:
+        for cmd in (["claude", "plugin", "marketplace", "update", "startup-team"],
+                    ["claude", "plugin", "update", "startup-team@startup-team"]):
+            out = subprocess.run(cmd, cwd=a.project, capture_output=True, text=True, encoding="utf-8", errors="replace")
+            print(("ok: " if out.returncode == 0 else "FAILED: ") + " ".join(cmd[1:]))
+
+
+def chain_setup_change(a) -> None:
+    """Memory entry, exclude fix and every selftest for one setup change, one line each."""
+    r = root()
+    a.kind, a.turn, a.tags = "setup-change", None, None
+    setattr(a, "for", None)
+    mem_add(a)
+    ex = r / ".git" / "info" / "exclude"
+    if ex.exists() and handoff_tracked(r):
+        lines = ex.read_text(encoding="utf-8").splitlines()
+        keep = [l for l in lines if l.strip() not in (".handoff", ".handoff/")]
+        if keep != lines:
+            ex.write_text("\n".join(keep) + ("\n" if keep else ""), encoding="utf-8")
+    plug = Path(__file__).resolve().parents[3]
+    me = str(Path(__file__).resolve())
+    tests = [[me, "records", "selftest"], [me, "loadout", "selftest"], [me, "conversations", "selftest"],
+             [str(plug / "hooks" / "notes.py"), "selftest"], [str(plug / "hooks" / "clear-gate.py"), "selftest"],
+             [str(Path(me).with_name("gateway.py")), "selftest"]]
+    bad = 0
+    for t in tests:
+        if not Path(t[0]).exists():
+            continue
+        out = subprocess.run([sys.executable, *t], capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=120)
+        bad += out.returncode != 0
+        print(("ok " if out.returncode == 0 else "FAIL ") + Path(t[0]).name + " " + " ".join(t[1:]))
+    if bad:
+        sys.exit(6)
+
+
+def git_selftest() -> None:
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        f = Path(tmp) / "x.md"
+        sha = "a" * 40
+        f.write_text("token = abc123abc123abc123abc123\ncommit " + sha + "\nplain\n", encoding="utf-8")
+        assert redact_fixtures(f) == 1, "one fixture redacted"
+        t = f.read_text(encoding="utf-8")
+        assert FIXTURE in t and "abc123abc123" not in t and sha in t, "value gone, git sha kept"
+        assert redact_fixtures(f) == 0, "second run changes nothing"
+        f.write_text(sha + "\n", encoding="utf-8")
+        assert redact_fixtures(f) == 1, "bare sha (no git word) redacted, as the check flags it"
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="startup-team: turn folders, shared memory, learning loop")
     sub = p.add_subparsers(dest="area", required=True)
@@ -993,6 +1120,28 @@ def main() -> None:
     rf.set_defaults(fn=rec_find)
     rc.add_parser("check-commit").set_defaults(fn=rec_check_commit)
     rc.add_parser("selftest").set_defaults(fn=rec_selftest)
+
+    g = sub.add_parser("git").add_subparsers(dest="cmd", required=True)
+    gr = g.add_parser("records-commit", help="stage, check (placeholders for quoted test values), commit locally")
+    gr.add_argument("files", nargs="+")
+    gr.add_argument("--message", "-m", required=True)
+    gr.add_argument("--trailer", default="Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>")
+    gr.set_defaults(fn=git_records_commit)
+    gp = g.add_parser("push-team", help="only after the owner's push word")
+    gp.add_argument("sha")
+    gp.add_argument("--repo", required=True)
+    gp.add_argument("--words", required=True, help="the project's private-words file")
+    gp.add_argument("--project", help="project folder whose local plugin copy is updated after the push")
+    gp.add_argument("--dry-run", action="store_true")
+    gp.set_defaults(fn=git_push_team)
+    g.add_parser("selftest").set_defaults(fn=lambda _a: (git_selftest(), print("git selftest ok")))
+
+    ch = sub.add_parser("chain").add_subparsers(dest="cmd", required=True)
+    cs = ch.add_parser("setup-change", help="memory entry + exclude fix + every selftest")
+    cs.add_argument("--text", required=True)
+    cs.add_argument("--evidence", required=True)
+    cs.add_argument("--source", default="optimization")
+    cs.set_defaults(fn=chain_setup_change)
 
     cv = sub.add_parser("conversations").add_subparsers(dest="cmd", required=True)
     cv.add_parser("build").set_defaults(fn=conv_build)

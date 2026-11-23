@@ -146,6 +146,13 @@ These add to the numbered steps above.
   make ONE local commit `Team records: <task>`. The check stops on a staged name outside
   `.handoff/`, a gateway map, `.private`, `.env` or local settings file, or a secret shape in the
   staged diff: then commit nothing, unstage (`git restore --staged -- .handoff`) and tell the owner.
+  Scripts first (owner): `team.py git records-commit <files> -m "Team records: <task>"` does the
+  stage, check and commit in one call; it puts `<redacted-fixture>` in place of a quoted test value in
+  a `.handoff/` record and prints the count, never the value. `team.py git push-team <sha> --repo
+  <team repo> --words <private-words file> [--project <dir>]` pushes the team repo only after the
+  owner's push word (fast-forward, private words, ls-remote, plugin update). `team.py chain
+  setup-change --text ... --evidence ...` does the memory entry, the exclude fix and every selftest.
+  The session still decides when each runs and reads its one-line result.
   Nothing outside `.handoff/` is ever in this commit; push only on the owner's command. It and the
   project setup commit ("Setup in git") are the only commits a main session makes itself. Where `.handoff/` is not tracked, `team.py` keeps it in
   `.git/info/exclude` and there is no records commit.
