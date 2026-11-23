@@ -64,9 +64,11 @@ the session that installed the plugin, with no restart:
    command itself is not loaded until a new session). It creates the AI Tech Lead session; the
    owner opens it and replies there once, and the AI Tech Lead then finishes the setup and
    installs the companion plugins, off by default; each sub session starts the first time a task
-   needs it. Without a
-   `start_session` tool (the terminal CLI), say in one line that standing sessions need the
-   desktop app and that the team keeps using its sub-agents.
+   needs it. If `start_session` is not loaded, first run ToolSearch query
+   `select:mcp__ccd_session__start_session`, alone in its message. Only if that finds no match, say
+   in one line that this session offers no session-start tool (the terminal CLI, or a desktop app
+   that is older or has session tools off; suggest updating the app) and that the team keeps using
+   its sub-agents.
 4. On 0 ("Not now"), do nothing more: the `setup-offer` hook asks again at the start of the next session.
 
 Two optional steps follow in the AI Tech Lead's setup run: a code graph of the project (when the
