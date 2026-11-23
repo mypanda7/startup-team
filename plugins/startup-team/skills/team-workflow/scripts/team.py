@@ -1055,15 +1055,17 @@ def git_commit_team(a) -> None:
     repo = Path(a.repo)
     files = [Path(os.path.normpath(f.replace("\\", "/"))).as_posix() for f in a.files if f]
     msg = a.message
+    # Checked before anything is staged or bumped, so a STOP changes nothing.
+    mine = lambda n: any(n == f or n.startswith(f + "/") for f in files) or (a.bump and n.endswith(".claude-plugin/plugin.json"))
+    extra = [n for n in run_git(repo, "diff", "--cached", "--name-only").splitlines() if not mine(n)]
+    if extra:
+        raise SystemExit("STOP: other staged files, commit nothing: " + ", ".join(extra[:5]))
     if a.bump:
         pj, ver = bump_patch(repo)
         files.append(pj)
         msg = f"{msg} ({ver})"
     run_git(repo, "add", "--", *files)
     staged = run_git(repo, "diff", "--cached", "--name-only").splitlines()
-    extra = [n for n in staged if not any(n == f or n.startswith(f + "/") for f in files)]
-    if extra:
-        raise SystemExit("STOP: other staged files, commit nothing: " + ", ".join(extra[:5]))
     blocked = [n for n in staged if BLOCKED_STAGED.search(n)]
     added = added_lines(run_git(repo, "diff", "--cached"))
     hits = word_hits(added + "\n" + msg, a.words)
@@ -1173,6 +1175,16 @@ def git_selftest() -> None:
         except SystemExit as e:
             assert e.code == 5, "private word stops the commit"
         subprocess.run(g + ["reset", "-q", "--", "b.txt"], check=True)
+        (c / "a.txt").write_text("hello again\n", encoding="utf-8")
+        subprocess.run(g + ["add", "b.txt"], check=True)
+        try:
+            git_commit_team(ns(repo=str(c), files=["a.txt"], message="a2", bump=False, words=str(words), trailer=""))
+            raise AssertionError("other staged file committed")
+        except SystemExit as e:
+            assert "other staged" in str(e), "other staged file is a STOP"
+        assert run_git(c, "diff", "--cached", "--name-only").split() == ["b.txt"], "given file not staged by a STOP"
+        subprocess.run(g + ["reset", "-q", "--", "b.txt"], check=True)
+        subprocess.run(g + ["checkout", "-q", "--", "a.txt"], check=True)
         push_checked(c, "HEAD", "main", str(words), False)
         assert run_git(o, "rev-parse", "main").strip() == run_git(c, "rev-parse", "HEAD").strip(), "pushed"
         try:
