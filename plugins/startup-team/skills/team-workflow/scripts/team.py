@@ -682,7 +682,7 @@ def commit_problems(r: Path) -> list:
     for line in diff.splitlines():
         if line.startswith("+++ "):
             fname = line[6:] if line.startswith("+++ b/") else line[4:]
-        elif line.startswith("+") and SECRET.search(line):
+        elif line.startswith("+") and SECRET.search(GIT_SHA.sub("gitsha", line) if GIT_WORD.search(line) else line):
             out.append(f"secret shape in {fname}")  # the value itself is never printed
         elif line.startswith("+"):
             m = GATEWAY_NONE.match(line[1:])
@@ -690,6 +690,10 @@ def commit_problems(r: Path) -> list:
                 out.append(f"GATEWAY reason not allowed in {fname}: {m.group(1)[:60] or '(none)'}")
     return sorted(set(out))
 
+
+# A full git commit id (40 lowercase hex) on a line that talks about git is not a secret.
+GIT_SHA = re.compile(r"\b[0-9a-f]{40}\b")
+GIT_WORD = re.compile(r"\b(git|commit|sha|ls-remote|push|merge|rev-parse|HEAD|origin)\b", re.I)
 
 # The allowed reasons for skipping the gateway (SKILL.md "Delegation first", Record line).
 GATEWAY_NONE = re.compile(r"\s*GATEWAY:\s*none\b:?\s*(.*)$", re.I)
@@ -742,6 +746,15 @@ def rec_git_selftest() -> None:
         assert not any("c.md" in x for x in probs), probs
         assert "GATEWAY reason not allowed in .handoff/d.md: small change, nothing to draft" in probs, probs
         assert "GATEWAY reason not allowed in .handoff/e.md: (none)" in probs, probs
+        sha = "330e1a47f7908561464c89a7ca89f29670d2ba92"
+        (r / ".handoff" / "f.md").write_text(f"- `git push`: ls-remote: {sha}\n", encoding="utf-8")
+        (r / ".handoff" / "g.md").write_text(f"note {sha}\n", encoding="utf-8")
+        (r / ".handoff" / "h.md").write_text(f"commit token = {sha}\n", encoding="utf-8")
+        subprocess.run(git + ["add", "-f", ".handoff"], check=True)
+        probs = commit_problems(r)
+        assert "secret shape in .handoff/f.md" not in probs, probs
+        assert "secret shape in .handoff/g.md" in probs, "a bare 40-hex with no git word still counts"
+        assert "secret shape in .handoff/h.md" in probs, "token = <value> still counts on a git line"
 
 
 # ---- conversations: per-session, per-day chat files plus a hand-kept SUMMARY.md ----
