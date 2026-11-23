@@ -928,7 +928,7 @@ FIXTURE = "<redacted-fixture>"
 def run_git(repo, *args, check=True) -> str:
     out = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if check and out.returncode:
-        raise SystemExit(f"git {args[0]} failed: {out.stderr.strip()[:200]}")
+        raise SystemExit(f"git {' '.join(a for a in args if not a.startswith('user.'))[:60]} failed: {(out.stderr or out.stdout).strip()[:200]}")
     return out.stdout
 
 
@@ -1032,7 +1032,7 @@ def git_push_team(a) -> None:
 
 def git_push_project(a) -> None:
     """Push the project repo's branch (only after the owner's push word for this project)."""
-    repo = Path(a.repo) if a.repo else root()
+    repo = Path(a.repo).resolve() if a.repo else root()
     branch = a.branch or run_git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
     push_checked(repo, a.sha or "HEAD", branch, a.words, a.dry_run)
 
@@ -1046,14 +1046,14 @@ def bump_patch(repo: Path):
     if not m:
         raise SystemExit("STOP: no version in plugin.json")
     ver = f"{m.group(1)}.{m.group(2)}.{int(m.group(3)) + 1}"
-    found[0].write_text(text[:m.start()] + f'"version": "{ver}"' + text[m.end():], encoding="utf-8")
+    found[0].write_text(text[:m.start(1)] + ver + text[m.end(3):], encoding="utf-8")
     return found[0].relative_to(repo).as_posix(), ver
 
 
 def git_commit_team(a) -> None:
     """One local commit in the team repo: given files only, optional patch bump, private words and secrets checked."""
     repo = Path(a.repo)
-    files = [f.replace("\\", "/").rstrip("/") for f in a.files if f]
+    files = [Path(os.path.normpath(f.replace("\\", "/"))).as_posix() for f in a.files if f]
     msg = a.message
     if a.bump:
         pj, ver = bump_patch(repo)
@@ -1070,7 +1070,8 @@ def git_commit_team(a) -> None:
     shaped = any(SECRET.search(GIT_SHA.sub("gitsha", l) if GIT_WORD.search(l) else l) for l in added.splitlines())
     if blocked or hits or shaped:
         why = [x for x in (blocked and "blocked name", hits and f"{hits} private-word hit(s)", shaped and "secret shape") if x]
-        print("STOP: " + "; ".join(why) + "; nothing committed, files left staged")
+        run_git(repo, "reset", "-q", "--", *files, check=False)
+        print("STOP: " + "; ".join(why) + "; nothing committed, files unstaged")
         sys.exit(5)
     name = run_git(repo, "log", "-1", "--format=%an").strip()
     mail = run_git(repo, "log", "-1", "--format=%ae").strip()
@@ -1081,7 +1082,7 @@ def git_commit_team(a) -> None:
 
 def git_status_line(a) -> None:
     """One line: branch, ahead/behind origin, changed and untracked counts."""
-    repo = Path(a.repo) if a.repo else root()
+    repo = Path(a.repo).resolve() if a.repo else root()
     if not a.no_fetch:
         run_git(repo, "fetch", "-q", "origin", check=False)
     br = run_git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
@@ -1095,7 +1096,7 @@ def git_status_line(a) -> None:
 
 def git_sync(a) -> None:
     """Bring the branch up to origin: fast-forward only; never merges, rebases, stashes or switches."""
-    repo = Path(a.repo) if a.repo else root()
+    repo = Path(a.repo).resolve() if a.repo else root()
     br = run_git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
     run_git(repo, "fetch", "-q", "origin", br)
     out = subprocess.run(["git", "-C", str(repo), "merge", "--ff-only", "-q", f"origin/{br}"], capture_output=True, text=True)
@@ -1159,7 +1160,11 @@ def git_selftest() -> None:
         words.write_text("secretbrand\n", encoding="utf-8")
         (c / "a.txt").write_text("hello\n", encoding="utf-8")
         ns = argparse.Namespace
-        git_commit_team(ns(repo=str(c), files=["a.txt"], message="add a", bump=True, words=str(words), trailer=""))
+        git_commit_team(ns(repo=str(c), files=["./a.txt"], message="add a", bump=True, words=str(words), trailer=""))
+        (c / "sub").mkdir()
+        (c / "sub" / "s.txt").write_text("s\n", encoding="utf-8")
+        git_commit_team(ns(repo=str(c), files=["sub\\s.txt"], message="add s", bump=False, words=str(words), trailer=""))
+        assert "sub/s.txt" in run_git(c, "ls-files"), "backslash path committed"
         assert '"1.2.4"' in (c / "plugins/p/.claude-plugin/plugin.json").read_text(encoding="utf-8"), "bumped"
         (c / "b.txt").write_text("our secretbrand here\n", encoding="utf-8")
         try:
