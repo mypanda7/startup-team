@@ -605,6 +605,19 @@ writes the project's `# Gateway (outside models)` CLAUDE.md section on the owner
 OpenAI-compatible endpoint works by editing that section; `gateway.py` itself names no router.
 
 ### Delegation first (only in a project whose CLAUDE.md has a gateway section)
+- Maximum delegation (owner): every main session, sub session, agent and sub-agent sends every
+  text-drafting part to the outside models first, and only what stays here is done here.
+  - One call: `gateway.py ask --job <job> --text "<brief>"` (or `--brief <file>`). It reads the base
+    URL and key variable name from the project's CLAUDE.md, picks the best-scoring model for the job
+    (skipping one whose last call failed on the model), retries once on `auto`, writes the brief and
+    answer under `.handoff/gateway/` and prints the answer.
+  - The caller checks the answer against the requirement and records `gateway.py review <id>
+    pass|fail --note ...`, so the scores keep improving.
+  - Drafts around a run are delegable too: test lists before QA runs, write-ups after, audit
+    checklists, summaries, briefs, copy and code drafts.
+  - Skipping it needs `GATEWAY: none: <reason>` naming what stays here: auth, permissions, payments,
+    database, secrets, personal data, an owner question, an approval, a push or deploy, or a re-run
+    only. `team.py records check-commit` flags a `not delegable` that names none of these.
 When the project's CLAUDE.md names the gateway's base URL, key variable and commands, this rule
 applies to every main session, sub session, role session, agent, sub-agent, skill and command of
 the team: each of them may delegate, and each checks what comes back against the requirement (the

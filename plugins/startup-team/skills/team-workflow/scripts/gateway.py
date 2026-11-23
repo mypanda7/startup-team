@@ -175,6 +175,12 @@ def median(values: list):
 def pick_model(rows: list, job: str) -> str:
     job = job_type(job)
     table = score_table(rows)
+    last = {}
+    for r in rows:
+        if r.get("kind") != "review" and r.get("model_asked"):
+            last[r["model_asked"]] = r
+    down = {m for m, r in last.items() if r.get("status") == "failed" and r.get("error_class") == "model"}
+    table = {k: v for k, v in table.items() if k[1] not in down}
     trusted = [(m, s) for (j, m), s in table.items() if j == job and s["reviewed"] >= MIN_REVIEWS]
     best = min(trusted, key=lambda ms: (-ms[1]["passed"] / ms[1]["reviewed"],
                                         median(ms[1]["tokens"]) if ms[1]["tokens"] else float("inf"),
@@ -487,6 +493,58 @@ def cmd_launch(a) -> int:
         return 1
 
 
+def project_gateway(project: Path):
+    """(base url, key variable name) from the project's CLAUDE.md gateway section, or ("", "")."""
+    try:
+        text = (project / "CLAUDE.md").read_text(encoding="utf-8")
+    except OSError:
+        return "", ""
+    url = re.search(r"Base URL:\s*(https?://[^\s`(]+)", text)
+    key = re.search(r"Key variable:\s*`?([A-Z][A-Z0-9_]+)`?", text)
+    return (url.group(1).rstrip(".,") if url else ""), (key.group(1) if key else "")
+
+
+def cmd_ask(a) -> int:
+    """One call: write the brief, pick the model from the scores, launch, retry once on `auto`, print the answer."""
+    with contextlib.suppress(Exception):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to a code page
+    project = Path(a.project)
+    url, key_env = project_gateway(project)
+    a.base_url = a.base_url or url
+    a.key_env = a.key_env or key_env
+    folder = project / ".handoff" / "gateway"
+    folder.mkdir(parents=True, exist_ok=True)
+    stem = re.sub(r"[^A-Za-z0-9_-]+", "-", a.name or job_type(a.job)).strip("-")[:40] or "ask"
+    stem = f"{stem}-{time.strftime('%Y%m%d-%H%M%S')}-{secrets.token_hex(2)}"
+    if a.text:
+        brief = folder / f"{stem}.brief.txt"
+        brief.write_text(a.text, encoding="utf-8")
+    elif a.brief:
+        brief = Path(a.brief)
+    else:
+        print("refused: give --text or --brief")
+        return 2
+    terms = Path(a.terms) if a.terms else folder / f"{stem}.terms.txt"
+    if not a.terms:
+        terms.write_text("", encoding="utf-8")
+    model = a.model or pick_model(read_ledger(project), a.job)
+    tries = [model] + (["auto"] if model != "auto" else [])
+    for n, m in enumerate(tries):
+        out = folder / f"{stem}{'' if n == 0 else '-' + str(n + 1)}.out.txt"
+        la = argparse.Namespace(**vars(a))
+        la.brief, la.out, la.model, la.terms = str(brief), str(out), m, str(terms)
+        rc = cmd_launch(la)
+        if rc == 0:
+            print("--- answer (" + str(out.relative_to(project)).replace("\\", "/") + ") ---")
+            print(out.read_text(encoding="utf-8"))
+            print("--- review it: gateway.py review <id> pass|fail --note ...")
+            return 0
+        if rc == 2:
+            return rc
+    print("failed twice: do the part here and record `GATEWAY: none: failed twice`")
+    return 1
+
+
 def cmd_list(a) -> int:
     for r in [r for r in read_ledger(Path(a.project)) if r.get("kind") != "review"][-a.last:]:
         print(f"{r.get('id')} {r.get('time')} {r.get('status')} {r.get('model_answered') or r.get('model_asked')} "
@@ -605,6 +663,15 @@ def main(argv=None) -> int:
     la.add_argument("--terms", default="")
     la.add_argument("--keep-maps-days", type=float, default=7)
     la.add_argument("--job", default="general")
+    ak = sub.add_parser("ask", help="one call: brief, pick, launch, retry on auto, print the answer")
+    ak.add_argument("--job", required=True)
+    ak.add_argument("--text", default="")
+    ak.add_argument("--brief", default="")
+    ak.add_argument("--terms", default="")
+    ak.add_argument("--name", default="")
+    ak.add_argument("--model", default="")
+    ak.add_argument("--max-brief-kb", type=float, default=200)
+    ak.add_argument("--keep-maps-days", type=float, default=7)
     rv = sub.add_parser("review")
     rv.add_argument("id")
     rv.add_argument("verdict", choices=("pass", "fail"))
@@ -629,7 +696,7 @@ def main(argv=None) -> int:
     lo.add_argument("id")
     sub.add_parser("selftest")
     # The common options may also come after the command.
-    for sp in (he, la, li, lo, ma, um, rv, sc, pk):
+    for sp in (he, la, ak, li, lo, ma, um, rv, sc, pk):
         sp.add_argument("--base-url", dest="base_url_late")
         sp.add_argument("--key-env", dest="key_env_late")
         sp.add_argument("--allow-host", dest="allow_host_late")
@@ -644,7 +711,7 @@ def main(argv=None) -> int:
         return selftest()
     return {"health": cmd_health, "launch": cmd_launch, "list": cmd_list, "log": cmd_log,
             "mask": cmd_mask, "unmask": cmd_unmask, "review": cmd_review, "scores": cmd_scores,
-            "pick": cmd_pick}[a.cmd](a)
+            "pick": cmd_pick, "ask": cmd_ask}[a.cmd](a)
 
 
 def run(argv=None) -> int:
