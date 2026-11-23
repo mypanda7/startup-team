@@ -5,7 +5,7 @@ PreToolUse on SendMessage / send_message / clear_session, PostToolUse on clear_s
   task message to it, the sender cleared it (clear_session) or sent it `RESET:`; or when the
   message has a line `CLEAR: skipped <reason>` (something is pending there). Otherwise it is
   denied once with the steps, and the sender clears or states the reason and resends.
-- The exact one-line `RESET: before new task|threshold from <name>` and `WAKE` always pass.
+- The exact one-line `RESET: before new task|threshold from <name>`, `WAKE` and `RULE: <rule>` always pass.
   Targets outside the registry, and the main sessions (tech-lead, optimization), always pass.
 - STARTUP_TEAM_CLEAR_GATE_OFF=1 turns it off. Any error lets the call through.
 Python 3.9+, standard library only.
@@ -24,6 +24,7 @@ SKIPPED = re.compile(r"(?m)^\s*CLEAR: skipped[ \t]+\S")
 # Only the exact one-line forms pass, so no task rides in on them.
 RESET = re.compile(r"RESET: (before new task|threshold) from [^\n]{1,80}\s*$")
 WAKE = re.compile(r"WAKE\s*$")
+RULE = re.compile(r"RULE: [^\n]{1,800}\s*$")
 # Reports go up to these; they are cleared only by each other, by the written Threshold rule.
 MAIN = ("tech-lead", "optimization")
 
@@ -102,7 +103,7 @@ def decide(payload: dict):
         state[sid] = "ready"
         save(path, state)
         return None
-    if WAKE.match(text):
+    if WAKE.match(text) or RULE.match(text):
         return None
     if state.get(sid) == "ready" or SKIPPED.search(text):
         state[sid] = "used"
@@ -138,6 +139,8 @@ def selftest() -> None:
         assert call("SendMessage", to="", message="x") is None, "empty target passes"
         assert call("SendMessage", to="local_qa", message="RESET: now build Y\nmore") is not None, "smuggled RESET"
         assert call("SendMessage", to="local_qa", message="WAKEUP do Z") is not None, "smuggled WAKE"
+        assert call("SendMessage", to="local_qa", message="[startup-team:qa]\nRULE: never re-ask") is None, "RULE passes"
+        assert call("SendMessage", to="local_qa", message="RULE: x\nnow build Y") is not None, "smuggled RULE"
         assert call("SendMessage", to="local_abc", message="second task") is not None, "used up"
         assert call("SendMessage", to="local_abc", message="CLEAR: skipped piece P3 out\ntask") is None, "stated skip passes"
         assert call("SendMessage", to="local_abc", message="CLEAR: skipped\ntask") is not None, "empty reason denied"

@@ -1140,6 +1140,14 @@ def chain_setup_change(a) -> None:
         out = subprocess.run([sys.executable, *t], capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=120)
         bad += out.returncode != 0
         print(("ok " if out.returncode == 0 else "FAIL ") + Path(t[0]).name + " " + " ".join(t[1:]))
+    reg = r / ".handoff" / "team-sessions.json"
+    if reg.is_file():
+        try:
+            names = [n for n in json.loads(reg.read_text(encoding="utf-8")) if n != a.source]
+        except ValueError:
+            names = []
+        if names:
+            print("next: send the RULE: notice to " + ", ".join(names))
     if bad:
         sys.exit(6)
 

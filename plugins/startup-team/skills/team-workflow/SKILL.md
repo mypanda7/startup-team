@@ -679,7 +679,7 @@ Flow, per change:
    Then the session that recorded it sends every standing session in `.handoff/team-sessions.json`
    (except itself) a short notice with `SendMessage`: first line `[startup-team:<name>]`, second
    line `RULE: <the rule in one line>`, so running sessions follow it before the plugin update
-   reaches them, each after the pre-send check ("Step 12, clears"). A `RULE:` notice is never
+   reaches them; a one-line `RULE:` notice is not a task, needs no clear and passes the clear gate. A `RULE:` notice is never
    triaged and never a piece; the receiver follows the rule from then on and replies nothing.
 2. **Build.** The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words
    only, as ONE commit on `main` that also raises the plugin's patch version. The build brief
