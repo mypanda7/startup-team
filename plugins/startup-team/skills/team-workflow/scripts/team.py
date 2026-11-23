@@ -1020,7 +1020,7 @@ def chain_setup_change(a) -> None:
             ex.write_text("\n".join(keep) + ("\n" if keep else ""), encoding="utf-8")
     plug = Path(__file__).resolve().parents[3]
     me = str(Path(__file__).resolve())
-    tests = [[me, "records", "selftest"], [me, "loadout", "selftest"], [me, "conversations", "selftest"],
+    tests = [[me, "records", "selftest"], [me, "git", "selftest"], [me, "loadout", "selftest"], [me, "conversations", "selftest"],
              [str(plug / "hooks" / "notes.py"), "selftest"], [str(plug / "hooks" / "clear-gate.py"), "selftest"],
              [str(Path(me).with_name("gateway.py")), "selftest"]]
     bad = 0
