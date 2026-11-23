@@ -1053,18 +1053,27 @@ def bump_patch(repo: Path):
 def git_commit_team(a) -> None:
     """One local commit in the team repo: given files only, optional patch bump, private words and secrets checked."""
     repo = Path(a.repo)
-    files = [Path(os.path.normpath(f.replace("\\", "/"))).as_posix() for f in a.files if f]
+    def rel(f):
+        # A path that exists from the current folder is taken from there, else as repo-relative.
+        here = Path(f.replace("\\", "/"))
+        if not here.is_absolute() and (Path.cwd() / here).exists():
+            here = Path.cwd() / here
+        if here.is_absolute():
+            return Path(os.path.relpath(here.resolve(), repo.resolve())).as_posix()
+        return Path(os.path.normpath(here)).as_posix()
+    files = [rel(f) for f in a.files if f]
     msg = a.message
     # Checked before anything is staged or bumped, so a STOP changes nothing.
     mine = lambda n: any(n == f or n.startswith(f + "/") for f in files) or (a.bump and n.endswith(".claude-plugin/plugin.json"))
     extra = [n for n in run_git(repo, "diff", "--cached", "--name-only").splitlines() if not mine(n)]
     if extra:
         raise SystemExit("STOP: other staged files, commit nothing: " + ", ".join(extra[:5]))
+    run_git(repo, "add", "--", *files)  # a bad path stops here, before any bump
     if a.bump:
         pj, ver = bump_patch(repo)
         files.append(pj)
         msg = f"{msg} ({ver})"
-    run_git(repo, "add", "--", *files)
+        run_git(repo, "add", "--", pj)
     staged = run_git(repo, "diff", "--cached", "--name-only").splitlines()
     blocked = [n for n in staged if BLOCKED_STAGED.search(n)]
     added = added_lines(run_git(repo, "diff", "--cached"))
@@ -1167,6 +1176,21 @@ def git_selftest() -> None:
         (c / "sub" / "s.txt").write_text("s\n", encoding="utf-8")
         git_commit_team(ns(repo=str(c), files=["sub\\s.txt"], message="add s", bump=False, words=str(words), trailer=""))
         assert "sub/s.txt" in run_git(c, "ls-files"), "backslash path committed"
+        before = (c / "plugins/p/.claude-plugin/plugin.json").read_text(encoding="utf-8")
+        try:
+            git_commit_team(ns(repo=str(c), files=["nope.txt"], message="x", bump=True, words=str(words), trailer=""))
+            raise AssertionError("bad path committed")
+        except SystemExit:
+            pass
+        assert (c / "plugins/p/.claude-plugin/plugin.json").read_text(encoding="utf-8") == before, "bad path: no bump"
+        cwd = os.getcwd()
+        os.chdir(c / "sub")
+        try:
+            (c / "sub" / "s.txt").write_text("s2\n", encoding="utf-8")
+            git_commit_team(ns(repo=str(c), files=["s.txt"], message="s2", bump=False, words=str(words), trailer=""))
+        finally:
+            os.chdir(cwd)
+        assert run_git(c, "log", "-1", "--format=%s").strip() == "s2", "cwd-relative path committed"
         assert '"1.2.4"' in (c / "plugins/p/.claude-plugin/plugin.json").read_text(encoding="utf-8"), "bumped"
         (c / "b.txt").write_text("our secretbrand here\n", encoding="utf-8")
         try:
