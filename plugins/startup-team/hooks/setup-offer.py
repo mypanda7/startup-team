@@ -64,6 +64,9 @@ Do not start the owner's request until they answer.
   reply there, and each sub session starts the first time a task needs it. Tell the owner to open AI Tech Lead and reply there once.
 - On 0 ("Not now"): carry on with their request; the offer returns in the next session.
 Ask at most once in this session: once it was asked (answered or not), never ask it again here.
+Before deciding there is no session tool, load it: if start_session is not loaded, run ToolSearch
+query `select:mcp__ccd_session__start_session` alone in its message. Only when that finds no match
+does this session have no start_session tool.
 Skip the offer silently when this session has no start_session tool (the terminal CLI), or when
 the team already exists: a Tech Lead session for this project folder (the `tech-lead` id in
 `.handoff/team-sessions.json` is a live session there, or else this session's or a listed

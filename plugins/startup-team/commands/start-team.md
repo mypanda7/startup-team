@@ -21,8 +21,10 @@ only on a turn the owner typed. So setup takes two runs of this command: run in 
 session, it starts only the AI Tech Lead (case A); run in the AI Tech Lead on a turn the owner
 typed there, it finishes the setup and starts the named sub sessions under it (case B). Follow these steps in order.
 
-1. If you have no `start_session` tool (the terminal CLI), say in one line that standing sessions
-   need the desktop app and that the team keeps using its sub-agents. Stop.
+1. If `start_session` is not loaded, run ToolSearch query `select:mcp__ccd_session__start_session`,
+   alone in its message. If that finds no match, say in one line that this session offers no
+   session-start tool (the terminal CLI, or a desktop app that is older or has session tools off;
+   suggest updating the app), and that the team keeps using its sub-agents. Stop.
 2. Call `get_session` with `self` for this session's id and title, then `list_sessions` once (all
    sessions, not only linked ones). Read `<project folder>/.handoff/team-sessions.json` if it
    exists (the registry, below).
