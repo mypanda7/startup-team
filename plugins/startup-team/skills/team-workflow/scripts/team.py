@@ -977,33 +977,131 @@ def git_records_commit(a) -> None:
     print("committed " + run_git(r, "rev-parse", "--short", "HEAD").strip() + " (local, not pushed)")
 
 
-def git_push_team(a) -> None:
-    """Push one exact commit of the team repo to main: fast-forward, private-word check, ls-remote, plugin update."""
-    repo = Path(a.repo)
-    sha = run_git(repo, "rev-parse", "--verify", a.sha + "^{commit}").strip()
-    run_git(repo, "fetch", "-q", "origin", "main")
-    if subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", "origin/main", sha]).returncode:
-        raise SystemExit("STOP: not a fast-forward of origin/main")
-    words = [w.strip().lower() for w in Path(a.words).read_text(encoding="utf-8").splitlines() if w.strip()]
-    added = "\n".join(l[1:] for l in run_git(repo, "diff", "origin/main", sha).splitlines()
-                      if l.startswith("+") and not l.startswith("+++")).lower()
-    added += "\n" + run_git(repo, "log", "--format=%B", "origin/main.." + sha).lower()
-    hits = sum(added.count(w) for w in words)
+def word_hits(text: str, words_file) -> int:
+    words = [w.strip().lower() for w in Path(words_file).read_text(encoding="utf-8").splitlines() if w.strip()] if words_file else []
+    low = text.lower()
+    return sum(low.count(w) for w in words)
+
+
+def added_lines(diff: str) -> str:
+    return "\n".join(l[1:] for l in diff.splitlines() if l.startswith("+") and not l.startswith("+++"))
+
+
+def push_checked(repo: Path, sha: str, branch: str, words_file, dry_run: bool) -> str:
+    """Push one exact commit to origin/<branch>: fast-forward only, blocked names and private words checked first."""
+    if words_file and not Path(words_file).is_file():
+        raise SystemExit(f"STOP: words file not found: {words_file}")
+    sha = run_git(repo, "rev-parse", "--verify", sha + "^{commit}").strip()
+    run_git(repo, "fetch", "-q", "origin", branch)
+    base = f"origin/{branch}"
+    if subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", base, sha]).returncode:
+        raise SystemExit(f"STOP: not a fast-forward of {base}")
+    names = run_git(repo, "diff", "--name-only", base, sha).splitlines()
+    blocked = [n for n in names if BLOCKED_STAGED.search(n)]
+    if blocked:
+        raise SystemExit("STOP: blocked file(s) in the range: " + ", ".join(blocked[:5]))
+    text = added_lines(run_git(repo, "diff", base, sha)) + "\n" + run_git(repo, "log", "--format=%B", f"{base}..{sha}")
+    hits = word_hits(text, words_file)
     if hits:
         raise SystemExit(f"STOP: {hits} private-word hit(s); nothing pushed")
-    if a.dry_run:
-        print(f"ready: {sha[:7]} fast-forward, 0 private-word hits (dry run, nothing pushed)")
-        return
-    run_git(repo, "push", "-q", "origin", f"{sha}:refs/heads/main")
-    remote = run_git(repo, "ls-remote", "origin", "refs/heads/main").split()[:1]
+    n = run_git(repo, "rev-list", "--count", f"{base}..{sha}").strip()
+    if dry_run:
+        print(f"ready: {sha[:7]} ({n} commit(s)) fast-forward of {base}, 0 private-word hits (dry run, nothing pushed)")
+        return sha
+    run_git(repo, "push", "-q", "origin", f"{sha}:refs/heads/{branch}")
+    remote = run_git(repo, "ls-remote", "origin", f"refs/heads/{branch}").split()[:1]
     if remote != [sha]:
-        raise SystemExit("STOP: ls-remote main does not show the pushed commit")
-    print(f"pushed {sha[:7]} to main; ls-remote {sha}")
-    if a.project:
-        for cmd in (["claude", "plugin", "marketplace", "update", "startup-team"],
-                    ["claude", "plugin", "update", "startup-team@startup-team"]):
-            out = subprocess.run(cmd, cwd=a.project, capture_output=True, text=True, encoding="utf-8", errors="replace")
-            print(("ok: " if out.returncode == 0 else "FAILED: ") + " ".join(cmd[1:]))
+        raise SystemExit(f"STOP: ls-remote {branch} does not show the pushed commit")
+    print(f"pushed {sha[:7]} ({n} commit(s)) to {branch}; ls-remote {sha}")
+    return sha
+
+
+def plugin_update(project) -> None:
+    for cmd in (["claude", "plugin", "marketplace", "update", "startup-team"],
+                ["claude", "plugin", "update", "startup-team@startup-team"]):
+        out = subprocess.run(cmd, cwd=project, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        print(("ok: " if out.returncode == 0 else "FAILED: ") + " ".join(cmd[1:]))
+
+
+def git_push_team(a) -> None:
+    """Push the team repo to main (only after the owner's push word), then update the project's plugin copy."""
+    push_checked(Path(a.repo), a.sha, "main", a.words, a.dry_run)
+    if a.project and not a.dry_run:
+        plugin_update(a.project)
+
+
+def git_push_project(a) -> None:
+    """Push the project repo's branch (only after the owner's push word for this project)."""
+    repo = Path(a.repo) if a.repo else root()
+    branch = a.branch or run_git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
+    push_checked(repo, a.sha or "HEAD", branch, a.words, a.dry_run)
+
+
+def bump_patch(repo: Path):
+    found = sorted(repo.glob("plugins/*/.claude-plugin/plugin.json")) or sorted(repo.glob(".claude-plugin/plugin.json"))
+    if len(found) != 1:
+        raise SystemExit("STOP: --bump needs exactly one plugin.json")
+    text = found[0].read_text(encoding="utf-8")
+    m = re.search(r'"version":\s*"(\d+)\.(\d+)\.(\d+)"', text)
+    if not m:
+        raise SystemExit("STOP: no version in plugin.json")
+    ver = f"{m.group(1)}.{m.group(2)}.{int(m.group(3)) + 1}"
+    found[0].write_text(text[:m.start()] + f'"version": "{ver}"' + text[m.end():], encoding="utf-8")
+    return found[0].relative_to(repo).as_posix(), ver
+
+
+def git_commit_team(a) -> None:
+    """One local commit in the team repo: given files only, optional patch bump, private words and secrets checked."""
+    repo = Path(a.repo)
+    files = [f.replace("\\", "/").rstrip("/") for f in a.files if f]
+    msg = a.message
+    if a.bump:
+        pj, ver = bump_patch(repo)
+        files.append(pj)
+        msg = f"{msg} ({ver})"
+    run_git(repo, "add", "--", *files)
+    staged = run_git(repo, "diff", "--cached", "--name-only").splitlines()
+    extra = [n for n in staged if not any(n == f or n.startswith(f + "/") for f in files)]
+    if extra:
+        raise SystemExit("STOP: other staged files, commit nothing: " + ", ".join(extra[:5]))
+    blocked = [n for n in staged if BLOCKED_STAGED.search(n)]
+    added = added_lines(run_git(repo, "diff", "--cached"))
+    hits = word_hits(added + "\n" + msg, a.words)
+    shaped = any(SECRET.search(GIT_SHA.sub("gitsha", l) if GIT_WORD.search(l) else l) for l in added.splitlines())
+    if blocked or hits or shaped:
+        why = [x for x in (blocked and "blocked name", hits and f"{hits} private-word hit(s)", shaped and "secret shape") if x]
+        print("STOP: " + "; ".join(why) + "; nothing committed, files left staged")
+        sys.exit(5)
+    name = run_git(repo, "log", "-1", "--format=%an").strip()
+    mail = run_git(repo, "log", "-1", "--format=%ae").strip()
+    full = msg + ("\n\n" + a.trailer if a.trailer else "")
+    run_git(repo, "-c", f"user.name={name}", "-c", f"user.email={mail}", "commit", "-q", "-m", full)
+    print("committed " + run_git(repo, "rev-parse", "--short", "HEAD").strip() + " (local, not pushed)")
+
+
+def git_status_line(a) -> None:
+    """One line: branch, ahead/behind origin, changed and untracked counts."""
+    repo = Path(a.repo) if a.repo else root()
+    if not a.no_fetch:
+        run_git(repo, "fetch", "-q", "origin", check=False)
+    br = run_git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
+    ab = run_git(repo, "rev-list", "--left-right", "--count", f"HEAD...origin/{br}", check=False).split()
+    st = run_git(repo, "status", "--porcelain").splitlines()
+    unt = sum(l.startswith("??") for l in st)
+    ahead, behind = (ab + ["?", "?"])[:2]
+    head = run_git(repo, "rev-parse", "--short", "HEAD").strip()
+    print(f"{repo.name}: {br}, ahead {ahead}, behind {behind} of origin; {len(st) - unt} changed, {unt} untracked; HEAD {head}")
+
+
+def git_sync(a) -> None:
+    """Bring the branch up to origin: fast-forward only; never merges, rebases, stashes or switches."""
+    repo = Path(a.repo) if a.repo else root()
+    br = run_git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
+    run_git(repo, "fetch", "-q", "origin", br)
+    out = subprocess.run(["git", "-C", str(repo), "merge", "--ff-only", "-q", f"origin/{br}"], capture_output=True, text=True)
+    if out.returncode:
+        raise SystemExit(f"STOP: {br} cannot fast-forward to origin/{br} (local commits or changes in the way); nothing changed")
+    print(f"{repo.name}: {br} at {run_git(repo, 'rev-parse', '--short', 'HEAD').strip()} (fast-forward only)")
 
 
 def chain_setup_change(a) -> None:
@@ -1046,6 +1144,37 @@ def git_selftest() -> None:
         assert redact_fixtures(f) == 0, "second run changes nothing"
         f.write_text(sha + "\n", encoding="utf-8")
         assert redact_fixtures(f) == 1, "bare sha (no git word) redacted, as the check flags it"
+        o, c = Path(tmp) / "o.git", Path(tmp) / "c"
+        subprocess.run(["git", "init", "-q", "--bare", str(o)], check=True)
+        subprocess.run(["git", "init", "-q", str(c)], check=True)
+        g = ["git", "-C", str(c), "-c", "user.name=t", "-c", "user.email=t@t"]
+        subprocess.run(g + ["checkout", "-q", "-b", "main"], check=True)
+        subprocess.run(g + ["remote", "add", "origin", str(o)], check=True)
+        (c / "plugins" / "p" / ".claude-plugin").mkdir(parents=True)
+        (c / "plugins" / "p" / ".claude-plugin" / "plugin.json").write_text('{"version": "1.2.3"}', encoding="utf-8")
+        subprocess.run(g + ["add", "."], check=True)
+        subprocess.run(g + ["commit", "-qm", "init"], check=True)
+        subprocess.run(g + ["push", "-q", "origin", "main"], capture_output=True, check=True)
+        words = Path(tmp) / "w.txt"
+        words.write_text("secretbrand\n", encoding="utf-8")
+        (c / "a.txt").write_text("hello\n", encoding="utf-8")
+        ns = argparse.Namespace
+        git_commit_team(ns(repo=str(c), files=["a.txt"], message="add a", bump=True, words=str(words), trailer=""))
+        assert '"1.2.4"' in (c / "plugins/p/.claude-plugin/plugin.json").read_text(encoding="utf-8"), "bumped"
+        (c / "b.txt").write_text("our secretbrand here\n", encoding="utf-8")
+        try:
+            git_commit_team(ns(repo=str(c), files=["b.txt"], message="b", bump=False, words=str(words), trailer=""))
+            raise AssertionError("private word committed")
+        except SystemExit as e:
+            assert e.code == 5, "private word stops the commit"
+        subprocess.run(g + ["reset", "-q", "--", "b.txt"], check=True)
+        push_checked(c, "HEAD", "main", str(words), False)
+        assert run_git(o, "rev-parse", "main").strip() == run_git(c, "rev-parse", "HEAD").strip(), "pushed"
+        try:
+            push_checked(c, "HEAD", "main", str(Path(tmp) / "none.txt"), True)
+            raise AssertionError("missing words file passed")
+        except SystemExit as e:
+            assert "words file" in str(e), "missing words file is a STOP"
 
 
 def main() -> None:
@@ -1134,6 +1263,28 @@ def main() -> None:
     gp.add_argument("--project", help="project folder whose local plugin copy is updated after the push")
     gp.add_argument("--dry-run", action="store_true")
     gp.set_defaults(fn=git_push_team)
+    gc = g.add_parser("commit-team", help="one local commit in the team repo")
+    gc.add_argument("files", nargs="+")
+    gc.add_argument("--repo", required=True)
+    gc.add_argument("--message", "-m", required=True)
+    gc.add_argument("--words", required=True, help="the project's private-words file")
+    gc.add_argument("--bump", action="store_true", help="raise the plugin's patch version and add it")
+    gc.add_argument("--trailer", default="Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>")
+    gc.set_defaults(fn=git_commit_team)
+    gq = g.add_parser("push-project", help="only after the owner's push word for this project")
+    gq.add_argument("sha", nargs="?")
+    gq.add_argument("--repo")
+    gq.add_argument("--branch")
+    gq.add_argument("--words")
+    gq.add_argument("--dry-run", action="store_true")
+    gq.set_defaults(fn=git_push_project)
+    gs = g.add_parser("status", help="one line per repo")
+    gs.add_argument("--repo")
+    gs.add_argument("--no-fetch", action="store_true")
+    gs.set_defaults(fn=git_status_line)
+    gy = g.add_parser("sync", help="fast-forward the branch to origin, nothing else")
+    gy.add_argument("--repo")
+    gy.set_defaults(fn=git_sync)
     g.add_parser("selftest").set_defaults(fn=lambda _a: (git_selftest(), print("git selftest ok")))
 
     ch = sub.add_parser("chain").add_subparsers(dest="cmd", required=True)

@@ -153,6 +153,13 @@ These add to the numbered steps above.
   owner's push word (fast-forward, private words, ls-remote, plugin update). `team.py chain
   setup-change --text ... --evidence ...` does the memory entry, the exclude fix and every selftest.
   The session still decides when each runs and reads its one-line result.
+  All other git work runs as scripts too (owner): `team.py git commit-team <files> --repo <team repo>
+  --words <file> -m <msg> [--bump]` (one local team-repo commit: given files only, patch bump,
+  private words and secret shapes checked); `team.py git push-project [sha] [--branch b] [--words
+  <file>] [--dry-run]` (only after the owner's push word for that project); `team.py git status
+  [--repo]` (one line: branch, ahead/behind, changed); `team.py git sync [--repo]` (fast-forward
+  only, never merge, rebase, stash or switch). A session runs git by hand only where no script fits,
+  and says why in one line.
   Nothing outside `.handoff/` is ever in this commit; push only on the owner's command. It and the
   project setup commit ("Setup in git") are the only commits a main session makes itself. Where `.handoff/` is not tracked, `team.py` keeps it in
   `.git/info/exclude` and there is no records commit.
