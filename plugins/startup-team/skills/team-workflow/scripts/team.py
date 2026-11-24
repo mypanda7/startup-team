@@ -701,7 +701,7 @@ GIT_WORD = re.compile(r"\b(git|commit|sha|ls-remote|push|merge|rev-parse|HEAD|or
 GATEWAY_NONE = re.compile(r"\s*GATEWAY:\s*none\b:?\s*(.*)$", re.I)
 GATEWAY_REASONS = ("not delegable", "gateway refused", "gateway unreachable", "failed twice")
 # What stays here (SKILL.md "Delegation first"); drafts around a run (test lists, write-ups) are delegable.
-STAYS_HERE = re.compile(r"\b(auth\w*|permission\w*|payment\w*|database|migration\w*|secret\w*|personal|owner question|approval|push|deploy\w*|re-?run only)\b", re.I)
+STAYS_HERE = re.compile(r"\b(auth\w*|permission\w*|payment\w*|database\w*|migration\w*|secret\w*|personal|owner question|approval|push|deploy\w*|re-?run only)\b", re.I)
 
 
 def rec_check_commit(_a) -> None:

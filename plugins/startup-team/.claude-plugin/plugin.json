@@ -1,6 +1,6 @@
 {
   "name": "startup-team",
-  "version": "0.11.44",
+  "version": "0.11.45",
   "description": "A small expert team for any project: tech lead, architect, designer, executor, QA, auditor, devops and security agents, one session per role, shipping and operations skills, project-rule hooks, turn folders, shared memory and an owner-approved learning loop. After installing, Claude says \"startup-team installed successfully.\" and asks whether to create the AI Tech Lead session (its sub sessions start when a task first needs them) and install the companion plugins, off by default (Set up now / Not now, or 1 / 0); see the README, \"After installing\".",
   "author": { "name": "mypanda7" },
   "license": "MIT"

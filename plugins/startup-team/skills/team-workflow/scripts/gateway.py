@@ -179,7 +179,8 @@ def pick_model(rows: list, job: str) -> str:
     for r in rows:
         if r.get("kind") != "review" and r.get("model_asked"):
             last[r["model_asked"]] = r
-    down = {m for m, r in last.items() if r.get("status") == "failed" and r.get("error_class") == "model"}
+    down = {m for m, r in last.items() if (r.get("status") == "failed" and r.get("error_class") == "model")
+            or (r.get("status") == "refused" and "--model" in str(r.get("error") or ""))}
     table = {k: v for k, v in table.items() if k[1] not in down}
     trusted = [(m, s) for (j, m), s in table.items() if j == job and s["reviewed"] >= MIN_REVIEWS]
     best = min(trusted, key=lambda ms: (-ms[1]["passed"] / ms[1]["reviewed"],
@@ -445,7 +446,10 @@ def cmd_launch(a) -> int:
             raise Refused("the brief file is not UTF-8")
         if not text.strip():
             raise Refused("the brief is empty")
-        check_text(project, a.model, "the --model value")
+        # A model id the gateway itself answered with is known, even when it is long enough to look secret-shaped.
+        known = {r.get("model_answered") for r in read_ledger(project) if r.get("model_answered")}
+        if a.model not in known:
+            check_text(project, a.model, "the --model value")
         row["model_asked"] = a.model  # recorded only once it is known to hold nothing identifying
         row["maps_deleted"] = expire_maps(project, a.keep_maps_days)
         masked, mapping, types, counts, tag = mask(project, text, read_terms(a.terms))
@@ -539,8 +543,11 @@ def cmd_ask(a) -> int:
             print(out.read_text(encoding="utf-8"))
             print("--- review it: gateway.py review <id> pass|fail --note ...")
             return 0
-        if rc == 2:
-            return rc
+        # A guard refusal of the picked model id (some ids look secret-shaped) is retried on auto too;
+        # any other refusal refuses again on auto with nothing sent.
+    if rc == 2:
+        print("refused: nothing was sent; fix the brief and ask again")
+        return 2
     print("failed twice: do the part here and record `GATEWAY: none: failed twice`")
     return 1
 
