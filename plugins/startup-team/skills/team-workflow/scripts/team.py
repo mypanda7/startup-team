@@ -701,7 +701,10 @@ GIT_WORD = re.compile(r"\b(git|commit|sha|ls-remote|push|merge|rev-parse|HEAD|or
 GATEWAY_NONE = re.compile(r"\s*GATEWAY:\s*none\b:?\s*(.*)$", re.I)
 GATEWAY_REASONS = ("not delegable", "gateway refused", "gateway unreachable", "failed twice")
 # What stays here (SKILL.md "Delegation first"); drafts around a run (test lists, write-ups) are delegable.
-STAYS_HERE = re.compile(r"\b(auth\w*|permission\w*|payment\w*|database\w*|migration\w*|secret\w*|personal|owner question|approval|push|deploy\w*|re-?run only)\b", re.I)
+STAYS_HERE = re.compile(r"\b(auth\w*|permission\w*|payment\w*|database\w*|migration\w*|secret\w*|personal|"
+                        r"owner questions?|questions? (to|for) the owner|approvals?|push\w*|deploy\w*|re-?run only|"
+                        r"running (commands?|tests?|commands or tests)|run (the )?(commands?|tests?)|"
+                        r"(reading|writing|reading or writing) files?|browsers?)\b", re.I)
 
 
 def rec_check_commit(_a) -> None:
@@ -745,7 +748,7 @@ def rec_git_selftest() -> None:
             "GATEWAY: none: gateway unreachable (worker)\nGATEWAY: 2026-ab12 copy pass\n", encoding="utf-8")
         (r / ".handoff" / "d.md").write_text("GATEWAY: none: small change, nothing to draft\n", encoding="utf-8")
         (r / ".handoff" / "e.md").write_text("GATEWAY: none\n", encoding="utf-8")
-        (r / ".handoff" / "e2.md").write_text("GATEWAY: none: not delegable (running tests)\n", encoding="utf-8")
+        (r / ".handoff" / "e2.md").write_text("GATEWAY: none: not delegable (writing a test list)\n", encoding="utf-8")
         subprocess.run(git + ["add", "-f", ".handoff"], check=True)
         probs = commit_problems(r)
         assert not any("c.md" in x for x in probs), probs

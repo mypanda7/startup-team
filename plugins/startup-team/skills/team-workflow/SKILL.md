@@ -615,9 +615,10 @@ OpenAI-compatible endpoint works by editing that section; `gateway.py` itself na
     pass|fail --note ...`, so the scores keep improving.
   - Drafts around a run are delegable too: test lists before QA runs, write-ups after, audit
     checklists, summaries, briefs, copy and code drafts.
-  - Skipping it needs `GATEWAY: none: <reason>` naming what stays here: auth, permissions, payments,
-    database, secrets, personal data, an owner question, an approval, a push or deploy, or a re-run
-    only. `team.py records check-commit` flags a `not delegable` that names none of these.
+  - Skipping it needs `GATEWAY: none: <reason>` naming what stays here (one list with "Not
+    delegable" below): auth, permissions, payments, database, secrets, personal data, reading or
+    writing files, running commands or tests, browsers, an owner question, an approval, a push or
+    deploy, or a re-run only. `team.py records check-commit` flags a `not delegable` that names none of these.
 When the project's CLAUDE.md names the gateway's base URL, key variable and commands, this rule
 applies to every main session, sub session, role session, agent, sub-agent, skill and command of
 the team: each of them may delegate, and each checks what comes back against the requirement (the
@@ -646,6 +647,7 @@ answers are never sent. Without that section nothing here changes.
 - Not delegable: reading or writing files, running commands or tests, browsers, pushes, deploys,
   approvals, questions to the owner, and a task whose point is the secret or personal value itself
   (for example "is this password strong").
+  The drafts around them (a test list before a run, the write-up after) are still delegable.
 - A refused or failed launch, or an answer that fails your check twice: do that part yourself and
   say so in your result. The ledger records each launch; add the one-line `model-selection`
   memory entry as for any piece.
