@@ -124,7 +124,8 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
     ask again: resume at 11.2.
     1. Find the command: `graphify` on PATH; else `graphify` in the user Python scripts folder
        (`python -c "import sysconfig; print(sysconfig.get_path('scripts', 'nt_user' if __import__('os').name == 'nt' else 'posix_user'))"`);
-       else `python -m graphify --help` exits 0. Not found: ask me once whether to install it
+       else `python -m graphify --help` exits 0. Not found: ask me once whether to install it (options "Install (Recommended)" = 1 and "Not now" = 0;
+       typed back-up "1 = yes (recommended), 0 = no.")
        (`python -m pip install --user graphifyy`, the PyPI package `graphifyy`, for this user only);
        install only on my yes; on no, write `.handoff/graph-setup-declined` and go on.
        Then ask me once, as the only question: "Set up a code graph (graphify) for this project?
@@ -132,7 +133,7 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
        a `/graphify` skill and three hooks in `.claude/settings.json` that run on searches and file
        reads." If this session has, or can load, a question dialog, ask it there with "Set it up (Recommended)"
        (= 1) and "Not now" (= 0); a dialog I dismiss counts as "Not now"; else ask it as text ending
-       "1 = yes, 0 = no." On "Not now", write `.handoff/graph-setup-declined` and go on. My yes here
+       "1 = yes (recommended), 0 = no." On "Not now", write `.handoff/graph-setup-declined` and go on. My yes here
        is the approval for those CLAUDE.md and hook changes, also in a project whose CLAUDE.md asks
        for the owner's approval for them: quote my answer in the report.
     2. The hooks call `graphify` by its bare name, so check it resolves in a fresh shell
@@ -165,7 +166,7 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
     Otherwise ask me once, as the only question: "Set up FreeLLMAPI so the team can hand text work
     to free models?" If this session has, or can load, a question dialog, ask it there with two
     options, "Set it up (Recommended)" (= 1) and "Not now" (= 0); a dialog I dismiss counts as "Not now". Only if
-    the dialog can't be shown, ask it as text ending "1 = yes, 0 = no." On "Not now", write
+    the dialog can't be shown, ask it as text ending "1 = yes (recommended), 0 = no." On "Not now", write
     `.handoff/gateway-setup-declined` (one line, today's date) and go on: this project is not asked
     again; `/startup-team:start-team gateway` asks again. On "Set it up", the sub-steps below, in
     order, each reported in one line. `<plugin folder>` is this plugin's absolute folder.
@@ -219,7 +220,7 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
     no sub session is in the registry. Read the app settings with `get_settings` (read-only; never
     change `bypass_permissions_mode`). Not opted in: tell me in one line to opt in under the app's
     Settings, and go on. Opted in: ask me once "Switch the sub sessions to bypass permissions?" (the
-    question dialog, options "Switch (Recommended)" = 1 and "Not now" = 0; as text ending "1 = yes, 0 = no." only
+    question dialog, options "Switch (Recommended)" = 1 and "Not now" = 0; as text ending "1 = yes (recommended), 0 = no." only
     if no dialog can be shown). On my yes, typed in this session: add the line `Sub sessions:
     bypass` to the project's CLAUDE.md, then switch every sub session in the registry to
     `bypassPermissions`. Main sessions (AI Tech Lead, AI Team Optimization) keep their mode; any
@@ -229,7 +230,7 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
     `.claude/settings.local.json` already has `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` under `env`, skip
     this step. Otherwise ask me once
     "Compress session histories early, at about 30% full?" (the question dialog, options "Yes (Recommended)" = 1
-    and "Not now" = 0; as text ending "1 = yes, 0 = no." only if no dialog can be shown). On my yes,
+    and "Not now" = 0; as text ending "1 = yes (recommended), 0 = no." only if no dialog can be shown). On my yes,
     merge `"env": {"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "30"}` into the tracked `.claude/settings.json`
     (create it if missing; keep every other key and env entry; never `settings.local.json`), and tell me in one line that it applies at each session's
     next start. On "Not now", change nothing.

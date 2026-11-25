@@ -56,7 +56,7 @@ the session that installed the plugin, with no restart:
      now (Recommended)" (= 1: creates the sessions and installs the companion plugins, off by default) and "Not now" (= 0: asks
      again next session). A dialog dismissed without a choice counts as "Not now".
    - Back-up, only when the dialog can't be shown (no such tool, or the call fails or is
-     refused): ask it as text ending "1 = yes, 0 = no." and wait. A typed 1/yes or 0/no counts
+     refused): ask it as text ending "1 = yes (recommended), 0 = no." and wait. A typed 1/yes or 0/no counts
      either way; any other free-text answer from the dialog is the owner's own words.
    - Either way it is asked once in this session; it returns in the next one.
 3. On 1 ("Set up now"), on that same owner turn: find the installed plugin's folder with `claude plugin list`,
