@@ -340,9 +340,9 @@ only a session of its own titled "AI Tech Lead", where the owner carries on; the
 Lead is the main session (by `sessions/tech-lead-session.md`, section "When you are the main
 session"). After one reply from the owner there, the AI Tech Lead runs `start-team` itself to
 finish the setup; it starts no sub session then. Each sub session (Business Analyst, Designer,
-Developer, QA Engineer, DevOps and Security, from the briefs in `sessions/`) is started by it the
-first time a task needs it and moved to the top level at once (`detach_session`, owner): each
-asks its own questions in its own session, and none passes a question to another session. It writes `.handoff/team-sessions.json`, each role's
+Developer, QA Engineer, DevOps and Security, from the briefs in `sessions/`) starts under it the
+first time a task needs it and is never detached (owner). Every session and sub session asks its
+own questions in its own session and never passes one to another session (owner). It writes `.handoff/team-sessions.json`, each role's
 session id and title, and every rule below that finds a session reads that registry first, so a
 renamed session is still found. When another session has an open question for the owner, only say "<that session> has an open question", in one line; never repeat the question or its options. Only a turn the owner started may call `start_session` (the app refuses it on
 a turn another session's message started), so the AI Tech Lead is started by the session where the

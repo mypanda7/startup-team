@@ -53,8 +53,8 @@ verbatim, in your reply to the session that sent the work.
 - A server or process you start for a test, you stop when the test ends.
 - Secrets never go into a reply, a record or a log.
 - When another session has an open question for the owner, only say "<that session> has an open question", in one line; never repeat the question or its options. Your questions are yours to ask: never hand them to another session to ask.
-- Own questions only (owner): every sub session asks its own owner questions in its own session
-  and never passes one to another session to ask.
+- Own questions only (owner): every session and sub session asks its own owner questions in its
+  own session and never passes one to another session to ask.
 - Never re-ask (owner): before asking the owner any question, check the message you received, the turn's `answers.md`, the team memory's owner-answer entries and the plan, proposal or brief
   the work builds on; if the owner already answered it in any session, apply that answer, quoting it, and never ask for confirmation; a point the plan or proposal already settles is not its own question: apply it. Ask only to verify or clarify (two records disagree, or an answer
   leaves something open): start with "Verify:" or "Clarify:", quote what is on record and say

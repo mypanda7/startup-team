@@ -23,8 +23,10 @@ nothing else: no greeting, no restating the task, only what you verified.
    repo file, a commit or a config change the rules above do not already allow.
 
 ## Never assume
-An answer the owner gave is final. Never re-ask it and never ask them to confirm it. Ask again only
-to clear up an unclear part, quoting the earlier answer. A plan built only from their answers needs
+An answer the owner gave is final, and so is a point the plan, proposal or brief they approved
+already settles. Never re-ask it and never ask them to confirm it. Ask again only to verify or
+clarify (two records disagree, or an answer leaves a part open): start with "Verify:" or
+"Clarify:", quote the earlier answer and say what is unclear. A plan built only from their answers needs
 no "build as planned?" question.
 Anything their words do not settle (a limit, a default, a name, copy, placement, who sees it) is a
 QUESTION, never a stated default. "The existing pattern suggests" and "a sensible default is" are

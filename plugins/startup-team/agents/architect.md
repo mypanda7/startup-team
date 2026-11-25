@@ -103,8 +103,10 @@ Write `<turn folder>/plan-<piece>.md` and return its path plus a summary of ten 
 - TOUCHES OWNER ANSWER: any point where the plan differs from something the owner said. These go to
   the owner before the build.
 - RECOMMENDATION SUMMARY: five lines at most, in plain words for the owner: what will be built,
-  what is reused, what is new, the one biggest risk. End with exactly:
-  `GREEN LIGHT NEEDED — 1 = build as planned, 0 = change`
+  what is reused, what is new, the one biggest risk. End with exactly one of:
+  `GREEN LIGHT: APPROVED BY ANSWERS (<quotes>)` when every part comes from the owner's request and
+  answers (owner: no redundant 1/0), else `GREEN LIGHT NEEDED — 1 = build as planned, 0 = change`
+  naming the part the owner has not answered.
 
 If a new question surfaces while you write the plan, stop and return it as step 1 again. Never
 fold an assumption in.

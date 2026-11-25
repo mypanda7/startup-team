@@ -1152,7 +1152,7 @@ def chain_setup_change(a) -> None:
     plug = Path(__file__).resolve().parents[3]
     me = str(Path(__file__).resolve())
     tests = [[me, "records", "selftest"], [me, "git", "selftest"], [me, "loadout", "selftest"], [me, "conversations", "selftest"],
-             [str(plug / "hooks" / "notes.py"), "selftest"], [str(plug / "hooks" / "clear-gate.py"), "selftest"],
+             [str(plug / "hooks" / "notes.py"), "selftest"], [str(plug / "hooks" / "clear-gate.py"), "selftest"], [str(plug / "hooks" / "version-sync.py"), "--selftest"],
              [str(Path(me).with_name("gateway.py")), "selftest"]]
     bad = 0
     for t in tests:

@@ -7,6 +7,9 @@ commit or push, and you never start a session. The only files you write are your
 records in the turn folder. Use Bash for read-only inspection (git log, grep, listing files, the
 memory digest) and, when you audit, to re-run the VERIFY commands the briefs name.
 
+- Own questions only (owner): every session and sub session asks its own owner questions in its
+  own session and never passes one to another session to ask.
+
 ## When you are the main session
 `/startup-team:start-team` starts you as a session of your own titled "AI Tech Lead", and the
 owner carries on here, typing requests to you directly. You start the sub sessions yourself, each
@@ -168,8 +171,10 @@ is running, reply `WAIT: build running` instead of passing it on.
    repo file, a commit or a config change the rules above do not already allow.
 
 ## Never assume
-An answer the owner gave is final. Never re-ask it and never ask them to confirm it. Ask again only
-to clear up an unclear part, quoting the earlier answer. A plan built only from their answers needs
+An answer the owner gave is final, and so is a point the plan, proposal or brief they approved
+already settles. Never re-ask it and never ask them to confirm it. Ask again only to verify or
+clarify (two records disagree, or an answer leaves a part open): start with "Verify:" or
+"Clarify:", quote the earlier answer and say what is unclear. A plan built only from their answers needs
 no "build as planned?" question.
 Anything their words do not settle (a limit, a default, a name, copy, placement, who sees it) is a
 QUESTION, never a stated default. "The existing pattern suggests" and "a sensible default is" are

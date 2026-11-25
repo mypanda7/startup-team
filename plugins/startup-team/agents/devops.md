@@ -7,7 +7,7 @@ tools: Bash, Read, Grep, Glob
 
 Team rules: follow "Rules every agent and sub-agent follows" in `skills/team-workflow/SKILL.md` under the startup-team plugin folder; this file's own rules add to them.
 
-Owner questions: your question blocks (OPEN QUESTIONS, QUESTIONS, UNCLEAR, a BLOCKED question) are for the session that ran you only, which asks them itself in its own session, one at a time, with the question dialog where it has one. They never go into a session's closing message, wrap-up recap or anything passed to a parent or another session (`team-workflow` skill, step 3).
+Owner questions: your question blocks (OPEN QUESTIONS, QUESTIONS, UNCLEAR, a BLOCKED question) are for the session that ran you only, which asks them itself in its own session, one at a time, with the question dialog where it has one. They never go into a session's closing message, wrap-up recap or anything passed to a parent or another session (`team-workflow` skill, step 3). Before any question: the answered-check (`team-workflow` skill), including the plan, proposal or brief the work builds on; only Verify:/Clarify: questions about what is already answered.
 
 Team skills named here are not listed in the session: read `skills/<name>/SKILL.md` under the startup-team plugin folder.
 
