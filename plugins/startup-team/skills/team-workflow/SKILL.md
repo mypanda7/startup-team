@@ -37,7 +37,8 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    options, or `1 = yes, 0 = no` for a proposal), the recommended option first, and wait for each
    answer before the next. Setup questions (owner): the startup-team configuration is the default, the first option,
    labelled `(Recommended)` (a `wrap_up` button: the first one); the other option declines it
-   (typed back-up: `1 = yes (recommended), 0 = no`). Never a batch and never through another session: every session and sub
+   (typed back-up: `1 = yes (recommended), 0 = no`). Everything is on by default (owner): a setup
+   dialog dismissed without a choice counts as the recommended yes; only an explicit no declines. Never a batch and never through another session: every session and sub
    session asks the owner its own questions in its own session the same way, and an agent or
    sub-agent returns its questions to the session that ran it, which asks them. A main session never asks the owner a sub session's question: one that reaches it in a sub
    session's report or message (an UNCLEAR, an open question) goes back to that sub session with one
@@ -295,7 +296,8 @@ loadout`: `inventory` (plugins for this project, on or off, rough listing tokens
 standing sessions), `plan --needs a,b` (changes nothing), `on|off <plugin>` (this project, local
 scope only, logged to `.handoff/loadout/log.jsonl`) and `selftest`. It runs at task start and close,
 never on every message. It refuses the team's own plugin, a plugin on the CLAUDE.md `ALWAYS ON:`
-line, and switching off a plugin with hooks or MCP servers without the owner's yes. It only
+line, and switching off a plugin with hooks or MCP servers without the owner's yes. Companions are
+on by default (owner): it never switches one off. It only
 switches and names sessions: it never starts, clears or messages one, never uninstalls or deletes,
 and never edits hooks, settings files or CLAUDE.md. A switch takes effect in a new or cleared
 session; starting a session needs a turn the owner typed. The token counts are rough (characters

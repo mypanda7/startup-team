@@ -50,11 +50,11 @@ the session that installed the plugin, with no restart:
 
 1. Say "startup-team installed successfully."
 2. Ask the owner only this, and wait for the answer:
-   "Create the AI Tech Lead session (its sub sessions start the first time a task needs them) and install the companion plugins (off by default)?"
+   "Create the AI Tech Lead session (its sub sessions start the first time a task needs them) and install and turn on the companion plugins?"
    - First choice: if the session has, or can load, a tool that asks a question with clickable
      options (in Claude Code: AskUserQuestion), ask it there with exactly two options: "Set up
-     now (Recommended)" (= 1: creates the sessions and installs the companion plugins, off by default) and "Not now" (= 0: asks
-     again next session). A dialog dismissed without a choice counts as "Not now".
+     now (Recommended)" (= 1: creates the sessions and installs and turns on the companion plugins) and "Not now" (= 0: asks
+     again next session). A dialog dismissed without a choice counts as "Set up now" (the default).
    - Back-up, only when the dialog can't be shown (no such tool, or the call fails or is
      refused): ask it as text ending "1 = yes (recommended), 0 = no." and wait. A typed 1/yes or 0/no counts
      either way; any other free-text answer from the dialog is the owner's own words.
@@ -63,7 +63,7 @@ the session that installed the plugin, with no restart:
    read its `commands/start-team.md` and follow it step by step (the `/startup-team:start-team`
    command itself is not loaded until a new session). It creates the AI Tech Lead session; the
    owner opens it and replies there once, and the AI Tech Lead then finishes the setup and
-   installs the companion plugins, off by default; each sub session starts the first time a task
+   installs and turns on the companion plugins; each sub session starts the first time a task
    needs it. If `start_session` is not loaded, first run ToolSearch query
    `select:mcp__ccd_session__start_session`, alone in its message. Only if that finds no match, say
    in one line that this session offers no session-start tool (the terminal CLI, or a desktop app
@@ -286,9 +286,9 @@ claude plugin install agent-skills@startup-team --scope local
 claude plugin update agent-skills@startup-team --scope local
 ```
 
-Companions are off by default: setup installs each one and disables it for the project, so none is
-listed in a session; agents read a disabled companion's files from the plugin cache when a task
-needs one. Turn one on with `claude plugin enable <name>@<marketplace> --scope local` (`disable`
+Companions are on by default (owner): setup installs each one and leaves it enabled for the
+project, so its skills are listed in every session. Agents read a
+turned-off companion's files from the plugin cache when a task needs one. Turn one on with `claude plugin enable <name>@<marketplace> --scope local` (`disable`
 turns it off). `/startup-team:companions` installs or updates the ones you choose. The companions are `agent-skills`,
 `antislop`, `taste-skill`, `ui-ux-pro-max`, `frontend-design`, `design`, `humanizer` and `ponytail`.
 The links are not pinned to a version, so an update brings whatever the author has published.

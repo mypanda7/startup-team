@@ -12,10 +12,9 @@ hands the answer back. See "Sub-agent requests" in SKILL.md.
 A skill that is not installed is simply not available: the request comes back `SKILL NOT FOUND`
 and the agent carries on with its own rules. Nothing here is required for the team to work.
 
-Companions are off by default: setup installs each one and then disables it for the project, so
-none is listed in a session. A disabled companion's files stay in the plugin cache
-(`~/.claude/plugins/cache/`), and `skill-sub` and the designer read them from there by path when a
-task needs one. An already-enabled copy is left as it is. Turn one on or off with
+Companions are on by default (owner): setup installs each one and leaves it enabled for the
+project, so its skills are listed in every session. A companion the owner turns off keeps its files in the plugin cache
+(`~/.claude/plugins/cache/`), and `skill-sub` and the designer read them from there by path. An already-enabled copy is left as it is. Turn one on or off with
 `claude plugin enable <name>@<marketplace> --scope local` or `claude plugin disable ...`.
 
 ## Companion plugins
@@ -27,7 +26,6 @@ straight from there:
 
 ```bash
 claude plugin install agent-skills@startup-team --scope local
-claude plugin disable agent-skills@startup-team --scope local
 claude plugin update agent-skills@startup-team --scope local
 ```
 

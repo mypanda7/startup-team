@@ -1,6 +1,6 @@
 ---
 name: activator
-description: "Switches this project's plugins on only when a task needs them and off after; names the sub sessions a task needs."
+description: "Switches on what a task needs (companions stay on: owner), switches other plugins off after; names the sub sessions a task needs."
 model: haiku
 tools: Bash, Read
 ---
@@ -29,12 +29,12 @@ it names) and the turn folder.
 
 **START.** Run `inventory`. From the block and `ROSTER.md` beside the `team-workflow` skill, name
 what the task needs. Switch ON only what must be enabled to work (hooks, MCP tools, agents the
-block runs). Leave companions whose skills are only read off: their files are read from the plugin
-cache by path. Return the standing sub sessions the task needs (by the block's roles), so the main
+block runs). Companions are on by default (owner): switch on any that is off, never
+switch one off. Return the standing sub sessions the task needs (by the block's roles), so the main
 session starts or wakes only those.
 
 **CLOSE.** Read `.handoff/loadout/log.jsonl`. Switch OFF what was switched on for this task and is
-not used since. List the standing sub sessions that are idle and hold nothing pending, so the main session
+not used since, except a companion (they stay on). List the standing sub sessions that are idle and hold nothing pending, so the main session
 knows which it may clear before their next task (`team-workflow` skill, "Step 12, clears").
 
 **STUDY.** Run `inventory`, then give at most five suggestions, ranked by rough saving, each as a
