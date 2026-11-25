@@ -134,7 +134,8 @@ VISIBILITY: <who sees it, and the check on each place that enforces it (menu, ro
 REMOVED / RENAMED: <each old section and what happens to it, or "none">
 MOCKUP: <wireframe path when layout matters, else "not needed — <why>">
 TESTS: <one check per kind of user and per state: who, what triggers it, what must show or hide>
-GREEN LIGHT NEEDED — 1 = build as shown, 0 = change
+GREEN LIGHT: APPROVED BY ANSWERS (<quotes>) when every part comes from the owner's request and
+answers | NEEDED — 1 = build as shown, 0 = change, only when a part is not yet answered (name it)
 ```
 
 You never assume an answer to a question the owner has not answered: an unanswered one goes back as

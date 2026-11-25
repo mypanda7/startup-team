@@ -50,6 +50,10 @@ beside the `team-workflow` skill. Then:
    line to the owner). Where `.handoff/` is tracked in git, make the records commit (`team-workflow` skill, "Step 12, records commit": `.handoff/` only, `team.py records check-commit` first, never pushed unasked) and, beside it, the project setup commit of only the setup files the task changed (`team-workflow` skill, "Setup in git"; secrets never). Run `activator` CLOSE as a sub-agent (`team-workflow` skill, "Loadout"); clear nothing at close, except the Threshold `RESET: threshold from <own name>` (`team-workflow` skill, "Step 12, clears" and "Threshold": sessions are cleared before their next task).
 
 ## Standing rules
+- Every owner instruction typed here (owner, 2026-11-25): remember it (`team.py chain
+  setup-change`, a memory note), cascade it to every session, sub session, agent and sub-agent
+  (the plugin's rules plus the `RULE:` notices) and include it in git: commit it, then push it to
+  the team repo after QA and the audit pass. That instruction is the push word for these commits.
 - Scope is the owner's request. Never widen it, and never apply a default over a point the owner
   answered.
 - Questions for the owner: ask them yourself, in this session, one at a time, as the

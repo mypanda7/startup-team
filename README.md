@@ -148,7 +148,8 @@ names another rules file.
 
 In a host that can start sessions (the Claude desktop app), the team works in two kinds of session.
 
-- **Standing sessions** are long-lived: one Tech Lead session per project and, under it, up to six
+- **Standing sessions** are long-lived: one Tech Lead session per project and, started by it as
+  top-level sessions of their own, up to six
   sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), each started the
   first time a task needs it and then used for every task.
 - **Role sessions** are opened for one run of a role and end with it, so the owner can open, steer
@@ -163,7 +164,7 @@ work goes to the Tech Lead session, and opens a role session only when there is 
 
 `/startup-team:start-team` (or "Set up now" in the setup offer) starts the "AI Tech Lead", a
 session of its own, where you carry on. Click Finish setup there (or type a reply) and it finishes the setup. It starts no
-sub session then: each one starts under it in the Claude desktop app's sidebar the first time a
+sub session then: each one is started by it, then moved to the top level of the sidebar, the first time a
 task needs it, from its brief in `sessions/`, in the project's own folder (never a worktree). The
 app nests a session under the one that started it, and only lets a turn the owner typed call
 `start_session`, so a sub session first needed on a turn another session started runs in a role

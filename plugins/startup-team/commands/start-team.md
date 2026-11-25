@@ -2,8 +2,9 @@
 description: Start the AI Tech Lead session (and AI Team Optimization where the project names a team repo clone); run inside it, finish the setup; sub sessions start when a task first needs them (or name them, or `all`)
 ---
 Set up the team's standing sessions: the AI Tech Lead, a session of its own, and its sub sessions
-(Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), which sit under it in the
-sidebar. Sub sessions start on demand: with no argument, case B starts none, and each one starts the
+(Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), each moved to the top
+level of the sidebar right after it starts (owner: a sub session's question shows only in its own
+session). Sub sessions start on demand: with no argument, case B starts none, and each one starts the
 first time a task needs it (`team-workflow` skill, "Sessions"). `$ARGUMENTS` may name sub sessions
 to start now (`business-analyst`, `designer`, `developer`, `qa`, `devops`, `security`), or `all`
 for all six. The argument
@@ -94,7 +95,9 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
    on-demand start, and steps 10 to 12 are skipped). Create it if missing, holding one line,
    today's date, before any `start_session` call, so the setup offer (the `setup-offer` hook) stops
    and new sub sessions' hooks stay quiet. Then start each named sub session that has none with ONE
-   `start_session` call, so it sits under this session:
+   `start_session` call, then move it to the top level at once with `detach_session` (owner,
+   2026-11-25: its questions then show only in its own session, never as a request in this one;
+   the registry still finds it by id, and it reports to the AI Tech Lead by message):
    - initiation `user_asked`, the title and name from the table
    - context `fresh`, `use_worktree: false`, never a worktree, whatever else I said
    - the model from the table, unless the project's CLAUDE.md names another

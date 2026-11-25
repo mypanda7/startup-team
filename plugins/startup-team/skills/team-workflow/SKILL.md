@@ -340,8 +340,9 @@ only a session of its own titled "AI Tech Lead", where the owner carries on; the
 Lead is the main session (by `sessions/tech-lead-session.md`, section "When you are the main
 session"). After one reply from the owner there, the AI Tech Lead runs `start-team` itself to
 finish the setup; it starts no sub session then. Each sub session (Business Analyst, Designer,
-Developer, QA Engineer, DevOps and Security, from the briefs in `sessions/`) starts under it the
-first time a task needs it. It writes `.handoff/team-sessions.json`, each role's
+Developer, QA Engineer, DevOps and Security, from the briefs in `sessions/`) is started by it the
+first time a task needs it and moved to the top level at once (`detach_session`, owner): each
+asks its own questions in its own session, and none passes a question to another session. It writes `.handoff/team-sessions.json`, each role's
 session id and title, and every rule below that finds a session reads that registry first, so a
 renamed session is still found. When another session has an open question for the owner, only say "<that session> has an open question", in one line; never repeat the question or its options. Only a turn the owner started may call `start_session` (the app refuses it on
 a turn another session's message started), so the AI Tech Lead is started by the session where the
@@ -473,8 +474,10 @@ its output file again before the next step.
 
 ## Answered-check (before any question goes out)
 For each question, search `.handoff/*/answers.md`, `team.py memory query <topic>`, the project's
-memory notes, CLAUDE.md and this conversation. Already answered: drop the question and apply the
-answer. Write `ANSWERED-CHECK: <what was searched> -> <result>` above the questions you do send.
+memory notes, CLAUDE.md, this conversation and the plan, proposal or brief the work builds on.
+Already answered, or already settled there: drop the question and apply it. No redundant build 1/0 (owner): the owner's answers to a proposal's questions are its green light. Ask "1 = build, 0 = change" only when the proposal holds something the owner has not answered (a new question); when every part comes from their request and answers, report `APPROVED BY ANSWERS:` with the quotes and go on. Allowed (owner): a question that
+only verifies or clarifies, when two records disagree or an answer leaves something open; it
+starts "Verify:" or "Clarify:", quotes what is on record and says what is unclear. Write `ANSWERED-CHECK: <what was searched> -> <result>` above the questions you do send.
 Never ask the owner to confirm something they already said. Never send the same question twice.
 
 ## Rules every agent and sub-agent follows

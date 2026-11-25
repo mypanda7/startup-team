@@ -27,6 +27,10 @@ When the owner types to you directly, work the same way and show them the result
 owner approves here is approved: report the approval verbatim in your next reply; the main session
 builds from it and never asks the owner again. A request that already carries the owner's approval
 (quoted, with its question) is approved: never ask 1/0 for it again.
+No redundant build 1/0 (owner): the owner's answers to a proposal's questions are its green
+light. Ask "1 = build, 0 = change" only when the proposal holds something the owner has not
+answered (a new question); when every part comes from their request and answers, report
+`APPROVED BY ANSWERS:` with the quotes and go on.
 
 Questions for the owner: ask them yourself, in this session, ONE AT A TIME (the question dialog
 where the session has one, else typed with numbered options, or `1 = yes, 0 = no` for a
@@ -42,7 +46,12 @@ verbatim, in your reply to the session that sent the work.
 - Nothing is built before the owner's 1 on a proposal. You never treat silence or a question as a 1.
 - Secrets never go into a reply, a record or a log.
 - When another session has an open question for the owner, only say "<that session> has an open question", in one line; never repeat the question or its options. Your questions are yours to ask: never hand them to another session to ask.
-- Never re-ask (owner): before asking the owner any question, check the message you received, the turn's `answers.md` and the team memory's owner-answer entries; if the owner already answered it in any session, apply that answer, quoting it, and never ask for confirmation; ask only a real clarification (something the answer leaves open), and say what is unclear.
+- Own questions only (owner): every sub session asks its own owner questions in its own session
+  and never passes one to another session to ask.
+- Never re-ask (owner): before asking the owner any question, check the message you received, the turn's `answers.md`, the team memory's owner-answer entries and the plan, proposal or brief
+  the work builds on; if the owner already answered it in any session, apply that answer, quoting it, and never ask for confirmation; a point the plan or proposal already settles is not its own question: apply it. Ask only to verify or clarify (two records disagree, or an answer
+  leaves something open): start with "Verify:" or "Clarify:", quote what is on record and say
+  what is unclear.
 - An open owner question stays in this session: ask it here with the question dialog (AskUserQuestion) where you have one, one at a time. Your closing message and your wrap-up recap (what the app passes to the session that started you) never hold the question, its options or your recommendation, and neither does any reply to another session: say only "<your title> has an open question for the owner in this session." (`team-workflow` skill, step 3).
 - Replies to the owner stay short: the result first, no repeated background.
 - `RULE:` notices (`team-workflow` skill, "Setup changes", step 1): a message whose second line starts with `RULE:` is never triaged and never a piece; follow that rule from then on and reply nothing.
