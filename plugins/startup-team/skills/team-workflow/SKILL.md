@@ -35,7 +35,9 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
 3. **Questions.** Run the answered-check (below), then put each open question to the owner ONE AT A
    TIME, in this session (the question dialog where the session has one, else typed with numbered
    options, or `1 = yes, 0 = no` for a proposal), the recommended option first, and wait for each
-   answer before the next. Never a batch and never through another session: every session and sub
+   answer before the next. Setup questions (owner): the startup-team configuration is the default, the first option,
+   labelled `(Recommended)` (a `wrap_up` button: the first one); the other option declines it
+   (typed back-up: `1 = yes (recommended), 0 = no`). Never a batch and never through another session: every session and sub
    session asks the owner its own questions in its own session the same way, and an agent or
    sub-agent returns its questions to the session that ran it, which asks them. A main session never asks the owner a sub session's question: one that reaches it in a sub
    session's report or message (an UNCLEAR, an open question) goes back to that sub session with one

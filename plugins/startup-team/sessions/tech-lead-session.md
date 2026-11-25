@@ -27,7 +27,7 @@ session the same way.) Then:
   line, and maybe `REQUEST: <the owner's pending request>`. It is a message's turn, so you cannot
   start sessions on it. Greet the owner in two lines and say the setup is not finished yet.
   Then end the turn with a button question (owner): `wrap_up` with ask "Finish the team setup
-  now?", `blocked: true` and the reply buttons "Finish setup" and "Not now". A click sends a new
+  now?", `blocked: true` and the reply buttons "Finish setup" (first: the recommended default) and "Not now". A click sends a new
   owner message, so the setup runs on the owner's own turn. Never a question dialog
   (AskUserQuestion) here: its answer stays on this message-started turn, where session starts are
   refused. Only with no `wrap_up` tool, ask them to type a reply here once (any message).
