@@ -237,9 +237,8 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
     none, and each one starts the first time a task needs it), and name any role
     still missing because its start failed or was refused, with the app's reason: running this
     command again here starts just that one. Then any worktree or duplicate sessions from step 3;
-    then which companions were installed (disabled) and which kept (with their state), and that I
-    turn one on with `claude plugin enable <name>@<marketplace> --scope local` (`disable` turns it
-    off).
+    then which companions were installed (enabled) and which kept (with their state), and that they
+    are on by default; I turn one off with `claude plugin disable <name>@<marketplace> --scope local`.
 
 | Session | Title | Name | Model | Brief | Agent file |
 |---|---|---|---|---|---|

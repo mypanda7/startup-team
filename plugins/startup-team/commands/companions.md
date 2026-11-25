@@ -2,10 +2,10 @@
 description: Install or update the optional companion plugins the team's agents borrow skills from
 ---
 Install or update the team's companion plugins. Setup (`/startup-team:start-team`) already installs
-every companion, disabled; this command adds or updates them later, by my choice. Companions are off
-by default: a disabled one's files stay in the plugin cache and agents read them from there by path
-when a task needs one. I turn one on with `claude plugin enable <name>@<marketplace> --scope local`
-and off with `claude plugin disable ...` (they are on by default). They are listed in this plugin's marketplace
+every companion and leaves it on; this command adds or updates them later, by my choice. Companions
+are on by default (owner); the activator never switches one off. I turn one off myself with
+`claude plugin disable <name>@<marketplace> --scope local` (its files stay in the plugin cache and
+agents read them from there by path) and back on with `claude plugin enable ...`. They are listed in this plugin's marketplace
 (`startup-team`), each linked to its author's original repository, and described in `ROSTER.md`
 beside the `team-workflow` skill. `$ARGUMENTS` may be `status`, `update`, or a list of plugin names
 (`agent-skills`, `antislop`, `taste-skill`, `ui-ux-pro-max`, `frontend-design`, `design`,

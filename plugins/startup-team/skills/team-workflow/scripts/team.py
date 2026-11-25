@@ -395,6 +395,11 @@ def inventory(proj: Path, home: Path) -> dict:
             "sessions": sessions}
 
 
+# Companions (ROSTER.md) are on by default (owner): never switched off without the owner's yes.
+COMPANIONS = {"agent-skills", "antislop", "taste-skill", "ui-ux-pro-max", "frontend-design", "design",
+              "humanizer", "ponytail"}
+
+
 def always_on(proj: Path) -> set:
     md = proj / "CLAUDE.md"
     text = md.read_text(encoding="utf-8") if md.exists() else ""
@@ -422,6 +427,8 @@ def switch(action: str, name: str, proj: Path, home: Path, scope: str = "local",
     al = always_on(proj)
     if action == "off" and (p["name"] in al or p["name"].split("@")[0] in al):
         return 2, f"refused: {p['name']} is on the project's ALWAYS ON line"
+    if action == "off" and p["name"].split("@")[0] in COMPANIONS and not approved:
+        return 2, f"refused: {p['name']} is a companion, on by default; switching it off needs the owner's yes (--approved)"
     if action == "off" and (p["hooks"] or p["mcp"]) and not approved:
         return 2, f"refused: {p['name']} has hooks or MCP servers; switching it off needs the owner's yes (--approved)"
     cmd = ["claude", "plugin", "enable" if action == "on" else "disable", p["name"], "--scope", "local"]
@@ -459,6 +466,8 @@ def plan(inv: dict, needs: list, al: set) -> list:
         need = p["name"] in needs or short in needs
         if p["name"].startswith(TEAM_PLUGIN) or p["name"] in al or short in al:
             continue
+        if short in COMPANIONS and p["enabled"]:
+            continue  # on by default (owner)
         if need and not p["enabled"]:
             rows.append(("on", p, ""))
         elif not need and p["enabled"]:
@@ -507,6 +516,7 @@ def lo_selftest(_a) -> None:
             "hidden@m": [plug("hidden", "z" * 400, hidden=True)],
             "hooked@m": [plug("hooked", "w" * 80, hooks=True)],
             "pinned@m": [plug("pinned", "v" * 80)],
+            "ponytail@m": [plug("ponytail", "t" * 80)],
             "elsewhere@m": [dict(plug("elsewhere", "u" * 80), projectPath=str(t / "other"))],
         }}), encoding="utf-8")
         (proj / ".claude" / "settings.local.json").write_text(json.dumps({"enabledPlugins": {"hidden@m": False}}), encoding="utf-8")
@@ -524,11 +534,13 @@ def lo_selftest(_a) -> None:
         assert switch("off", "pinned", proj, home, run=run)[0] == 2
         assert switch("off", "hooked", proj, home, run=run)[0] == 2
         assert switch("off", "nothere", proj, home, run=run)[0] == 2
+        assert switch("off", "ponytail", proj, home, run=run)[0] == 2, "a companion was switched off"
         assert not ran, "a refusal ran a command"
         assert switch("off", "light", proj, home, run=run)[0] == 0
         assert switch("off", "hooked", proj, home, approved=True, run=run)[0] == 0
         assert ran[0] == ["claude", "plugin", "disable", "light@m", "--scope", "local"], ran[0]
-        assert len(read(proj / ".handoff" / "loadout" / "log.jsonl")) == 2, "log lines"
+        assert switch("off", "ponytail", proj, home, approved=True, run=run)[0] == 0
+        assert len(read(proj / ".handoff" / "loadout" / "log.jsonl")) == 3, "log lines"
         acts = {(act, p["name"]) for act, p, _ in plan(inv, ["hidden"], always_on(proj))}
         assert acts == {("on", "hidden@m"), ("off", "light@m"), ("off", "hooked@m")}, acts
     print("loadout selftest ok")
