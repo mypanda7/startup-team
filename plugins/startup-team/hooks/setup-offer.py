@@ -61,7 +61,7 @@ the AI Team Optimization session beside the AI Tech Lead (the question itself st
 Do not start the owner's request until they answer.
 - On 1 ("Set up now"): run /startup-team:start-team on that owner turn. It creates the AI Tech Lead
   session (with the owner's pending request); the companion plugins are set up inside it after one
-  reply there, and each sub session starts the first time a task needs it. Tell the owner to open AI Tech Lead and reply there once.
+  reply there, and each sub session starts the first time a task needs it. Tell the owner to open AI Tech Lead and click Finish setup there (or type a reply).
 - On 0 ("Not now"): carry on with their request; the offer returns in the next session.
 Ask at most once in this session: once it was asked (answered or not), never ask it again here.
 Before deciding there is no session tool, load it: if start_session is not loaded, run ToolSearch

@@ -162,7 +162,7 @@ work goes to the Tech Lead session, and opens a role session only when there is 
 ### Standing sessions
 
 `/startup-team:start-team` (or "Set up now" in the setup offer) starts the "AI Tech Lead", a
-session of its own, where you carry on. Reply there once and it finishes the setup. It starts no
+session of its own, where you carry on. Click Finish setup there (or type a reply) and it finishes the setup. It starts no
 sub session then: each one starts under it in the Claude desktop app's sidebar the first time a
 task needs it, from its brief in `sessions/`, in the project's own folder (never a worktree). The
 app nests a session under the one that started it, and only lets a turn the owner typed call
