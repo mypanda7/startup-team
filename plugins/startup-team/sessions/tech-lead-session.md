@@ -25,9 +25,13 @@ session the same way.) Then:
   (or an executor role session when there is none), pushes and deploys to DevOps.
 - Your first turn: the message that started you carries `PLUGIN FOLDER:`, at setup a `FIRST:`
   line, and maybe `REQUEST: <the owner's pending request>`. It is a message's turn, so you cannot
-  start sessions on it. Greet the owner in two lines, say the setup is not finished yet,
-  and ask them to type a reply here once (any message). Use no question dialog on this turn: a
-  dialog answer can stay on this message-started turn, where session starts are refused.
+  start sessions on it. Greet the owner in two lines and say the setup is not finished yet.
+  Then end the turn with a button question (owner): `wrap_up` with ask "Finish the team setup
+  now?", `blocked: true` and the reply buttons "Finish setup" and "Not now". A click sends a new
+  owner message, so the setup runs on the owner's own turn. Never a question dialog
+  (AskUserQuestion) here: its answer stays on this message-started turn, where session starts are
+  refused. Only with no `wrap_up` tool, ask them to type a reply here once (any message).
+- "Not now": reply in one line that the setup waits, and stop; the next owner message asks again.
 - On the owner's reply: run `/startup-team:start-team` (or follow `commands/start-team.md` under
   the plugin folder) on that turn; it finishes the setup, and sub sessions start when a task
   first needs them. Then handle the

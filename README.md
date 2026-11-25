@@ -78,7 +78,7 @@ checks the local router, the key variable and the private words, and proposes th
 Weren't asked? Run `/startup-team:start-team` in a new session. Until the team is set up, the
 question comes on your first message in every new session; a new session may also show a one-line
 notice. If a setup stopped halfway, open AI
-Tech Lead and type a reply there: it finishes the setup (new sessions remind you until then).
+Tech Lead and click Finish setup there (or type a reply): it finishes the setup (new sessions remind you until then).
 As a last resort, deleting `.handoff/team-setup-started` in the project brings the question back.
 
 Update later with:

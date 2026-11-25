@@ -32,14 +32,14 @@ STARTED_MARKER = os.path.join(".handoff", "team-setup-started")
 NOTICE = ("startup-team is installed but the team isn't set up: choose Set up now, or reply 1, to "
           "create the AI Tech Lead")
 
-HALF_NOTICE = ("startup-team setup isn't finished: open AI Tech Lead and type a reply there to finish "
-               "the setup")
+HALF_NOTICE = ("startup-team setup isn't finished: open AI Tech Lead and click Finish setup there "
+               "(or type a reply) to finish the setup")
 
 REMINDER = """Team setup (startup-team) isn't finished: the setup started, but the AI Tech Lead
 has not finished it yet. If this session is the Tech Lead (its id is the `tech-lead` entry of
 `.handoff/team-sessions.json`, or else its title ends with "Tech Lead"), run /startup-team:start-team
 on this owner turn; it finishes the setup here. Otherwise, before anything else, tell the owner
-in one line: \"Setup isn't finished: open AI Tech Lead and type a reply there to finish the setup.\"
+in one line: \"Setup isn't finished: open AI Tech Lead and click Finish setup there (or type a reply) to finish the setup.\"
 If no Tech Lead session exists for this project, say instead that setup stopped before the AI Tech
 Lead was created, and that deleting `.handoff/team-setup-started` brings the setup question back.
 Then carry on with the owner's request. Say it at most once in this session."""
@@ -76,7 +76,7 @@ sessions are in that registry). Then create
 A Tech Lead whose setup run never finished is a half-done setup: never write `team-setup-done` for it.
 If this session is that Tech Lead, run /startup-team:start-team on this owner turn instead of
 asking. Otherwise skip the question and tell the owner in one line:
-\"Setup isn't finished: open AI Tech Lead and type a reply there to finish the setup.\""""
+\"Setup isn't finished: open AI Tech Lead and click Finish setup there (or type a reply) to finish the setup.\""""
 
 
 def first_offer(session_id: str) -> bool:

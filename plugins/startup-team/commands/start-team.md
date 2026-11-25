@@ -56,8 +56,9 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
      nor see the project's `.handoff/`). Prompt: `[startup-team:tech-lead]`, the full text of
      `sessions/tech-lead-session.md` (the `sessions` and `agents` folders sit beside the
      `commands` folder), `PLUGIN FOLDER: <absolute path of this plugin's folder>`, the line
-     `FIRST: the setup is not finished yet; ask the owner to type a reply here once (no dialog), then
-     run start-team from the plugin folder on that typed turn`, and `REQUEST: <my pending request, verbatim>` when there is
+     `FIRST: the setup is not finished yet; end this turn with the wrap_up button question "Finish
+     the team setup now?" (buttons "Finish setup" / "Not now"; no AskUserQuestion dialog), then
+     run start-team from the plugin folder on the owner's click`, and `REQUEST: <my pending request, verbatim>` when there is
      one. Background: at least 80 characters on which project folder it serves and that it leads
      the team.
    - Team Optimization, only when the project's CLAUDE.md names `TEAM REPO CLONE:`: find it by
@@ -76,12 +77,13 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
    - Write the registry's `tech-lead` entry, and `optimization` when it was found or started
      (step 9 shows the format), keeping every other entry.
    - Tell me in one line: when the setup is not finished (no `team-setup-done`), open AI Tech Lead
-     (link it) and type a reply there once to finish it; when it is, that the team already exists,
+     (link it) and click "Finish setup" there (or type a reply) to finish it; when it is, that the team already exists,
      with the AI Tech Lead linked. Link AI Team Optimization too when it was
      found or started. Do not write `team-setup-done`. Stop.
 6. **Case B: this session is the Tech Lead.** If this turn was started by another session's
    message, not typed by me, say in one line that the app refuses session starts on such a turn and
-   ask me to reply here once. Stop. Otherwise create `.handoff/team-setup-started` if it is
+   end the turn with the same `wrap_up` button question ("Finish setup" / "Not now"; typed reply
+   only with no `wrap_up`). Stop. Otherwise create `.handoff/team-setup-started` if it is
    missing, read `sessions/tech-lead-session.md` and keep it, with the `team-workflow` skill, as
    your standing method.
 7. The named sub sessions are those `$ARGUMENTS` names, all six for `all`, and none with no
