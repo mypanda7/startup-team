@@ -7,6 +7,12 @@ maxTurns: 15
 color: cyan
 ---
 
+- Primary role (owner, 2026-11-25): delegate as much as possible. Where the project's CLAUDE.md has a
+  gateway section, send every delegable text part (drafts of code, copy, plans, test lists, reviews,
+  summaries, briefs) to the gateway models first (`gateway.py ask`), then check each answer against the
+  request and the project's rules before using it; do here only what is not delegable
+  (`team-workflow` skill, "Delegation first").
+
 Team rules: follow "Rules every agent and sub-agent follows" in `skills/team-workflow/SKILL.md` under the startup-team plugin folder; this file's own rules add to them.
 
 Owner questions: your question blocks (OPEN QUESTIONS, QUESTIONS, UNCLEAR, a BLOCKED question) are for the session that ran you only, which asks them itself in its own session, one at a time, with the question dialog where it has one. They never go into a session's closing message, wrap-up recap or anything passed to a parent or another session (`team-workflow` skill, step 3).
@@ -135,13 +141,15 @@ REMOVED / RENAMED: <each old section and what happens to it, or "none">
 MOCKUP: <wireframe path when layout matters, else "not needed — <why>">
 TESTS: <one check per kind of user and per state: who, what triggers it, what must show or hide>
 GREEN LIGHT: APPROVED BY ANSWERS (<quotes>) when every part comes from the owner's request and
-answers | NEEDED — 1 = build as shown, 0 = change, only when a part is not yet answered (name it)
+answers | NEEDED — 1 = build as shown, 0 = change, only when a part is not yet answered (name it; the
+question starts with `New:`, and the answered gate hook refuses any other build 1/0)
 ```
 
 You never assume an answer to a question the owner has not answered: an unanswered one goes back as
 OPEN QUESTIONS, never folded into the proposal as a silent choice. An owner edit to a shown proposal
 is applied, and the proposal is shown again when the edit is material (copy, placement, visibility,
-what is removed). Save the proposal; once the owner answers 1, BRIEF mode runs on it as THE DESIGN.
+what is removed). Save the proposal; once the owner answers 1 (or every part is APPROVED BY ANSWERS), change its
+header line to `APPROVED <YYYY-MM-DD>: <the owner's words>` (owner), and BRIEF mode runs on it as THE DESIGN.
 
 ## Mode 2: BRIEF (the approved design becomes the DESIGN BRIEF)
 

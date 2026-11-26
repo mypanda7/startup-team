@@ -42,9 +42,11 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    session asks the owner its own questions in its own session the same way, and an agent or
    sub-agent returns its questions to the session that ran it, which asks them. A main session never asks the owner a sub session's question: one that reaches it in a sub
    session's report or message (an UNCLEAR, an open question) goes back to that sub session with one
-   line, "ask the owner this in your session", and the sub session asks it, one at a time.
+   line, "you have an open question: ask it in your session" (never the question itself: no question passes between sessions), and the sub session asks it, one at a time.
    No question travels out of the session that owns it. A session with an open owner question asks
-   it in its own session with the question dialog (AskUserQuestion) where it has one, one at a
+   it in its own session (a sub session, started from another session, with its `wrap_up` question
+   and buttons, never AskUserQuestion: the app shows a nested session's dialog in its parent as
+   "Request from <name>"; owner), one at a
    time; its closing message and its wrap-up recap (what the app passes to the session that started
    it) never hold the question, its options or its recommendation, only "<role> has an open question
    for the owner in this session.", and the same holds for anything it sends a parent or another
@@ -76,12 +78,14 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    project's breakpoints, check the console, and save `browser-pass.md` in the turn folder.
 8. **QA.** `qa` (the QA Engineer sub session when the project has one), once the pieces of the turn are built (or per piece when the decision block says
    so), with the request, the answers, the design brief or plan and the results. It writes
-   `qa-<piece>.md`. QA makes sure nothing is missed: every acceptance point, edge case, and for auth / data / redirect /
+   `qa-<piece>.md`, and for every screen change `browser-pass.md` naming its screenshots (owner). QA makes sure nothing is missed: every acceptance point, edge case, and for auth / data / redirect /
    upload pieces the abuse cases (security probes), plus the checks the brief names; its record says what it covered
    and what it could not. BUGS go back to the tech lead as fix tasks; an UNCLEAR is asked of the owner by the QA session
    itself (or by the session that ran the `qa` agent).
 9. **Deviation sweep.** Every DEVIATION that touches an owner answer goes to the owner before the audit.
-10. **Audit.** `auditor` (the Tech Lead session when the project has one, see Sessions), with the request, the decision block, the answers, the briefs, the results and the QA records. FAIL
+10. **Audit.** Commit the turn's records first (`team.py git records-commit`, owner): the audit request names
+   that commit, so the auditor reads committed files. Then `auditor` (the Tech Lead session when the project
+   has one, see Sessions), with the request, the decision block, the answers, the briefs, the results and the QA records. FAIL
    items go back to the tech lead. W items go to the owner as one list of 1/0 proposals. One audit per task: the
    auditor checks the task was completed as assigned (each brief's DONE WHEN, VERIFY WITH and DO NOT, the owner's
    words, the records, and that the stated commits and files exist). It re-runs only the VERIFY commands the briefs
@@ -177,8 +181,11 @@ These add to the numbered steps above.
     question or approval open, and for another session `get_session` shows it not running.
     Anything ongoing: skip the clear and say so in one line. A Threshold or owner-asked clear then
     happens once it is done; a skipped before-new-task `RESET:` clear never happens later (the task is sent anyway).
-  - No session clears itself when a piece or task closes, and nothing is sent at close to clear
-    another (except past the Threshold). A session is cleared just before another session sends
+  - Clear at close (owner, 2026-11-25): a sub session whose task closes with nothing ongoing writes
+    its checkpoint and calls the clear tool for `self` BEFORE its last message to the chat, so the
+    owner's next question there starts empty (anything ongoing: skip and say so in one line). Main
+    sessions do not clear themselves at close, and nothing is sent at close to clear another
+    (except past the Threshold). A session is cleared just before another session sends
     it any message that starts its turn: a task (a brief, a triage request), a re-test, a
     follow-up, a `RULE:` or `HEADS-UP:` notice. `RESET:` and `WAKE` themselves never trigger it.
     Agents and sub-agents keep no history: their record file is their history, and they end when
@@ -196,7 +203,8 @@ These add to the numbered steps above.
        send the task.
   - The clear gate (`hooks/clear-gate.py`) enforces this: a message to a session in the registry is
     refused unless, since your last task message to it, you cleared it or sent it `RESET:`, or the
-    message has a line `CLEAR: skipped <what is pending>`. On a refusal, clear it or state the reason,
+    message has a line `CLEAR: skipped <what is pending>` naming real pending work (a notice, "none" or
+    "not known" is refused: check with `get_session` and `RESET:` it). On a refusal, clear it or state the reason,
     then resend. Only the exact one-line `RESET: before new task|threshold from <name>` and `WAKE`
     pass on their own; messages to the main sessions (reports going up) are not gated. Off switch:
     `STARTUP_TEAM_CLEAR_GATE_OFF=1`.
@@ -339,9 +347,10 @@ role and end with it. A role whose standing session exists for the project gets 
 only a session of its own titled "AI Tech Lead", where the owner carries on; there the AI Tech
 Lead is the main session (by `sessions/tech-lead-session.md`, section "When you are the main
 session"). After one reply from the owner there, the AI Tech Lead runs `start-team` itself to
-finish the setup; it starts no sub session then. Each sub session (Business Analyst, Designer,
-Developer, QA Engineer, DevOps and Security, from the briefs in `sessions/`) starts under it the
-first time a task needs it and is never detached (owner). Every session and sub session asks its
+finish the setup, and then starts all six sub sessions under it (owner: all sessions and sub
+sessions are created at setup). Each sub session (Business Analyst, Designer, Developer, QA
+Engineer, DevOps and Security, from the briefs in `sessions/`) is never detached (owner); one
+still missing later starts under it the first time a task needs it. Every session and sub session asks its
 own questions in its own session and never passes one to another session (owner). It writes `.handoff/team-sessions.json`, each role's
 session id and title, and every rule below that finds a session reads that registry first, so a
 renamed session is still found. When another session has an open question for the owner, only say "<that session> has an open question", in one line; never repeat the question or its options. Only a turn the owner started may call `start_session` (the app refuses it on
@@ -355,7 +364,12 @@ Where the project's CLAUDE.md has the line `Sub sessions: bypass` (the owner's y
 Main sessions (AI Tech Lead, AI Team Optimization) keep their mode; any change there asks the owner
 first, every time.
 
-**On demand.** After triage, on a turn the owner typed, the main session starts only the missing
+**Missing ones.** All six start at setup (owner), and only the AI Tech Lead ever starts a sub
+session, so every sub session sits under it on every installation (owner, 2026-11-27: "you will
+follow the existing subsession relationship with Tech Lead on all installation"). Any other session
+(AI Team Optimization, the session that ran the setup, a `[run]` session) never starts one: it uses a
+sub-agent meanwhile and tells the owner in one line that the AI Tech Lead starts it. After triage,
+on a turn the owner typed, the AI Tech Lead starts only a missing one of the
 sub sessions the task's pieces need (the `activator`'s list, or the decision block's routes), by
 the `start-team` rules (found first by registry, then by title; never a second one;
 `use_worktree: false`; the project's folder; registry updated), then sends the work. The AI Tech
@@ -489,7 +503,7 @@ Every agent in `agents/` and every sub-agent it runs keeps these, beside its own
   session, one at a time. Never through another session, never a batch. Your questions are yours
   to ask: never hand them to another session to ask. A main session never asks the owner a sub session's question: one that reaches it in a sub
   session's report or message (an UNCLEAR, an open question) goes back to that sub session with one
-  line, "ask the owner this in your session", and the sub session asks it, one at a time.
+  line, "you have an open question: ask it in your session" (never the question itself: no question passes between sessions), and the sub session asks it, one at a time.
 - Your question blocks (OPEN QUESTIONS, QUESTIONS, UNCLEAR) go only to the session that ran you,
   which asks them itself in its own session (question dialog, one at a time). No question, option
   or recommendation goes into a session's closing message, wrap-up recap or anything passed to a
@@ -701,7 +715,9 @@ Flow, per change:
    Then the session that recorded it sends every standing session in `.handoff/team-sessions.json`
    (except itself) a short notice with `SendMessage`: first line `[startup-team:<name>]`, second
    line `RULE: <the rule in one line>`, so running sessions follow it before the plugin update
-   reaches them; a one-line `RULE:` notice is not a task, needs no clear and passes the clear gate. A `RULE:` notice is never
+   reaches them; a `RULE:` notice is not a task, but it starts the target's turn, so the check-and-clear runs
+   before it like before a task (owner): idle targets get `RESET:` (or the clear tool) first, then the
+   notice; `CLEAR: skipped` only with what is actually pending there, never "notice only" or "not known". A `RULE:` notice is never
    triaged and never a piece; the receiver follows the rule from then on and replies nothing.
 2. **Build.** The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words
    only, as ONE commit on `main` that also raises the plugin's patch version. The build brief

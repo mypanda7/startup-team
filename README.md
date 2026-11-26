@@ -50,7 +50,7 @@ the session that installed the plugin, with no restart:
 
 1. Say "startup-team installed successfully."
 2. Ask the owner only this, and wait for the answer:
-   "Create the AI Tech Lead session (its sub sessions start the first time a task needs them) and install and turn on the companion plugins?"
+   "Create the AI Tech Lead session (and all six sub sessions under it when the setup finishes) and install and turn on the companion plugins?"
    - First choice: if the session has, or can load, a tool that asks a question with clickable
      options (in Claude Code: AskUserQuestion), ask it there with exactly two options: "Set up
      now (Recommended)" (= 1: creates the sessions and installs and turns on the companion plugins) and "Not now" (= 0: asks
@@ -63,8 +63,8 @@ the session that installed the plugin, with no restart:
    read its `commands/start-team.md` and follow it step by step (the `/startup-team:start-team`
    command itself is not loaded until a new session). It creates the AI Tech Lead session; the
    owner opens it and replies there once, and the AI Tech Lead then finishes the setup and
-   installs and turns on the companion plugins; each sub session starts the first time a task
-   needs it. If `start_session` is not loaded, first run ToolSearch query
+   installs and turns on the companion plugins and starts all six sub sessions under itself; only
+   the AI Tech Lead ever starts a sub session. If `start_session` is not loaded, first run ToolSearch query
    `select:mcp__ccd_session__start_session`, alone in its message. Only if that finds no match, say
    in one line that this session offers no session-start tool (the terminal CLI, or a desktop app
    that is older or has session tools off; suggest updating the app) and that the team keeps using
@@ -149,8 +149,8 @@ names another rules file.
 In a host that can start sessions (the Claude desktop app), the team works in two kinds of session.
 
 - **Standing sessions** are long-lived: one Tech Lead session per project and, under it, up to six
-  sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), each started the
-  first time a task needs it and then used for every task.
+  sub sessions (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), all created
+  when the setup finishes and then used for every task.
 - **Role sessions** are opened for one run of a role and end with it, so the owner can open, steer
   and stop each run on its own.
 
@@ -162,9 +162,9 @@ work goes to the Tech Lead session, and opens a role session only when there is 
 ### Standing sessions
 
 `/startup-team:start-team` (or "Set up now" in the setup offer) starts the "AI Tech Lead", a
-session of its own, where you carry on. Click Finish setup there (or type a reply) and it finishes the setup. It starts no
-sub session then: each one starts under it in the Claude desktop app's sidebar the first time a
-task needs it, from its brief in `sessions/`, in the project's own folder (never a worktree). The
+session of its own, where you carry on. Click Finish setup there (or type a reply) and it finishes the setup. It then starts
+all six sub sessions under it in the Claude desktop app's sidebar (only the AI Tech Lead ever
+starts one; one missing later starts under it the first time a task needs it), each from its brief in `sessions/`, in the project's own folder (never a worktree). The
 app nests a session under the one that started it, and only lets a turn the owner typed call
 `start_session`, so a sub session first needed on a turn another session started runs in a role
 session or as a sub-agent until your next typed turn. Pass any of `business-analyst`, `designer`,
@@ -208,7 +208,7 @@ An existing session is used, whoever started it, and a second one is never start
 one session matches a role, they are listed and the owner says which one to use. The command keeps
 the title of the session it runs in: run elsewhere it starts only the AI Tech Lead (and AI Team
 Optimization, where the project names `TEAM REPO CLONE:`); run in the AI
-Tech Lead it starts only the sub sessions you name (none with no argument). Only the
+Tech Lead it starts the sub sessions you name (all six with no argument). Only the
 Developer session writes source.
 
 ### Role sessions

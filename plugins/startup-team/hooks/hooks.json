@@ -68,6 +68,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "AskUserQuestion|mcp__ccd_turn__wrap_up|SendMessage|mcp__ccd_session_mgmt__send_message|mcp__ccd_session__send_message",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/answered-gate.sh\"",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [

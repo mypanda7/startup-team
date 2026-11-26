@@ -508,6 +508,12 @@ def project_gateway(project: Path):
     return (url.group(1).rstrip(".,") if url else ""), (key.group(1) if key else "")
 
 
+def reset_wait(error: str, cap: int = 120):
+    """Seconds to wait from a router's rate-limit text ("Soonest reset ~78s"), capped; None when not given."""
+    m = re.search(r"reset\D{0,6}(\d+)\s*s", error)
+    return min(int(m.group(1)) + 2, cap) if m else None
+
+
 def cmd_ask(a) -> int:
     """One call: write the brief, pick the model from the scores, launch, retry once on `auto`, print the answer."""
     with contextlib.suppress(Exception):
@@ -548,6 +554,20 @@ def cmd_ask(a) -> int:
     if rc == 2:
         print("refused: nothing was sent; fix the brief and ask again")
         return 2
+    # Delegate as much as possible (owner): a rate limit is waited out once, then auto is tried again.
+    last = (read_ledger(project) or [{}])[-1]
+    wait = reset_wait(last.get("error") or "") if last.get("error_class") == "rate-limit" else None
+    if wait is not None:
+        print(f"rate-limited: waiting {wait} s for the router's reset, then one more try on auto")
+        time.sleep(wait)
+        out = folder / f"{stem}-{len(tries) + 1}.out.txt"
+        la = argparse.Namespace(**vars(a))
+        la.brief, la.out, la.model, la.terms = str(brief), str(out), "auto", str(terms)
+        if cmd_launch(la) == 0:
+            print("--- answer (" + str(out.relative_to(project)).replace("\\", "/") + ") ---")
+            print(out.read_text(encoding="utf-8"))
+            print("--- review it: gateway.py review <id> pass|fail --note ...")
+            return 0
     print("failed twice: do the part here and record `GATEWAY: none: failed twice`")
     return 1
 
@@ -788,6 +808,8 @@ def _stub(behaviour: dict):
 
 def selftest() -> int:
     """Assert-based. Network only to 127.0.0.1 stubs it starts and stops itself."""
+    assert reset_wait('HTTP 429 ... Soonest reset ~78s. 615 models') == 80
+    assert reset_wait('reset ~900s') == 120 and reset_wait('HTTP 429') is None
     dummy = "dummy-SELFTEST-key-7f3a91"
     env = "TEAM_GATEWAY_SELFTEST_KEY"
     os.environ[env] = dummy

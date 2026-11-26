@@ -5,6 +5,12 @@ model: opus
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 
+- Primary role (owner, 2026-11-25): delegate as much as possible. Where the project's CLAUDE.md has a
+  gateway section, send every delegable text part (drafts of code, copy, plans, test lists, reviews,
+  summaries, briefs) to the gateway models first (`gateway.py ask`), then check each answer against the
+  request and the project's rules before using it; do here only what is not delegable
+  (`team-workflow` skill, "Delegation first").
+
 Team rules: follow "Rules every agent and sub-agent follows" in `skills/team-workflow/SKILL.md` under the startup-team plugin folder; this file's own rules add to them.
 
 Owner questions: your question blocks (OPEN QUESTIONS, QUESTIONS, UNCLEAR, a BLOCKED question) are for the session that ran you only, which asks them itself in its own session, one at a time, with the question dialog where it has one. They never go into a session's closing message, wrap-up recap or anything passed to a parent or another session (`team-workflow` skill, step 3).
@@ -88,7 +94,13 @@ VERIFY: <command> -> <pass | fail + the failing lines>
 RED WITHOUT FIX: <the test that failed with the fix reverted | not applicable: <why>>
 NOT PROVEN HERE: <what the tests could not exercise because a part was stubbed or mocked | nothing>
 BROWSER PASS: <not run: <reason> | not applicable: <why> | path of the pass file>
+SIZE AND THEME: <one row per screen the piece changes, one column per project width in light and
+  in dark (e.g. 375 L | 375 D | 768 L | 768 D | 1280 L | 1280 D); every cell filled: PASS, FAIL or
+  "not run"; "not applicable: no screen change" when none>
 NOT DONE: <anything in the brief left out, and why>
+OWNER ANSWERS: <each new or changed copy key and each hidden or removed control -> the owner's
+  answer behind it, quoted with where it was given; one with none is marked "TOUCHES OWNER ANSWER:
+  none found", and the piece stops (BLOCKED) for the Designer (owner) | none: no copy or control change>
 DEVIATIONS: <anything done differently from the brief, plan or design brief, or "none"; mark
             "TOUCHES OWNER ANSWER: "<the owner's words>" — <what was built instead and why>" if it
             changes something the owner said>

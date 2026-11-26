@@ -5,7 +5,10 @@ PreToolUse on SendMessage / send_message / clear_session, PostToolUse on clear_s
   task message to it, the sender cleared it (clear_session) or sent it `RESET:`; or when the
   message has a line `CLEAR: skipped <reason>` (something is pending there). Otherwise it is
   denied once with the steps, and the sender clears or states the reason and resends.
-- The exact one-line `RESET: before new task|threshold from <name>`, `WAKE` and `RULE: <rule>` always pass.
+- The exact one-line `RESET: before new task|threshold from <name>` and `WAKE` always pass. A `RULE:`
+  notice is gated like a task (owner: clear before every message that starts a turn).
+- A skip reason that names nothing pending ("notice only", "not known", "none", "not a task")
+  is denied: check the target with get_session and RESET it instead (owner, 2026-11-25).
   Targets outside the registry, and the main sessions (tech-lead, optimization), always pass.
 - STARTUP_TEAM_CLEAR_GATE_OFF=1 turns it off. Any error lets the call through.
 Python 3.9+, standard library only.
@@ -24,7 +27,16 @@ SKIPPED = re.compile(r"(?m)^\s*CLEAR: skipped[ \t]+\S")
 # Only the exact one-line forms pass, so no task rides in on them.
 RESET = re.compile(r"RESET: (before new task|threshold) from [^\n]{1,80}\s*$")
 WAKE = re.compile(r"WAKE\s*$")
-RULE = re.compile(r"RULE: [^\n]{1,800}\s*$")
+# A skip must name what is pending; these name nothing (owner, 2026-11-25).
+VAGUE = re.compile(r"(?i)\b(notice|not known|unknown|n/a|none|nothing|not a (new )?task|no task|unsure)\b")
+CONCRETE = re.compile(r"(?i)\b(piece|P\d+|fail\w*|re-?test|fix round|question|approval|build\w*|running|open|out|waiting|review|deploy|push|audit)\b")
+SKIP_LINE = re.compile(r"(?im)^\s*CLEAR: skipped\b([^\n]*)$")
+
+
+def vague_skip(text: str) -> bool:
+    """True when a `CLEAR: skipped` reason names nothing pending (a notice, \"not known\", \"none\")."""
+    m = SKIP_LINE.search(text)
+    return bool(m and VAGUE.search(m.group(1)) and not CONCRETE.search(m.group(1)))
 # Reports go up to these; they are cleared only by each other, by the written Threshold rule.
 MAIN = ("tech-lead", "optimization")
 
@@ -103,8 +115,13 @@ def decide(payload: dict):
         state[sid] = "ready"
         save(path, state)
         return None
-    if WAKE.match(text) or RULE.match(text):
+    if WAKE.match(text):
         return None
+    if state.get(sid) != "ready" and vague_skip(text):
+        return (f"Clear gate: `CLEAR: skipped` must name what is pending in {name} (a piece out, a FAIL "
+                f"awaiting a re-test, an open question). A notice, or not knowing, is no reason: check it "
+                f"with get_session; idle -> send `[startup-team:{name}] RESET: before new task from "
+                f"<your name>`, wait for its turn to end, then resend.")
     if state.get(sid) == "ready" or SKIPPED.search(text):
         state[sid] = "used"
         save(path, state)
@@ -139,8 +156,13 @@ def selftest() -> None:
         assert call("SendMessage", to="", message="x") is None, "empty target passes"
         assert call("SendMessage", to="local_qa", message="RESET: now build Y\nmore") is not None, "smuggled RESET"
         assert call("SendMessage", to="local_qa", message="WAKEUP do Z") is not None, "smuggled WAKE"
-        assert call("SendMessage", to="local_qa", message="[startup-team:qa]\nRULE: never re-ask") is None, "RULE passes"
-        assert call("SendMessage", to="local_qa", message="RULE: x\nnow build Y") is not None, "smuggled RULE"
+        assert call("SendMessage", to="local_qa", message="[startup-team:qa]\nRULE: never re-ask") is not None, "RULE gated"
+        assert call("SendMessage", to="local_qa", message="CLEAR: skipped rule notice only\nRULE: x") is not None, "vague skip"
+        assert call("SendMessage", to="local_qa", message="CLEAR: skipped pending work not known\nx") is not None, "unknown skip"
+        for real in ("Developer fix round open; none of the others", "audit notice pending on P3",
+                     "P3 out, unknown cause", "FAIL awaiting re-test"):
+            assert not vague_skip("CLEAR: skipped " + real), real
+        assert vague_skip("CLEAR: skipped rule notice only (not a new task); pending work is not known")
         assert call("SendMessage", to="local_abc", message="second task") is not None, "used up"
         assert call("SendMessage", to="local_abc", message="CLEAR: skipped piece P3 out\ntask") is None, "stated skip passes"
         assert call("SendMessage", to="local_abc", message="CLEAR: skipped\ntask") is not None, "empty reason denied"

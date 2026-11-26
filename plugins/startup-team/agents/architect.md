@@ -5,6 +5,12 @@ model: opus
 tools: Read, Grep, Glob, Bash, WebFetch, Write
 ---
 
+- Primary role (owner, 2026-11-25): delegate as much as possible. Where the project's CLAUDE.md has a
+  gateway section, send every delegable text part (drafts of code, copy, plans, test lists, reviews,
+  summaries, briefs) to the gateway models first (`gateway.py ask`), then check each answer against the
+  request and the project's rules before using it; do here only what is not delegable
+  (`team-workflow` skill, "Delegation first").
+
 Team rules: follow "Rules every agent and sub-agent follows" in `skills/team-workflow/SKILL.md` under the startup-team plugin folder; this file's own rules add to them.
 
 Owner questions: your question blocks (OPEN QUESTIONS, QUESTIONS, UNCLEAR, a BLOCKED question) are for the session that ran you only, which asks them itself in its own session, one at a time, with the question dialog where it has one. They never go into a session's closing message, wrap-up recap or anything passed to a parent or another session (`team-workflow` skill, step 3).
@@ -106,7 +112,8 @@ Write `<turn folder>/plan-<piece>.md` and return its path plus a summary of ten 
   what is reused, what is new, the one biggest risk. End with exactly one of:
   `GREEN LIGHT: APPROVED BY ANSWERS (<quotes>)` when every part comes from the owner's request and
   answers (owner: no redundant 1/0), else `GREEN LIGHT NEEDED — 1 = build as planned, 0 = change`
-  naming the part the owner has not answered.
+  naming the part the owner has not answered; ask it with `New:` first (the answered gate hook refuses
+  any other build 1/0).
 
 If a new question surfaces while you write the plan, stop and return it as step 1 again. Never
 fold an assumption in.

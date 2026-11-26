@@ -46,7 +46,7 @@ Then carry on with the owner's request. Say it at most once in this session."""
 
 OFFER = """Team setup (startup-team): before anything else this turn, say "startup-team installed
 successfully." and ask the owner, as the only question:
-"Create the AI Tech Lead session (its sub sessions start the first time a task needs them) and
+"Create the AI Tech Lead session (and all six sub sessions under it when the setup finishes) and
 install and turn on the companion plugins?"
 - First choice: if this session has, or can load, a tool that asks the owner a question with
   clickable options (in Claude Code: AskUserQuestion), ask it there with exactly two options:
@@ -61,7 +61,7 @@ the AI Team Optimization session beside the AI Tech Lead (the question itself st
 Do not start the owner's request until they answer.
 - On 1 ("Set up now"): run /startup-team:start-team on that owner turn. It creates the AI Tech Lead
   session (with the owner's pending request); the companion plugins are set up inside it after one
-  reply there, and each sub session starts the first time a task needs it. Tell the owner to open AI Tech Lead and click Finish setup there (or type a reply).
+  reply there, and its six sub sessions are created there when the setup finishes. Tell the owner to open AI Tech Lead and click Finish setup there (or type a reply).
 - On 0 ("Not now"): carry on with their request; the offer returns in the next session.
 Ask at most once in this session: once it was asked (answered or not), never ask it again here.
 Before deciding there is no session tool, load it: if start_session is not loaded, run ToolSearch

@@ -1,12 +1,13 @@
 ---
-description: Start the AI Tech Lead session (and AI Team Optimization where the project names a team repo clone); run inside it, finish the setup; sub sessions start when a task first needs them (or name them, or `all`)
+description: Start the AI Tech Lead session (and AI Team Optimization where the project names a team repo clone); run inside it, finish the setup and start all six sub sessions under it (owner; or name some)
 ---
 Set up the team's standing sessions: the AI Tech Lead, a session of its own, and its sub sessions
 (Business Analyst, Designer, Developer, QA Engineer, DevOps, Security), which sit under it in the
-sidebar and are never detached (owner). Sub sessions start on demand: with no argument, case B starts none, and each one starts the
-first time a task needs it (`team-workflow` skill, "Sessions"). `$ARGUMENTS` may name sub sessions
-to start now (`business-analyst`, `designer`, `developer`, `qa`, `devops`, `security`), or `all`
-for all six. The argument
+sidebar and are never detached (owner). All sessions and sub sessions are created at setup (owner,
+2026-11-25): with no argument, case B starts all six; one missing later (a failed start, a deleted
+session) starts the first time a task needs it (`team-workflow` skill, "Sessions"). `$ARGUMENTS`
+may name sub sessions to start (`business-analyst`, `designer`, `developer`, `qa`, `devops`,
+`security`), or `all` for all six. The argument
 `gateway`, run in the Tech Lead, runs only step 12 and asks its question again.
 Where the project's CLAUDE.md names `TEAM REPO CLONE: <path>`, case A also starts "AI Team
 Optimization", a second session of its own beside the AI Tech Lead (never under it), where the
@@ -19,7 +20,10 @@ optional `Pushes: only on the owner's command` (DevOps holds every push for the 
 The desktop app nests a session under the session that started it, and allows `start_session`
 only on a turn the owner typed. So setup takes two runs of this command: run in any other
 session, it starts only the AI Tech Lead (case A); run in the AI Tech Lead on a turn the owner
-typed there, it finishes the setup and starts the named sub sessions under it (case B). Follow these steps in order.
+typed there, it finishes the setup and starts the named sub sessions under it (case B). Follow these steps in order. In a session started from another session (the AI Tech Lead is one),
+every "question dialog" below means the `wrap_up` question instead (owner: the app shows a nested
+session's dialog in its parent): `ask`, the recommended button first, `blocked: true`; it has no
+dismissed state, so the step waits for the click (or a typed reply).
 
 1. If `start_session` is not loaded, run ToolSearch query `select:mcp__ccd_session__start_session`,
    alone in its message. If that finds no match, say in one line that this session offers no
@@ -42,7 +46,8 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
 4. The case: this session is the Tech Lead when its id is the registry's `tech-lead` entry, or else
    its title ends with "Tech Lead" (ignoring case and spaces). Then go to case B (step 6).
    Otherwise, case A (step 5).
-5. **Case A: this session is not the Tech Lead.** Start no sub session here.
+5. **Case A: this session is not the Tech Lead.** Start no sub session here: only the AI Tech Lead
+   starts them, so they sit under it on every installation (owner, 2026-11-27).
    - Create `<project folder>/.handoff/team-setup-started` holding one line, today's date, so the
      sessions started from now on never get the setup notice.
    - The Tech Lead, by step 3. More than one matches: list them and ask me which one leads (I
@@ -86,8 +91,8 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
    only with no `wrap_up`). Stop. Otherwise create `.handoff/team-setup-started` if it is
    missing, read `sessions/tech-lead-session.md` and keep it, with the `team-workflow` skill, as
    your standing method.
-7. The named sub sessions are those `$ARGUMENTS` names, all six for `all`, and none with no
-   argument. For each named sub session, in the table's order: one match by step 3, use it as it is, whoever
+7. The named sub sessions are those `$ARGUMENTS` names, and all six for `all` or with no argument
+   (owner: all are created at setup). For each named sub session, in the table's order: one match by step 3, use it as it is, whoever
    started it. More than one: list them and ask me which one to use; never guess, and start none
    for that role meanwhile.
 8. Note whether `<project folder>/.handoff/team-setup-done` already exists (then this run is an
@@ -234,7 +239,7 @@ typed there, it finishes the setup and starts the named sub sessions under it (c
     (create it if missing; keep every other key and env entry; never `settings.local.json`), and tell me in one line that it applies at each session's
     next start. On "Not now", change nothing.
 15. Tell me in one line which sub sessions were found and which were started (with no argument:
-    none, and each one starts the first time a task needs it), and name any role
+    all six), and name any role
     still missing because its start failed or was refused, with the app's reason: running this
     command again here starts just that one. Then any worktree or duplicate sessions from step 3;
     then which companions were installed (enabled) and which kept (with their state), and that they
