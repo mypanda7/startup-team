@@ -140,9 +140,9 @@ def record_start(root: str, session_id: str) -> None:
 
 
 SUMMARY_LINE = ("Past context: read .handoff/conversations/SUMMARY.md first; open its sub files only when "
-                "the task needs them. On the first turn after a clear or a restart, start your reply with a "
-                "short `Read from summary:` block (at most 5 lines: the last task, its state, anything open), "
-                "then carry on.")
+                "the task needs them. On the first turn after a start, a clear or a restart that carries a real request (never one a RESET, RULE or WAKE message started: those stay silent), start your reply with a "
+                "short `Read from summary:` block (at most 5 lines: the last task, its state, anything open). "
+                "Then check for pending tasks (the summary's open items, your checkpoint, the open task boards): when there are any, name each in one short line and ask the owner once, at the end of that turn, whether they want more information on them (owner, 2026-11-27; a top-level session: the question dialog; a sub session: its `wrap_up` question); none: say so in one line. Then carry on.")
 
 
 PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

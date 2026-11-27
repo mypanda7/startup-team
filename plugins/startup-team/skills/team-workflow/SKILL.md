@@ -292,9 +292,14 @@ the summary from a template only when it is missing; it never changes it otherwi
 - A session that needs past context reads the summary first, when it exists, and never loads past
   transcripts or whole turn folders. It opens a sub file only when the task needs it, and Greps
   before reading a whole one.
-- On its first turn after a clear or a restart, a session starts its visible reply with a short
-  block `Read from summary:` (at most 5 lines: the last task, its state, anything open), taken from
-  the summary and its checkpoint, then carries on.
+- On its first turn after a start, a clear or a restart that carries a real request (never one a
+  RESET, RULE or WAKE message started: those stay silent), a session starts its visible reply with a
+  short block `Read from summary:` (at most 5 lines: the last task, its state, anything open), taken
+  from the summary and its checkpoint. Pending tasks (owner, 2026-11-27): it then checks for pending
+  tasks (the summary's open items, its checkpoint, the open task boards); when there are any, it names
+  each in one short line and asks the owner once, at the end of that turn, whether they want more
+  information on them (a top-level session: the question dialog; a sub session: its `wrap_up`
+  question); none: one line saying so. Then it carries on with the owner's request.
 - At each task's close (step 12) the main session rebuilds the sub files, adds one row and updates
   "Where things stand". Keep the summary under about 60 lines.
 
