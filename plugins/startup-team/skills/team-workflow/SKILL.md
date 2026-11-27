@@ -80,7 +80,8 @@ one. When a step or an agent names one (`ship`, `test-gate`, `scan-errors`, ...)
    so), with the request, the answers, the design brief or plan and the results. It writes
    `qa-<piece>.md`, and for every screen change `browser-pass.md` naming its screenshots (owner). QA makes sure nothing is missed: every acceptance point, edge case, and for auth / data / redirect /
    upload pieces the abuse cases (security probes), plus the checks the brief names; its record says what it covered
-   and what it could not. BUGS go back to the tech lead as fix tasks; an UNCLEAR is asked of the owner by the QA session
+   and what it could not. BUGS go back to the tech lead as fix tasks; a fix is not reported done
+   until the QA record has `RE-TEST <fix commit>: PASS` (owner, checked by `team.py git records-commit`); an UNCLEAR is asked of the owner by the QA session
    itself (or by the session that ran the `qa` agent).
 9. **Deviation sweep.** Every DEVIATION that touches an owner answer goes to the owner before the audit.
 10. **Audit.** Commit the turn's records first (`team.py git records-commit`, owner): the audit request names
@@ -691,6 +692,11 @@ answers are never sent. Without that section nothing here changes.
   "quick", "trivial" or "only a few lines" do not count.
   `team.py records check-commit` stops a records commit whose added `GATEWAY: none:` line names none
   of these (it must start with "not delegable", "gateway refused", "gateway unreachable" or "failed twice").
+  A "failed" line cites its ledger ids and the real try count, e.g. `GATEWAY: none: failed twice (2 tries:
+  <id>, <id>)`; the check refuses an id missing from `.handoff/gateway/ledger.jsonl` or a count that
+  does not match (owner). It also refuses a result whose FILES line and COMMIT disagree, a MEMORY id
+  not in the staged memory, a FIX with no `RE-TEST <commit>: PASS` in the QA record, and an OWNER quote
+  missing from the turn's `answers.md` (owner).
 - The auditor fails a record with no `GATEWAY:` line, a reason outside the allowed list, or a
   launch id with no `review` verdict. A launch that failed with no answer (for example a 502 or a
   timeout) is recorded as `<launch id> failed <error class>` and needs no review verdict; the
@@ -724,6 +730,8 @@ Flow, per change:
    before it like before a task (owner): idle targets get `RESET:` (or the clear tool) first, then the
    notice; `CLEAR: skipped` only with what is actually pending there, never "notice only" or "not known". A `RULE:` notice is never
    triaged and never a piece; the receiver follows the rule from then on and replies nothing.
+   A change that replaces an owner rule updates every place that states the old rule: the plugin's
+   briefs, agents, hooks and skill, plus the project's memory note and its `MEMORY.md` index line (owner).
 2. **Build.** The Developer builds it in the clone named by `TEAM REPO CLONE:`, in generic words
    only, as ONE commit on `main` that also raises the plugin's patch version. The build brief
    carries the line `MEMORY: M####` naming the step-1 setup-change record (more than one allowed,

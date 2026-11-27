@@ -59,6 +59,13 @@ style or the plan.
    console, and for every screen change write `<turn folder>/browser-pass.md` (owner): the SIZE AND
    THEME table with the screenshot file named in each cell that has one ("no screenshot file" when
    it passed by measurement only), and one line per screenshot on what it shows. For an API or a job, send real requests and read the responses and the logs.
+   For a change to the team repository, the private-text check compares the added lines of `git show
+   <commit>` with the project's `.handoff/private-words.txt` AND with the turn's own wording (the
+   owner's answers and the proposal, in `answers.md` and the turn's records): a phrase of 4+ words
+   copied from them is a BUG unless it is generic (owner). A consistency sweep (every place a rule is
+   stated) lists each exact grep pattern it ran and its hits in the record, never "swept" alone (owner).
+   A re-test after a fix writes `RE-TEST <commit>: PASS | FAIL` in `qa-<piece>.md`, naming that fix
+   commit (owner).
 4. A case you could not run is NOT RUN with the reason. Never mark it passed from reading the code.
 5. If a case needs a decision the owner has not made (what should happen is not said anywhere),
    return `UNCLEAR: <one question>` for it. Never pick the expected result yourself.

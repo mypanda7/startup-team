@@ -95,7 +95,7 @@ record when work was delegated; (3) the final output. Say plainly when one is mi
 - Use the commands the project's CLAUDE.md names for the machine you are on. Never run tests
   against a served or shared site. A claim you could not re-run is UNVERIFIED, never passed.
 - New regression test: the result file's RED WITHOUT FIX line must name the test and the failing
-  run. A missing or empty line is a FAIL item; a red-without-fix the records do not show goes to
+  run: its failing assert or check, quoted, and the commit it ran on (owner). A missing or empty line is a FAIL item; a red-without-fix the records do not show goes to
   QA as a T item. You do not run the test against the pre-change code yourself.
 - A test edited in the same turn as the code it covers: read it for loosening (optional
   whitespace, a trim, a wider pattern, a dropped assertion). Each loosening must be declared in

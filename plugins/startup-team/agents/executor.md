@@ -91,7 +91,10 @@ MODEL: <the model that did the work>
 COMMIT: <hash> <subject>
 FILES: <path — what changed>
 VERIFY: <command> -> <pass | fail + the failing lines>
-RED WITHOUT FIX: <the test that failed with the fix reverted | not applicable: <why>>
+RED WITHOUT FIX: <the test that failed with the fix reverted: its failing assert or check, quoted,
+  and the commit it ran on (owner) | not applicable: <why>>
+FIX: <only for a fix after QA findings: the finding ids it fixes; it is not reported done until
+  qa-<piece>.md has `RE-TEST <commit>: PASS` for it (owner) | omit>
 NOT PROVEN HERE: <what the tests could not exercise because a part was stubbed or mocked | nothing>
 BROWSER PASS: <not run: <reason> | not applicable: <why> | path of the pass file>
 SIZE AND THEME: <one row per screen the piece changes, one column per project width in light and
@@ -116,7 +119,7 @@ NOTES FOR THE AUDITOR: <what to re-run, the riskiest line>
 ```
 STATUS: DONE | BLOCKED
 COMMIT: <hash> | none
-RED WITHOUT FIX: <test | not applicable>
+RED WITHOUT FIX: <the failing assert, quoted, and its commit | not applicable>
 DEVIATIONS: <n> (+ <m> neighbouring findings), all in the result file
 BLOCKED: <the one thing the main session must decide | none>
 RESULT: <path to result-<piece>.md>

@@ -568,7 +568,10 @@ def cmd_ask(a) -> int:
             print(out.read_text(encoding="utf-8"))
             print("--- review it: gateway.py review <id> pass|fail --note ...")
             return 0
-    print("failed twice: do the part here and record `GATEWAY: none: failed twice`")
+    # The records check wants the ledger ids and the real try count on this line (owner).
+    k = len(tries) + (wait is not None)
+    ids = ", ".join(str(e.get("id", "?")) for e in read_ledger(project)[-k:])
+    print(f"failed twice: do the part here and record `GATEWAY: none: failed twice ({k} tries: {ids})`")
     return 1
 
 

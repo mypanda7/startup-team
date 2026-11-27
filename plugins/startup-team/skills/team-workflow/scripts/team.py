@@ -702,7 +702,128 @@ def commit_problems(r: Path) -> list:
                 out.append(f"GATEWAY reason not allowed in {fname}: {m.group(1)[:60] or '(none)'}")
             elif m and m.group(1).lower().startswith("not delegable") and not STAYS_HERE.search(m.group(1)):
                 out.append(f"GATEWAY 'not delegable' names nothing that stays here in {fname}: {m.group(1)[:60]}")
+            elif m and m.group(1).lower().startswith("failed"):
+                out += [f"GATEWAY failed line in {fname}: {p}" for p in ledger_problems(line[1:], ledger_ids(r))]
+    out += record_problems(r, [n for n in names if n])
     return sorted(set(out))
+
+
+LEDGER_ID = re.compile(r"\b\d{8}-\d{6}-[0-9a-f]{4}\b")
+
+
+def ledger_ids(r: Path) -> set:
+    ids = set()
+    try:
+        for line in (r / ".handoff" / "gateway" / "ledger.jsonl").read_text(encoding="utf-8").splitlines():
+            ids.update(LEDGER_ID.findall(line[:40]))
+    except OSError:
+        pass
+    return ids
+
+
+def ledger_problems(line: str, known: set) -> list:
+    """A `GATEWAY: none: failed` line cites its ledger ids and the real try count (owner, 2026-11-27)."""
+    ids = sorted(set(LEDGER_ID.findall(line)))
+    out = [f"ledger id not found: {i}" for i in ids if i not in known]
+    if not ids:
+        out.append("no ledger id")
+    n = re.search(r"\b(\d+)\s+(?:try|tries)\b", line)
+    if not n:
+        out.append("no try count")
+    elif ids and int(n.group(1)) != len(ids):
+        out.append(f"try count {n.group(1)} but {len(ids)} ledger ids")
+    return out
+
+
+def staged_text(r: Path, path: str) -> str:
+    """The index copy of a file (the staged change, else HEAD), or the working file, or ""."""
+    p = subprocess.run(["git", "-C", str(r), "show", f":{path}"], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    if p.returncode == 0:
+        return p.stdout
+    try:
+        return (r / path).read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
+def field(text: str, name: str) -> str:
+    m = re.search(rf"(?m)^{name}:\s*(.*)$", text)
+    return m.group(1) if m else ""
+
+
+def commit_repo(r: Path, sha: str):
+    """The repo that holds `sha`: the project, else the `TEAM REPO CLONE:` named in its CLAUDE.md."""
+    m = re.search(r"(?m)^\s*-?\s*TEAM REPO CLONE:\s*(.+?)\s*$", staged_text(r, "CLAUDE.md"))
+    for repo in [r] + ([Path(m.group(1))] if m else []):
+        if subprocess.run(["git", "-C", str(repo), "cat-file", "-e", sha + "^{commit}"],
+                          capture_output=True).returncode == 0:
+            return repo
+    return None
+
+
+FILE_NAME_RE = re.compile(r"[\w.*/-]*[\w*]\.(?:py|md|json|jsonl|sh|ps1|txt|ya?ml|toml|js|ts|tsx|css|html|sql|svg)\b")
+
+
+def unparen(s: str) -> str:
+    while True:
+        t = re.sub(r"\([^()]*\)", "", s)
+        if t == s:
+            return s
+        s = t
+
+
+def files_problems(r: Path, result: str, name: str) -> list:
+    """FILES line vs `git show --stat` of all the COMMIT line's commits together, both ways (owner, 2026-11-27)."""
+    import fnmatch
+    files = field(result, "FILES")
+    stat = {}  # path -> the first listed commit that touched it
+    for sha in dict.fromkeys(re.findall(r"\b[0-9a-f]{7,40}\b", field(result, "COMMIT"))):
+        repo = commit_repo(r, sha)
+        if repo is None:
+            continue  # shortcut: a commit not on this machine is not checked; upgrade if records move between machines
+        for line in run_git(repo, "show", "--name-only", "--format=", sha).splitlines():
+            if line:
+                stat.setdefault(line, sha)
+    if not stat or not files:
+        return []
+    shas = ", ".join(dict.fromkeys(stat.values()))
+    tokens = set(FILE_NAME_RE.findall(unparen(files)))
+    hit = lambda path, t: path.endswith(t) or fnmatch.fnmatch(path, "*" + t)
+    out = [f"FILES misses {p} (in {c}) in {name}" for p, c in stat.items() if not any(hit(p, t) for t in tokens)]
+    out += [f"FILES names {t}, not in {shas}, in {name}" for t in sorted(tokens) if not any(hit(p, t) for p in stat)]
+    return out
+
+
+def quote_norm(s: str) -> str:
+    return " ".join(s.replace("“", '"').replace("”", '"').replace("’", "'").split()).lower()
+
+
+def record_problems(r: Path, names: list) -> list:
+    """Checks on staged result files (owner, 2026-11-27): FILES vs the commit, MEMORY ids committed,
+    a FIX re-tested by QA, quoted owner answers on record."""
+    out = []
+    memory = staged_text(r, ".handoff/memory/agent-memory.jsonl")
+    for n in names:
+        m = re.match(r"(\.handoff/.+/)result-([^/]+)\.md$", n)
+        if not m:
+            continue
+        folder, piece = m.groups()
+        text = staged_text(r, n)
+        out += files_problems(r, text, n)
+        for mid in re.findall(r"\bM\d{3,}\b", field(text, "MEMORY")):
+            if f'"id": "{mid}"' not in memory:
+                out.append(f"MEMORY {mid} not in the committed memory file ({n}); stage .handoff/memory/agent-memory.jsonl")
+        sha = re.search(r"\b[0-9a-f]{7,40}\b", field(text, "COMMIT"))
+        qa = staged_text(r, f"{folder}qa-{piece}.md")
+        if re.search(r"(?m)^FIX\b", text) and sha and not re.search(rf"RE-TEST\s+{sha.group(0)[:7]}[0-9a-f]*:\s*PASS\b", qa):
+            out.append(f"FIX in {n} but qa-{piece}.md has no RE-TEST {sha.group(0)[:7]}: PASS")
+        answers = quote_norm(staged_text(r, f"{folder}answers.md"))
+        owner = field(text, "OWNER ANSWERS") or field(text, "OWNER")
+        for q in re.findall(r"[\"“]([^\"”]{8,})[\"”]", owner):
+            if quote_norm(q) not in answers:
+                out.append(f"owner answer not in answers.md ({n}): {q[:50]}")
+    return out
 
 
 # A full git commit id (40 lowercase hex) on a line that talks about git is not a secret.
@@ -755,8 +876,12 @@ def rec_git_selftest() -> None:
         assert "outside .handoff/: out.txt" in probs, probs
         assert "secret shape in .handoff/b.md" in probs, probs
         assert not any("zqvalsecret" in x for x in probs)
+        (r / ".handoff" / "gateway").mkdir(exist_ok=True)
+        (r / ".handoff" / "gateway" / "ledger.jsonl").write_text(
+            '{"id": "20261125-090740-e100"}\n{"id": "20261125-090741-e101"}\n', encoding="utf-8")
         (r / ".handoff" / "c.md").write_text(
-            "GATEWAY: none: not delegable (database migration)\nGATEWAY: none: failed twice\n"
+            "GATEWAY: none: not delegable (database migration)\n"
+            "GATEWAY: none: failed twice (2 tries: 20261125-090740-e100, 20261125-090741-e101)\n"
             "GATEWAY: none: gateway unreachable (worker)\nGATEWAY: 2026-ab12 copy pass\n", encoding="utf-8")
         (r / ".handoff" / "d.md").write_text("GATEWAY: none: small change, nothing to draft\n", encoding="utf-8")
         (r / ".handoff" / "e.md").write_text("GATEWAY: none\n", encoding="utf-8")
@@ -776,6 +901,60 @@ def rec_git_selftest() -> None:
         assert "secret shape in .handoff/f.md" not in probs, probs
         assert "secret shape in .handoff/g.md" in probs, "a bare 40-hex with no git word still counts"
         assert "secret shape in .handoff/h.md" in probs, "token = <value> still counts on a git line"
+        # Owner, 2026-11-27: FILES vs commit, MEMORY committed, FIX re-tested, owner quotes on record, ledger ids.
+        subprocess.run(git + ["reset", "-q"], check=True)
+        for f in ("b.md", "c.md", "d.md", "e.md", "e2.md", "f.md", "g.md", "h.md"):
+            (r / ".handoff" / f).unlink()
+        (r / "x").mkdir()
+        (r / "x" / "a.py").write_text("a\n", encoding="utf-8")
+        (r / "x" / "y.md").write_text("y\n", encoding="utf-8")
+        subprocess.run(git + ["add", "x"], check=True)
+        subprocess.run(git + ["commit", "-qm", "piece"], check=True)
+        sha = subprocess.run(git + ["rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
+        t = r / ".handoff" / "t1"
+        t.mkdir()
+        (t / "answers.md").write_text('Owner: "Keep the panel on the left."\n', encoding="utf-8")
+        (r / ".handoff" / "memory").mkdir(exist_ok=True)
+        (r / ".handoff" / "memory" / "agent-memory.jsonl").write_text('{"id": "M0001", "text": "x"}\n', encoding="utf-8")
+        (t / "qa-P1.md").write_text("QA: FAIL B1\n", encoding="utf-8")
+        (t / "result-P1.md").write_text(
+            f"MEMORY: M0001, M0002.\nCOMMIT: team {sha}, local.\nFILES: x/a.py (the fix; also see z/zz.py), x/b.py.\n"
+            'OWNER ANSWERS: "Keep the panel on the left."; "Use red."\nFIX: B1 fixed.\n', encoding="utf-8")
+        (t / "note.md").write_text("GATEWAY: none: failed twice (2 tries, 20261125-090740-e100)\n"
+                                   "GATEWAY: none: failed twice (1 try, 20261125-090740-e100)\n", encoding="utf-8")
+        subprocess.run(git + ["add", "-f", ".handoff"], check=True)
+        probs = commit_problems(r)
+        n = ".handoff/t1/result-P1.md"
+        assert f"FILES misses x/y.md (in {sha}) in {n}" in probs, probs
+        assert f"FILES names x/b.py, not in {sha}, in {n}" in probs, probs
+        assert not any("zz.py" in x or "x/a.py" in x for x in probs), "parenthesised names and matches pass"
+        assert any("MEMORY M0002" in x for x in probs) and not any("MEMORY M0001" in x for x in probs), probs
+        assert f"FIX in {n} but qa-P1.md has no RE-TEST {sha[:7]}: PASS" in probs, probs
+        assert any("owner answer not in answers.md" in x and "Use red." in x for x in probs), probs
+        assert not any("Keep the panel" in x for x in probs), probs
+        assert any("try count 2 but 1 ledger ids" in x for x in probs), probs
+        assert sum("GATEWAY failed line" in x for x in probs) == 1, probs
+        (t / "qa-P1.md").write_text(f"QA: FAIL B1\n## RE-TEST {sha}\nRE-TEST {sha}: FAIL\n", encoding="utf-8")
+        subprocess.run(git + ["add", "-f", ".handoff"], check=True)
+        assert any("RE-TEST" in x for x in commit_problems(r)), "a FAIL re-test is not done (audit W T3)"
+        (t / "qa-P1.md").write_text(f"QA: FAIL B1\n## RE-TEST {sha}\nRE-TEST {sha}: PASS\n", encoding="utf-8")
+        subprocess.run(git + ["add", "-f", ".handoff"], check=True)
+        assert not any("RE-TEST" in x for x in commit_problems(r))
+        # Audit W T1: FILES is checked against every commit on the COMMIT line together.
+        (r / "x" / "c.py").write_text("c\n", encoding="utf-8")
+        subprocess.run(git + ["add", "x/c.py"], check=True)
+        subprocess.run(git + ["commit", "-qm", "fix", "-o", "x/c.py"], check=True)
+        sha2 = subprocess.run(git + ["rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
+        (t / "result-P1.md").write_text(f"COMMIT: team {sha} (fix {sha2}).\nFILES: x/a.py, x/y.md.\n", encoding="utf-8")
+        subprocess.run(git + ["add", "-f", ".handoff"], check=True)
+        probs = commit_problems(r)
+        assert f"FILES misses x/c.py (in {sha2}) in {n}" in probs and not any("x/y.md" in x for x in probs), probs
+        (t / "result-P1.md").write_text(f"COMMIT: team {sha} (fix {sha2}).\nFILES: x/a.py, x/y.md, x/c.py.\nFIX: B1.\n", encoding="utf-8")
+        (t / "qa-P1.md").unlink()  # QA W B3: a FIX with no QA record at all is refused too
+        subprocess.run(git + ["add", "-A", "-f", ".handoff"], check=True)
+        assert any(f"has no RE-TEST {sha[:7]}" in x for x in commit_problems(r))
+        assert ledger_problems("GATEWAY: none: failed twice", set()) == ["no ledger id", "no try count"]
+        assert ledger_problems("x 1 try 20261125-090740-e101", {"20261125-090740-e100"}) == ["ledger id not found: 20261125-090740-e101"]
 
 
 # ---- conversations: per-session, per-day chat files plus a hand-kept SUMMARY.md ----
